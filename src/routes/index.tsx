@@ -382,8 +382,9 @@ function HomePage() {
 
       {/* Testimonials */}
       {testimonials.length > 0 ? (
-        <section className="band-ink">
-          <div className="container-site section-y">
+        <section className="band-deep relative overflow-hidden">
+          <span aria-hidden="true" className="orb -top-24 left-1/4 size-80 bg-secondary/20" />
+          <div className="container-site section-y relative">
             <p className="eyebrow text-secondary">From DiaLearn families</p>
             <h2 className="display-section mt-3 max-w-2xl">
               Parents hear the difference before the results arrive.
@@ -392,7 +393,7 @@ function HomePage() {
               {testimonials.map((item) => (
                 <figure
                   key={item.name}
-                  className="rounded-2xl border border-ink-foreground/15 bg-ink-foreground/5 p-5"
+                  className="rounded-2xl border border-ink-foreground/15 bg-ink-foreground/[0.07] p-5 backdrop-blur transition-colors hover:bg-ink-foreground/[0.11]"
                 >
                   <Quote className="size-5 text-secondary" />
                   <blockquote className="mt-3 text-sm text-ink-foreground/90">
@@ -415,25 +416,36 @@ function HomePage() {
 
       {/* Closing CTA */}
       <section className="container-site section-y">
-        <div className="card-warm flex flex-col items-start gap-4 p-6 md:flex-row md:items-center md:justify-between md:p-8">
-          <div className="min-w-0">
+        <div className="card-elevated grid gap-0 overflow-hidden md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <div className="flex flex-col items-start justify-center gap-4 p-6 md:p-10">
             <h2 className="display-section">Ready to find the right tutor?</h2>
-            <p className="lead mt-2 max-w-xl">
+            <p className="lead max-w-xl">
               Start with a single lesson. No packages, no pressure.
             </p>
+            <div className="flex w-full flex-col gap-3 sm:flex-row">
+              <Button asChild variant="cta" size="lg">
+                <Link to="/tutors">
+                  <Sparkles /> Find a tutor
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/auth">Create an account</Link>
+              </Button>
+            </div>
           </div>
-          <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
-            <Button asChild variant="cta" size="lg">
-              <Link to="/tutors">
-                <Sparkles /> Find a tutor
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link to="/auth">Create an account</Link>
-            </Button>
+          <div className="relative min-h-56 md:min-h-72">
+            <img
+              src={parentChild}
+              alt="A parent and child reviewing homework together after a DiaLearn lesson"
+              width={1280}
+              height={960}
+              loading="lazy"
+              className="absolute inset-0 size-full object-cover"
+            />
           </div>
         </div>
       </section>
+
     </PublicShell>
   );
 }
