@@ -41,8 +41,9 @@ function ClassPreviewPage() {
       </section>
 
       <section className="border-y border-border bg-surface">
-        <div className="container-site section-y grid gap-8 lg:grid-cols-2">
-          <div>
+        <div className="container-site section-y grid gap-8 lg:grid-cols-[minmax(20rem,1fr)_minmax(20rem,1fr)]">
+          <div className="w-full min-w-0">
+
             <p className="eyebrow">Inside the hour</p>
             <h2 className="display-section mt-2">Calm, structured, one-to-one</h2>
             <p className="lead mt-3">

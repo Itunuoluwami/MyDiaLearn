@@ -56,8 +56,9 @@ function AboutPage() {
         </div>
       </section>
 
-      <section className="container-site section-y grid gap-8 lg:grid-cols-2">
-        <div>
+      <section className="container-site section-y grid gap-8 lg:grid-cols-[minmax(20rem,1fr)_minmax(20rem,1fr)]">
+        <div className="w-full min-w-0">
+
           <h2 className="display-section">Our story</h2>
           <div className="mt-4 space-y-4 text-sm text-muted-foreground">
             <p>

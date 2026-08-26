@@ -94,8 +94,9 @@ function HomePage() {
     <PublicShell>
       {/* Hero */}
       <section className="border-b border-border bg-surface">
-        <div className="container-site grid items-center gap-8 py-10 md:py-16 lg:grid-cols-2 lg:gap-14">
-          <div className="min-w-0">
+        <div className="container-site grid items-center gap-8 py-10 md:py-16 lg:grid-cols-[minmax(20rem,1fr)_minmax(20rem,1fr)] lg:gap-14">
+          <div className="w-full min-w-0">
+
             <p className="eyebrow">
               {settingText(settings, "content.hero_eyebrow", "Diaspora families, African teachers")}
             </p>
@@ -128,7 +129,7 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="relative">
+          <div className="relative w-full min-w-0">
             <img
               src={heroStudent}
               alt="A student in the diaspora taking a live one-to-one lesson with her tutor"
