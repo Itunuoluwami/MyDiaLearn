@@ -341,18 +341,28 @@ function HomePage() {
                 </Button>
               }
             />
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
               {trustSignals.map((signal) => (
-                <div key={signal.title} className="card-warm p-5">
-                  <ShieldCheck className="size-5 text-primary" />
-                  <h3 className="mt-3 text-lg">{signal.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{signal.body}</p>
+                <div
+                  key={signal.title}
+                  className="card-warm hover-lift relative overflow-hidden p-5 pt-6"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="orb -top-16 -right-10 size-32 bg-primary/15"
+                  />
+                  <span className="relative flex size-11 items-center justify-center rounded-xl bg-primary-soft text-primary-deep">
+                    <ShieldCheck className="size-5" />
+                  </span>
+                  <h3 className="relative mt-4 text-lg">{signal.title}</h3>
+                  <p className="relative mt-2 text-sm text-muted-foreground">{signal.body}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
       ) : null}
+
 
       {/* Featured tutors */}
       <section className="container-site section-y">
