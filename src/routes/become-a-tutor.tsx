@@ -53,25 +53,37 @@ function BecomeTutorPage() {
   return (
     <PublicShell>
       <section className="band-hero border-b border-border">
-        <div className="container-site py-10 md:py-16">
-          <p className="eyebrow">For teachers across Africa</p>
-          <h1 className="display-hero mt-3 max-w-3xl">
-            Teach diaspora students, from wherever you are.
-          </h1>
-          <p className="lead mt-4 max-w-2xl">
-            DiaLearn brings you students whose families want a teacher who understands both their
-            curriculum and where they come from.
-          </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Button asChild variant="cta" size="lg">
-              <Link to="/auth">Start your tutor application</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link to="/pricing">See fees and payouts</Link>
-            </Button>
+        <div className="container-site grid items-center gap-10 py-10 md:py-16 lg:grid-cols-[minmax(20rem,1.1fr)_minmax(18rem,0.9fr)] lg:gap-14">
+          <div className="w-full min-w-0">
+            <p className="eyebrow">For teachers across Africa</p>
+            <h1 className="display-hero mt-3 max-w-3xl">
+              Teach diaspora students, from wherever you are.
+            </h1>
+            <p className="lead mt-4 max-w-2xl">
+              DiaLearn brings you students whose families want a teacher who understands both their
+              curriculum and where they come from.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Button asChild variant="cta" size="lg">
+                <Link to="/auth">Start your tutor application</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/pricing">See fees and payouts</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="media-frame aspect-[4/3] w-full min-w-0">
+            <img
+              src={educatorWhiteboard}
+              alt="An African educator teaching mathematics on a glass whiteboard during an online class"
+              width={1280}
+              height={960}
+              loading="lazy"
+            />
           </div>
         </div>
       </section>
+
 
       <section className="container-site section-y">
         <h2 className="display-section">Why teach with DiaLearn</h2>
