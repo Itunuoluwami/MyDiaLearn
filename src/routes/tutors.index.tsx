@@ -29,16 +29,16 @@ import {
 } from "@/lib/public-data";
 
 export interface TutorSearchSchema {
-  q?: string;
-  subject?: string;
-  curriculum?: string;
-  country?: string;
-  level?: string;
-  language?: string;
-  minRating?: number;
-  maxPrice?: number;
-  sort?: string;
-  page?: number;
+  q?: string | undefined;
+  subject?: string | undefined;
+  curriculum?: string | undefined;
+  country?: string | undefined;
+  level?: string | undefined;
+  language?: string | undefined;
+  minRating?: number | undefined;
+  maxPrice?: number | undefined;
+  sort?: string | undefined;
+  page?: number | undefined;
 }
 
 function text(value: unknown): string | undefined {
@@ -52,17 +52,18 @@ function numeric(value: unknown): number | undefined {
 
 export const Route = createFileRoute("/tutors/")({
   validateSearch: (search: Record<string, unknown>): TutorSearchSchema => ({
-    q: text(search.q),
-    subject: text(search.subject),
-    curriculum: text(search.curriculum),
-    country: text(search.country),
-    level: text(search.level),
-    language: text(search.language),
-    minRating: numeric(search.minRating),
-    maxPrice: numeric(search.maxPrice),
-    sort: text(search.sort),
-    page: numeric(search.page),
+    q: text(search['q']),
+    subject: text(search['subject']),
+    curriculum: text(search['curriculum']),
+    country: text(search['country']),
+    level: text(search['level']),
+    language: text(search['language']),
+    minRating: numeric(search['minRating']),
+    maxPrice: numeric(search['maxPrice']),
+    sort: text(search['sort']),
+    page: numeric(search['page']),
   }),
+
   head: () => ({
     meta: [
       { title: "Find a verified tutor — DiaLearn" },
