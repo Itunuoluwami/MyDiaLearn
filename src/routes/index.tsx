@@ -93,14 +93,22 @@ function HomePage() {
   return (
     <PublicShell>
       {/* Hero */}
-      <section className="border-b border-border bg-surface">
-        <div className="container-site grid items-center gap-8 py-10 md:py-16 lg:grid-cols-[minmax(20rem,1fr)_minmax(20rem,1fr)] lg:gap-14">
+      <section className="band-hero relative overflow-hidden border-b border-border">
+        <span
+          aria-hidden="true"
+          className="orb -top-24 -left-20 size-72 bg-primary/20 md:size-96"
+        />
+        <span
+          aria-hidden="true"
+          className="orb top-40 -right-16 size-72 bg-secondary/25 md:size-96"
+        />
+        <div className="container-site relative grid items-center gap-10 py-12 md:py-20 lg:grid-cols-[minmax(20rem,1fr)_minmax(20rem,1fr)] lg:gap-14">
           <div className="w-full min-w-0">
-
-            <p className="eyebrow">
+            <span className="chip-float text-primary-deep">
+              <ShieldCheck className="size-4" />
               {settingText(settings, "content.hero_eyebrow", "Diaspora families, African teachers")}
-            </p>
-            <h1 className="display-hero mt-3">
+            </span>
+            <h1 className="display-hero mt-5">
               {settingText(
                 settings,
                 "content.hero_headline",
@@ -127,19 +135,57 @@ function HomePage() {
                 <Link to="/become-a-tutor">Become a tutor</Link>
               </Button>
             </div>
+
+            <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground">
+              {[
+                "Identity & qualification checks",
+                "Pay per lesson, no packages",
+                "Every lesson recorded",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <Check className="size-4 shrink-0 text-success" />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="relative w-full min-w-0">
-            <img
-              src={heroStudent}
-              alt="A student in the diaspora taking a live one-to-one lesson with her tutor"
-              width={1280}
-              height={1440}
-              className="w-full rounded-2xl border border-border object-cover shadow-lift"
-            />
+            <div className="media-frame aspect-[4/5] sm:aspect-[5/4] lg:aspect-[4/5]">
+              <img
+                src={heroStudent}
+                alt="A student in the diaspora taking a live one-to-one lesson with her tutor"
+                width={1280}
+                height={1440}
+              />
+              <span aria-hidden="true" className="media-overlay opacity-60" />
+            </div>
+
+            <div className="card-elevated absolute -bottom-5 left-4 flex items-center gap-3 p-3 pr-4 md:left-6">
+              <span className="flex size-11 items-center justify-center rounded-xl bg-success-soft text-success">
+                <Video className="size-5" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">Live one-to-one lesson</span>
+                <span className="block text-xs text-muted-foreground">
+                  Recorded for parents to review
+                </span>
+              </span>
+            </div>
+
+            <div className="card-elevated absolute -top-4 right-2 hidden items-center gap-3 p-3 pr-4 md:flex">
+              <span className="flex size-11 items-center justify-center rounded-xl bg-secondary-soft text-secondary-foreground">
+                <GraduationCap className="size-5" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">Curriculum-matched</span>
+                <span className="block text-xs text-muted-foreground">British, IB, WAEC & more</span>
+              </span>
+            </div>
           </div>
         </div>
       </section>
+
 
       {/* Persona picker */}
       {personas.length > 0 ? (
