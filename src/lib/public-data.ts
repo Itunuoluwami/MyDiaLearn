@@ -167,8 +167,9 @@ export function useTutorSearch(params: TutorSearchParams) {
 
       const { data, error } = await supabase.rpc(
         "public_tutor_search",
-        args as Parameters<typeof supabase.rpc<"public_tutor_search">>[1],
+        args as unknown as Parameters<typeof supabase.rpc<"public_tutor_search">>[1],
       );
+
 
       if (error) throw error;
       return data ?? [];
