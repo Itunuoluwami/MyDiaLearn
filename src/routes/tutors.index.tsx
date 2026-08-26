@@ -275,7 +275,102 @@ function FilterPanel({
   );
 }
 
+/** Removable chips for every applied filter, labelled from the DB lookups. */
+function ActiveFilterChips({
+  search,
+  update,
+  clear,
+}: {
+  search: TutorSearchSchema;
+  update: (patch: Partial<TutorSearchSchema>) => void;
+  clear: () => void;
+}) {
+  const { data: subjects = [] } = useSubjectFacets();
+  const { data: curricula = [] } = useCurriculumFacets();
+  const { data: countries = [] } = useCountryFacets();
+  const { data: levels = [] } = useEducationLevels(search.curriculum);
+  const { data: settings } = usePublicSettings();
+  const labels = settingMap(settings, "content.country_labels");
+
+  const chips: { key: string; label: string; onRemove: () => void }[] = [];
+
+  if (search.q) {
+    chips.push({ key: "q", label: `“${search.q}”`, onRemove: () => update({ q: undefined }) });
+  }
+  const subject = subjects.find((item) => item.id === search.subject);
+  if (subject) {
+    chips.push({ key: "subject", label: subject.name, onRemove: () => update({ subject: undefined }) });
+  }
+  const curriculum = curricula.find((item) => item.id === search.curriculum);
+  if (curriculum) {
+    chips.push({
+      key: "curriculum",
+      label: curriculum.name,
+      onRemove: () => update({ curriculum: undefined, level: undefined }),
+    });
+  }
+  const level = levels.find((item) => item.id === search.level);
+  if (level) {
+    chips.push({ key: "level", label: level.name, onRemove: () => update({ level: undefined }) });
+  }
+  const country = countries.find((item) => item.country_code === search.country);
+  if (country) {
+    chips.push({
+      key: "country",
+      label: countryLabel(country.country_code, labels),
+      onRemove: () => update({ country: undefined }),
+    });
+  }
+  if (search.language) {
+    chips.push({
+      key: "language",
+      label: search.language,
+      onRemove: () => update({ language: undefined }),
+    });
+  }
+  if (search.minRating) {
+    chips.push({
+      key: "minRating",
+      label: `${search.minRating}+ rating`,
+      onRemove: () => update({ minRating: undefined }),
+    });
+  }
+  if (search.maxPrice) {
+    chips.push({
+      key: "maxPrice",
+      label: `Up to ${search.maxPrice} / hour`,
+      onRemove: () => update({ maxPrice: undefined }),
+    });
+  }
+
+  if (chips.length === 0) return null;
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2">
+      {chips.map((chip) => (
+        <button
+          key={chip.key}
+          type="button"
+          onClick={chip.onRemove}
+          className="focus-ring inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-primary-soft px-3 text-xs font-medium text-primary-deep transition-colors duration-200 hover:bg-primary hover:text-primary-foreground"
+        >
+          {chip.label}
+          <X className="size-3.5" />
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={clear}
+        className="focus-ring inline-flex min-h-9 items-center rounded-full px-3 text-xs font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground"
+      >
+        Clear all
+      </button>
+    </div>
+  );
+}
+
 function TutorSearchPage() {
+
   const search = Route.useSearch();
   const navigate = useNavigate();
   const [filtersOpen, setFiltersOpen] = useState(false);
