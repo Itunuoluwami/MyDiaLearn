@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
+  Building2,
   CalendarCheck,
   Check,
   GraduationCap,
+  Presentation,
+  Users,
   Quote,
   Search,
   ShieldCheck,
@@ -55,6 +58,9 @@ interface Testimonial {
   name: string;
   detail?: string;
 }
+
+/** Decorative persona icons, cycled in order — content itself stays DB-driven. */
+const PERSONA_ICONS = [Users, GraduationCap, Presentation, Building2];
 
 const STEPS = [
   {
@@ -230,7 +236,10 @@ function HomePage() {
                       : "bg-secondary-soft text-secondary-foreground"
                   }`}
                 >
-                  <GraduationCap className="size-5" />
+                  {(() => {
+                    const Icon = PERSONA_ICONS[index % PERSONA_ICONS.length] ?? GraduationCap;
+                    return <Icon className="size-5" />;
+                  })()}
                 </span>
                 <h3 className="mt-4 text-lg">{persona.label}</h3>
                 <p className="mt-2 flex-1 text-sm text-muted-foreground">{persona.description}</p>
