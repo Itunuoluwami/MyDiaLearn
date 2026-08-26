@@ -79,7 +79,7 @@ export function TutorCard({
         </div>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 pt-4">
         <span className="text-sm font-semibold">
           {formatMoney(tutor.hourly_rate, tutor.currency)}
           <span className="text-xs font-normal text-muted-foreground"> / hour</span>
