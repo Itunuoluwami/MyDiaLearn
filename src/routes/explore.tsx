@@ -40,7 +40,7 @@ const SORTS = [
 function ExplorePage() {
   return (
     <PublicShell>
-      <section className="border-b border-border bg-surface">
+      <section className="band-hero border-b border-border">
         <div className="container-site py-8 md:py-12">
           <p className="eyebrow">Explore DiaLearn</p>
           <h1 className="display-section mt-2">Four ways in, one tutor search</h1>

@@ -65,7 +65,7 @@ function ContactPage() {
 
   return (
     <PublicShell>
-      <section className="border-b border-border bg-surface">
+      <section className="band-hero border-b border-border">
         <div className="container-site py-10 md:py-14">
           <p className="eyebrow">Contact</p>
           <h1 className="display-hero mt-3 max-w-2xl">We read every message.</h1>
