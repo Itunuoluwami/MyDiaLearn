@@ -12,8 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BecomeATutorRouteImport } from './routes/become-a-tutor'
+import { Route as ClassPreviewRouteImport } from './routes/class-preview'
+import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as ForAgenciesRouteImport } from './routes/for-agencies'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedFamilyRouteImport } from './routes/_authenticated/family'
+import { Route as TutorsIndexRouteImport } from './routes/tutors.index'
+import { Route as TutorsTutorIdRouteImport } from './routes/tutors.$tutorId'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 
 const IndexRoute = IndexRouteImport.update({
@@ -30,6 +37,31 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BecomeATutorRoute = BecomeATutorRouteImport.update({
+  id: '/become-a-tutor',
+  path: '/become-a-tutor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClassPreviewRoute = ClassPreviewRouteImport.update({
+  id: '/class-preview',
+  path: '/class-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForAgenciesRoute = ForAgenciesRouteImport.update({
+  id: '/for-agencies',
+  path: '/for-agencies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   id: '/account',
   path: '/account',
@@ -39,6 +71,16 @@ const AuthenticatedFamilyRoute = AuthenticatedFamilyRouteImport.update({
   id: '/family',
   path: '/family',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const TutorsIndexRoute = TutorsIndexRouteImport.update({
+  id: '/tutors/',
+  path: '/tutors/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TutorsTutorIdRoute = TutorsTutorIdRouteImport.update({
+  id: '/tutors/$tutorId',
+  path: '/tutors/$tutorId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
@@ -50,15 +92,29 @@ const AuthenticatedAdminSettingsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/become-a-tutor': typeof BecomeATutorRoute
+  '/class-preview': typeof ClassPreviewRoute
+  '/explore': typeof ExploreRoute
+  '/for-agencies': typeof ForAgenciesRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/account': typeof AuthenticatedAccountRoute
   '/family': typeof AuthenticatedFamilyRoute
+  '/tutors/$tutorId': typeof TutorsTutorIdRoute
+  '/tutors/': typeof TutorsIndexRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/become-a-tutor': typeof BecomeATutorRoute
+  '/class-preview': typeof ClassPreviewRoute
+  '/explore': typeof ExploreRoute
+  '/for-agencies': typeof ForAgenciesRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/account': typeof AuthenticatedAccountRoute
   '/family': typeof AuthenticatedFamilyRoute
+  '/tutors/$tutorId': typeof TutorsTutorIdRoute
+  '/tutors': typeof TutorsIndexRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
 }
 export interface FileRoutesById {
@@ -66,22 +122,60 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/become-a-tutor': typeof BecomeATutorRoute
+  '/class-preview': typeof ClassPreviewRoute
+  '/explore': typeof ExploreRoute
+  '/for-agencies': typeof ForAgenciesRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/family': typeof AuthenticatedFamilyRoute
+  '/tutors/$tutorId': typeof TutorsTutorIdRoute
+  '/tutors/': typeof TutorsIndexRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/account' | '/family' | '/admin/settings'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/become-a-tutor'
+    | '/class-preview'
+    | '/explore'
+    | '/for-agencies'
+    | '/how-it-works'
+    | '/account'
+    | '/family'
+    | '/tutors/$tutorId'
+    | '/tutors/'
+    | '/admin/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/account' | '/family' | '/admin/settings'
+  to:
+    | '/'
+    | '/auth'
+    | '/become-a-tutor'
+    | '/class-preview'
+    | '/explore'
+    | '/for-agencies'
+    | '/how-it-works'
+    | '/account'
+    | '/family'
+    | '/tutors/$tutorId'
+    | '/tutors'
+    | '/admin/settings'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/become-a-tutor'
+    | '/class-preview'
+    | '/explore'
+    | '/for-agencies'
+    | '/how-it-works'
     | '/_authenticated/account'
     | '/_authenticated/family'
+    | '/tutors/$tutorId'
+    | '/tutors/'
     | '/_authenticated/admin/settings'
   fileRoutesById: FileRoutesById
 }
@@ -89,6 +183,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  BecomeATutorRoute: typeof BecomeATutorRoute
+  ClassPreviewRoute: typeof ClassPreviewRoute
+  ExploreRoute: typeof ExploreRoute
+  ForAgenciesRoute: typeof ForAgenciesRoute
+  HowItWorksRoute: typeof HowItWorksRoute
+  TutorsTutorIdRoute: typeof TutorsTutorIdRoute
+  TutorsIndexRoute: typeof TutorsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -114,6 +215,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/become-a-tutor': {
+      id: '/become-a-tutor'
+      path: '/become-a-tutor'
+      fullPath: '/become-a-tutor'
+      preLoaderRoute: typeof BecomeATutorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/class-preview': {
+      id: '/class-preview'
+      path: '/class-preview'
+      fullPath: '/class-preview'
+      preLoaderRoute: typeof ClassPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-agencies': {
+      id: '/for-agencies'
+      path: '/for-agencies'
+      fullPath: '/for-agencies'
+      preLoaderRoute: typeof ForAgenciesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/account': {
       id: '/_authenticated/account'
       path: '/account'
@@ -127,6 +263,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/family'
       preLoaderRoute: typeof AuthenticatedFamilyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/tutors/': {
+      id: '/tutors/'
+      path: '/tutors'
+      fullPath: '/tutors/'
+      preLoaderRoute: typeof TutorsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tutors/$tutorId': {
+      id: '/tutors/$tutorId'
+      path: '/tutors/$tutorId'
+      fullPath: '/tutors/$tutorId'
+      preLoaderRoute: typeof TutorsTutorIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
@@ -157,6 +307,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  BecomeATutorRoute: BecomeATutorRoute,
+  ClassPreviewRoute: ClassPreviewRoute,
+  ExploreRoute: ExploreRoute,
+  ForAgenciesRoute: ForAgenciesRoute,
+  HowItWorksRoute: HowItWorksRoute,
+  TutorsTutorIdRoute: TutorsTutorIdRoute,
+  TutorsIndexRoute: TutorsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
