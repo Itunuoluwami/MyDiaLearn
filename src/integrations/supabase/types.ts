@@ -1414,6 +1414,107 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       owns_tutor: { Args: { _tutor_id: string }; Returns: boolean }
+      public_country_facets: {
+        Args: never
+        Returns: {
+          country_code: string
+          tutor_count: number
+        }[]
+      }
+      public_curriculum_facets: {
+        Args: never
+        Returns: {
+          code: string
+          country_code: string
+          description: string
+          id: string
+          name: string
+          tutor_count: number
+        }[]
+      }
+      public_search_suggestions: {
+        Args: { p_limit?: number; p_q: string }
+        Returns: {
+          id: string
+          kind: string
+          label: string
+          sublabel: string
+        }[]
+      }
+      public_subject_facets: {
+        Args: never
+        Returns: {
+          category: string
+          icon: string
+          id: string
+          name: string
+          slug: string
+          tutor_count: number
+        }[]
+      }
+      public_tutor_detail: {
+        Args: { p_tutor_id: string }
+        Returns: {
+          agency_name: string
+          avatar_url: string
+          biography: string
+          country_code: string
+          currency: string
+          full_name: string
+          headline: string
+          hourly_rate: number
+          id: string
+          intro_video_url: string
+          languages: Json
+          qualifications: Json
+          rating_avg: number
+          rating_count: number
+          subjects: string[]
+          timezone: string
+          years_experience: number
+        }[]
+      }
+      public_tutor_reviews: {
+        Args: { p_limit?: number; p_tutor_id: string }
+        Returns: {
+          comment: string
+          created_at: string
+          id: string
+          reviewer_name: string
+          score: number
+        }[]
+      }
+      public_tutor_search: {
+        Args: {
+          p_country?: string
+          p_curriculum?: string
+          p_language?: string
+          p_level?: string
+          p_limit?: number
+          p_max_price?: number
+          p_min_rating?: number
+          p_offset?: number
+          p_q?: string
+          p_sort?: string
+          p_subject?: string
+        }
+        Returns: {
+          avatar_url: string
+          country_code: string
+          created_at: string
+          currency: string
+          full_name: string
+          headline: string
+          hourly_rate: number
+          id: string
+          languages: Json
+          rating_avg: number
+          rating_count: number
+          subjects: string[]
+          total_count: number
+          years_experience: number
+        }[]
+      }
     }
     Enums: {
       app_role: "student" | "parent" | "tutor" | "agency" | "admin"
