@@ -1499,15 +1499,20 @@ export type Database = {
           p_subject?: string
         }
         Returns: {
+          availability_timezone: string
+          available_days: number[]
           avatar_url: string
           country_code: string
           created_at: string
           currency: string
+          curricula: string[]
           full_name: string
           headline: string
           hourly_rate: number
           id: string
           languages: Json
+          lessons_completed: number
+          levels: string[]
           rating_avg: number
           rating_count: number
           subjects: string[]
