@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ClassPreviewRouteImport } from './routes/class-preview'
+import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedFamilyRouteImport } from './routes/_authenticated/family'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
@@ -28,6 +30,16 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClassPreviewRoute = ClassPreviewRouteImport.update({
+  id: '/class-preview',
+  path: '/class-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
@@ -50,6 +62,8 @@ const AuthenticatedAdminSettingsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/class-preview': typeof ClassPreviewRoute
+  '/explore': typeof ExploreRoute
   '/account': typeof AuthenticatedAccountRoute
   '/family': typeof AuthenticatedFamilyRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -57,6 +71,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/class-preview': typeof ClassPreviewRoute
+  '/explore': typeof ExploreRoute
   '/account': typeof AuthenticatedAccountRoute
   '/family': typeof AuthenticatedFamilyRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -66,20 +82,38 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/class-preview': typeof ClassPreviewRoute
+  '/explore': typeof ExploreRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/family': typeof AuthenticatedFamilyRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/account' | '/family' | '/admin/settings'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/class-preview'
+    | '/explore'
+    | '/account'
+    | '/family'
+    | '/admin/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/account' | '/family' | '/admin/settings'
+  to:
+    | '/'
+    | '/auth'
+    | '/class-preview'
+    | '/explore'
+    | '/account'
+    | '/family'
+    | '/admin/settings'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/class-preview'
+    | '/explore'
     | '/_authenticated/account'
     | '/_authenticated/family'
     | '/_authenticated/admin/settings'
@@ -89,6 +123,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ClassPreviewRoute: typeof ClassPreviewRoute
+  ExploreRoute: typeof ExploreRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -112,6 +148,20 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/class-preview': {
+      id: '/class-preview'
+      path: '/class-preview'
+      fullPath: '/class-preview'
+      preLoaderRoute: typeof ClassPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/account': {
@@ -157,6 +207,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ClassPreviewRoute: ClassPreviewRoute,
+  ExploreRoute: ExploreRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
