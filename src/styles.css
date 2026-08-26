@@ -27,12 +27,10 @@
   --font-display: "Fraunces", "Lora", Georgia, serif;
   --font-sans: "Inter", "Public Sans", ui-sans-serif, system-ui, sans-serif;
 
-  /* Spacing scale: 4 / 8 / 16 / 24 / 40 */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2.5rem;
+  /* Spacing scale 4/8/16/24/40 uses Tailwind's default 0.25rem step
+     (1/2/4/6/10). Do NOT add named --spacing-* keys here: they shadow
+     Tailwind's named width scale and break max-w-sm/md/lg site-wide. */
+
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
