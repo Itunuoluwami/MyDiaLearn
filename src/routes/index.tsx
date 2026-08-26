@@ -1,11 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CalendarCheck, Quote, Search, ShieldCheck, Sparkles, Video } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarCheck,
+  Check,
+  GraduationCap,
+  Quote,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Video,
+} from "lucide-react";
 
 import heroStudent from "@/assets/hero-student.jpg";
+import tutorTeaching from "@/assets/tutor-teaching.jpg";
+import parentChild from "@/assets/parent-child.jpg";
 import { PublicShell } from "@/components/public/PublicShell";
 import { SiteSearch } from "@/components/public/SiteSearch";
 import { ClassPreview } from "@/components/public/ClassPreview";
 import { CurriculumGrid, SubjectGrid, TutorStrip } from "@/components/public/BrowseSections";
+
 import { Button } from "@/components/ui/button";
 import {
   settingList,
