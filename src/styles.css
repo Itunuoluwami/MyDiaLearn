@@ -224,17 +224,29 @@
   h1,
   h2,
   h3 {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     font-family: var(--font-display);
     font-weight: 700;
-    letter-spacing: -0.015em;
+    letter-spacing: 0;
     line-height: 1.15;
+    overflow-wrap: normal;
+    word-break: normal;
   }
 
   h4,
   h5,
   h6 {
     font-weight: 600;
-    letter-spacing: -0.005em;
+    letter-spacing: 0;
+  }
+
+  main,
+  section,
+  article {
+    min-width: 0;
   }
 }
 
@@ -242,21 +254,31 @@
 
 /* Editorial hero headline for the public marketing site */
 @utility display-hero {
+  display: block;
+  width: 100%;
+  min-width: 0;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(2.5rem, 5.5vw, 4.25rem);
   line-height: 1.05;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
+  overflow-wrap: normal;
+  word-break: normal;
   font-variation-settings: "SOFT" 40, "WONK" 1;
 }
 
 /* Section header on the public site */
 @utility display-section {
+  display: block;
+  width: 100%;
+  min-width: 0;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(1.75rem, 3vw, 2.5rem);
   line-height: 1.15;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 /* Small serif eyebrow/label above section headers */
@@ -286,9 +308,15 @@
 
 @utility container-site {
   width: 100%;
+  min-width: 0;
   margin-inline: auto;
   max-width: 76rem;
   padding-inline: 1rem;
+
+  & > * {
+    min-width: 0;
+  }
+
   @media (min-width: 768px) {
     padding-inline: 2.5rem;
   }
