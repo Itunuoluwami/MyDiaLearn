@@ -133,18 +133,19 @@ export function useSearchSuggestions(term: string) {
 /* ---------------- Tutor search ---------------- */
 
 export interface TutorSearchParams {
-  q?: string;
-  subject?: string;
-  curriculum?: string;
-  country?: string;
-  level?: string;
-  language?: string;
-  minRating?: number;
-  maxPrice?: number;
-  sort?: string;
-  limit?: number;
-  offset?: number;
+  q?: string | undefined;
+  subject?: string | undefined;
+  curriculum?: string | undefined;
+  country?: string | undefined;
+  level?: string | undefined;
+  language?: string | undefined;
+  minRating?: number | undefined;
+  maxPrice?: number | undefined;
+  sort?: string | undefined;
+  limit?: number | undefined;
+  offset?: number | undefined;
 }
+
 
 export function useTutorSearch(params: TutorSearchParams) {
   return useQuery({
