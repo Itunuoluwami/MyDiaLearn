@@ -16,6 +16,8 @@ import { Route as ClassPreviewRouteImport } from './routes/class-preview'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedFamilyRouteImport } from './routes/_authenticated/family'
+import { Route as TutorsIndexRouteImport } from './routes/tutors.index'
+import { Route as TutorsTutorIdRouteImport } from './routes/tutors.$tutorId'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 
 const IndexRoute = IndexRouteImport.update({
@@ -52,6 +54,16 @@ const AuthenticatedFamilyRoute = AuthenticatedFamilyRouteImport.update({
   path: '/family',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const TutorsIndexRoute = TutorsIndexRouteImport.update({
+  id: '/tutors/',
+  path: '/tutors/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TutorsTutorIdRoute = TutorsTutorIdRouteImport.update({
+  id: '/tutors/$tutorId',
+  path: '/tutors/$tutorId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/admin/settings',
@@ -66,6 +78,8 @@ export interface FileRoutesByFullPath {
   '/explore': typeof ExploreRoute
   '/account': typeof AuthenticatedAccountRoute
   '/family': typeof AuthenticatedFamilyRoute
+  '/tutors/$tutorId': typeof TutorsTutorIdRoute
+  '/tutors/': typeof TutorsIndexRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
 }
 export interface FileRoutesByTo {
@@ -75,6 +89,8 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreRoute
   '/account': typeof AuthenticatedAccountRoute
   '/family': typeof AuthenticatedFamilyRoute
+  '/tutors/$tutorId': typeof TutorsTutorIdRoute
+  '/tutors': typeof TutorsIndexRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
 }
 export interface FileRoutesById {
@@ -86,6 +102,8 @@ export interface FileRoutesById {
   '/explore': typeof ExploreRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/family': typeof AuthenticatedFamilyRoute
+  '/tutors/$tutorId': typeof TutorsTutorIdRoute
+  '/tutors/': typeof TutorsIndexRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
 }
 export interface FileRouteTypes {
@@ -97,6 +115,8 @@ export interface FileRouteTypes {
     | '/explore'
     | '/account'
     | '/family'
+    | '/tutors/$tutorId'
+    | '/tutors/'
     | '/admin/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -106,6 +126,8 @@ export interface FileRouteTypes {
     | '/explore'
     | '/account'
     | '/family'
+    | '/tutors/$tutorId'
+    | '/tutors'
     | '/admin/settings'
   id:
     | '__root__'
@@ -116,6 +138,8 @@ export interface FileRouteTypes {
     | '/explore'
     | '/_authenticated/account'
     | '/_authenticated/family'
+    | '/tutors/$tutorId'
+    | '/tutors/'
     | '/_authenticated/admin/settings'
   fileRoutesById: FileRoutesById
 }
@@ -125,6 +149,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ClassPreviewRoute: typeof ClassPreviewRoute
   ExploreRoute: typeof ExploreRoute
+  TutorsTutorIdRoute: typeof TutorsTutorIdRoute
+  TutorsIndexRoute: typeof TutorsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -178,6 +204,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFamilyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/tutors/': {
+      id: '/tutors/'
+      path: '/tutors'
+      fullPath: '/tutors/'
+      preLoaderRoute: typeof TutorsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tutors/$tutorId': {
+      id: '/tutors/$tutorId'
+      path: '/tutors/$tutorId'
+      fullPath: '/tutors/$tutorId'
+      preLoaderRoute: typeof TutorsTutorIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
       path: '/admin/settings'
@@ -209,6 +249,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ClassPreviewRoute: ClassPreviewRoute,
   ExploreRoute: ExploreRoute,
+  TutorsTutorIdRoute: TutorsTutorIdRoute,
+  TutorsIndexRoute: TutorsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
