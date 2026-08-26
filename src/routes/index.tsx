@@ -129,7 +129,7 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="relative">
+          <div className="relative w-full min-w-0">
             <img
               src={heroStudent}
               alt="A student in the diaspora taking a live one-to-one lesson with her tutor"
