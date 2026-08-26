@@ -43,7 +43,7 @@ const VALUES = [
 function AboutPage() {
   return (
     <PublicShell>
-      <section className="border-b border-border bg-surface">
+      <section className="band-hero border-b border-border">
         <div className="container-site py-10 md:py-16">
           <p className="eyebrow">{BRAND.company}</p>
           <h1 className="display-hero mt-3 max-w-3xl">

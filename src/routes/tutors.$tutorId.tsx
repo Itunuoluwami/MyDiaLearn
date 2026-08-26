@@ -109,7 +109,7 @@ function TutorProfilePage() {
 
   return (
     <PublicShell>
-      <section className="border-b border-border bg-surface">
+      <section className="band-hero border-b border-border">
         <div className="container-site py-8 md:py-12">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
             <div className="min-w-0">

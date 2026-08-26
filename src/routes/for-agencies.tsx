@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Building2, Users } from "lucide-react";
 
+import studentsOnline from "@/assets/students-online.jpg";
 import { PublicShell } from "@/components/public/PublicShell";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,24 +53,36 @@ function ForAgenciesPage() {
 
   return (
     <PublicShell>
-      <section className="border-b border-border bg-surface">
-        <div className="container-site py-10 md:py-16">
-          <p className="eyebrow">For tutoring organisations</p>
-          <h1 className="display-hero mt-3 max-w-3xl">Bring your teaching team to DiaLearn</h1>
-          <p className="lead mt-4 max-w-2xl">
-            If you already run a tutoring business in Africa, DiaLearn gives your team access to
-            diaspora families — with the oversight an agency needs.
-          </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Button asChild variant="cta" size="lg">
-              <Link to="/auth">Register your agency</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link to="/contact">Talk to our team</Link>
-            </Button>
+      <section className="band-hero border-b border-border">
+        <div className="container-site grid items-center gap-10 py-10 md:py-16 lg:grid-cols-[minmax(20rem,1.1fr)_minmax(18rem,0.9fr)] lg:gap-14">
+          <div className="w-full min-w-0">
+            <p className="eyebrow">For tutoring organisations</p>
+            <h1 className="display-hero mt-3 max-w-3xl">Bring your teaching team to DiaLearn</h1>
+            <p className="lead mt-4 max-w-2xl">
+              If you already run a tutoring business in Africa, DiaLearn gives your team access to
+              diaspora families — with the oversight an agency needs.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Button asChild variant="cta" size="lg">
+                <Link to="/auth">Register your agency</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/contact">Talk to our team</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="media-frame aspect-[4/3] w-full min-w-0">
+            <img
+              src={studentsOnline}
+              alt="Students learning online with laptops and notebooks in a bright study space"
+              width={1280}
+              height={960}
+              loading="lazy"
+            />
           </div>
         </div>
       </section>
+
 
       <section className="container-site section-y">
         <h2 className="display-section">What an agency gets</h2>

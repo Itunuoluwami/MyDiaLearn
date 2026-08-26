@@ -330,7 +330,7 @@ function TutorSearchPage() {
 
   return (
     <PublicShell>
-      <section className="border-b border-border bg-surface">
+      <section className="band-hero border-b border-border">
         <div className="container-site py-6 md:py-10">
           <h1 className="display-section">Find a verified tutor</h1>
           <div className="mt-4 max-w-2xl">

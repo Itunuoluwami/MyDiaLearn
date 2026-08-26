@@ -24,8 +24,9 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  --font-display: "Fraunces", "Lora", Georgia, serif;
-  --font-sans: "Inter", "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Lora", Georgia, "Times New Roman", serif;
+  --font-sans: "Public Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+
 
   /* Spacing scale 4/8/16/24/40 uses Tailwind's default 0.25rem step
      (1/2/4/6/10). Do NOT add named --spacing-* keys here: they shadow
@@ -80,9 +81,12 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --shadow-soft: 0 1px 2px oklch(0.2556 0.03 225.86 / 4%), 0 6px 16px -8px oklch(0.2556 0.03 225.86 / 10%);
-  --shadow-lift: 0 2px 4px oklch(0.2556 0.03 225.86 / 5%), 0 18px 40px -20px oklch(0.2556 0.03 225.86 / 16%);
+  /* Brand-tinted elevation. Never heavy black shadows. */
+  --shadow-soft: 0 1px 2px oklch(0.4545 0.0722 223.51 / 5%), 0 4px 20px oklch(0.4545 0.0722 223.51 / 8%);
+  --shadow-lift: 0 2px 6px oklch(0.4545 0.0722 223.51 / 6%), 0 8px 30px oklch(0.4545 0.0722 223.51 / 10%);
+  --shadow-hover: 0 4px 10px oklch(0.4545 0.0722 223.51 / 7%), 0 12px 35px oklch(0.4545 0.0722 223.51 / 14%);
 }
+
 
 :root {
   /* Surfaces */
@@ -262,7 +266,7 @@
   letter-spacing: 0;
   overflow-wrap: normal;
   word-break: normal;
-  font-variation-settings: "SOFT" 40, "WONK" 1;
+  font-variation-settings: normal;
 }
 
 /* Section header on the public site */
@@ -349,6 +353,10 @@
   box-shadow: var(--shadow-lift);
 }
 
+@utility shadow-hover {
+  box-shadow: var(--shadow-hover);
+}
+
 /* Standard content card: 16px radius, soft shadow, hairline border */
 @utility card-warm {
   background-color: var(--color-card);
@@ -359,6 +367,15 @@
   transition:
     box-shadow 200ms ease,
     transform 200ms ease;
+}
+
+/* Raised card for primary content blocks that need to float above a surface */
+@utility card-elevated {
+  background-color: var(--color-card);
+  color: var(--color-card-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lift);
 }
 
 /* Interactive listing card (tutor cards, category tiles) */
@@ -373,8 +390,19 @@
     transform 200ms ease,
     border-color 200ms ease;
   &:hover {
-    box-shadow: var(--shadow-lift);
+    box-shadow: var(--shadow-hover);
     border-color: var(--color-primary-soft);
+    transform: translateY(-3px);
+  }
+}
+
+/* Gentle lift for any element on hover */
+@utility hover-lift {
+  transition:
+    box-shadow 220ms ease,
+    transform 220ms ease;
+  &:hover {
+    box-shadow: var(--shadow-hover);
     transform: translateY(-2px);
   }
 }
@@ -393,3 +421,98 @@
     box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-ring);
   }
 }
+
+/* ---- Depth & imagery utilities ---- */
+
+/* Soft brand gradient wash for hero/CTA bands */
+@utility band-hero {
+  background-image:
+    radial-gradient(
+      70rem 40rem at 15% -10%,
+      color-mix(in oklab, var(--color-primary) 14%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      50rem 32rem at 95% 10%,
+      color-mix(in oklab, var(--color-secondary) 22%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-surface) 80%, var(--color-background)),
+      var(--color-background)
+    );
+}
+
+/* Quiet tinted band that separates sections without a hard edge */
+@utility band-tint {
+  background-image: linear-gradient(
+    180deg,
+    var(--color-background),
+    color-mix(in oklab, var(--color-primary) 5%, var(--color-background))
+  );
+}
+
+/* Deep editorial gradient for CTA blocks on ink */
+@utility band-deep {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-ink),
+    color-mix(in oklab, var(--color-primary-deep) 70%, var(--color-ink))
+  );
+  color: var(--color-ink-foreground);
+}
+
+/* Rounded, clipped image frame with soft brand elevation */
+@utility media-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lift);
+  background-color: var(--color-surface);
+
+  & img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+/* Subtle ink gradient overlay for text legibility over imagery */
+@utility media-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    to top,
+    color-mix(in oklab, var(--color-ink) 72%, transparent),
+    color-mix(in oklab, var(--color-ink) 18%, transparent) 45%,
+    transparent 75%
+  );
+}
+
+/* Small floating glass chip used over imagery and hero bands */
+@utility chip-float {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+  background-color: color-mix(in oklab, var(--color-card) 88%, transparent);
+  backdrop-filter: blur(8px);
+  padding: 0.4375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Decorative soft glow blob, always aria-hidden */
+@utility orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(60px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
