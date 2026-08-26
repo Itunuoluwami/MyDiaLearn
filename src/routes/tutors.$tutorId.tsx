@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BadgeCheck, Clock, MapPin, Star } from "lucide-react";
+import { BadgeCheck, Clock, MapPin, Star, UserSearch } from "lucide-react";
 
 import { PublicShell } from "@/components/public/PublicShell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { useAuth } from "@/hooks/use-auth";
 import {
   countryLabel,
