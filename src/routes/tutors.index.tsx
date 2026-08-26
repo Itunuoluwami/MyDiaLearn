@@ -375,27 +375,34 @@ function TutorSearchPage() {
               </div>
             </div>
 
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {isLoading
-                ? Array.from({ length: 6 }).map((_, index) => (
-                    <Skeleton key={index} className="h-56 rounded-2xl" />
-                  ))
-                : tutors.map((tutor) => (
-                    <TutorCard key={tutor.id} tutor={tutor} countryLabels={labels} />
-                  ))}
-            </div>
+            <ActiveFilterChips search={search} update={update} clear={clear} />
 
-            {!isLoading && tutors.length === 0 ? (
-              <div className="card-warm mt-5 p-6">
-                <h2 className="text-lg">No tutors match these filters yet</h2>
-                <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                  Try widening your filters, or clear them to see every verified tutor on DiaLearn.
-                </p>
-                <Button className="mt-4" variant="outline" onClick={clear}>
-                  Clear filters
-                </Button>
+            {isLoading ? (
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <TutorCardSkeleton key={index} />
+                ))}
               </div>
-            ) : null}
+            ) : tutors.length > 0 ? (
+              <div className="mt-5 grid animate-fade-in gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {tutors.map((tutor) => (
+                  <TutorCard key={tutor.id} tutor={tutor} countryLabels={labels} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                className="mt-5"
+                icon={SearchX}
+                title="No tutors match these filters yet"
+                description="Try widening your filters, or clear them to see every verified tutor on DiaLearn."
+                action={
+                  <Button variant="outline" onClick={clear}>
+                    Clear filters
+                  </Button>
+                }
+              />
+            )}
+
 
             {pageCount > 1 ? (
               <div className="mt-6 flex items-center justify-between gap-3">
