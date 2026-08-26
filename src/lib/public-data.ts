@@ -151,19 +151,25 @@ export function useTutorSearch(params: TutorSearchParams) {
   return useQuery({
     queryKey: ["public-tutor-search", params],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("public_tutor_search", {
-        p_q: params.q?.trim() || undefined,
-        p_subject: params.subject || undefined,
-        p_curriculum: params.curriculum || undefined,
-        p_country: params.country || undefined,
-        p_level: params.level || undefined,
-        p_language: params.language || undefined,
-        p_min_rating: params.minRating ?? undefined,
-        p_max_price: params.maxPrice ?? undefined,
+      const args: Record<string, unknown> = {
         p_sort: params.sort || "top_rated",
         p_limit: params.limit ?? 24,
         p_offset: params.offset ?? 0,
-      });
+      };
+      if (params.q?.trim()) args['p_q'] = params.q.trim();
+      if (params.subject) args['p_subject'] = params.subject;
+      if (params.curriculum) args['p_curriculum'] = params.curriculum;
+      if (params.country) args['p_country'] = params.country;
+      if (params.level) args['p_level'] = params.level;
+      if (params.language) args['p_language'] = params.language;
+      if (params.minRating != null) args['p_min_rating'] = params.minRating;
+      if (params.maxPrice != null) args['p_max_price'] = params.maxPrice;
+
+      const { data, error } = await supabase.rpc(
+        "public_tutor_search",
+        args as Parameters<typeof supabase.rpc<"public_tutor_search">>[1],
+      );
+
       if (error) throw error;
       return data ?? [];
     },
