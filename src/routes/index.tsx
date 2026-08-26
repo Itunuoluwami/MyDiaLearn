@@ -208,18 +208,35 @@ function HomePage() {
             title="What brings you to DiaLearn today?"
             copy="Pick the path that fits you — each one leads to the right part of DiaLearn."
           />
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {personas.map((persona) => (
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {personas.map((persona, index) => (
               <a
                 key={persona.key}
                 href={persona.href}
-                className="card-interactive focus-ring flex flex-col p-5"
+                className="card-interactive focus-ring group relative flex flex-col overflow-hidden p-5"
               >
-                <h3 className="text-lg">{persona.label}</h3>
+                <span
+                  aria-hidden="true"
+                  className={`absolute inset-x-0 top-0 h-1 ${
+                    index % 2 === 0
+                      ? "bg-gradient-to-r from-primary to-primary/40"
+                      : "bg-gradient-to-r from-secondary to-secondary/40"
+                  }`}
+                />
+                <span
+                  className={`flex size-11 items-center justify-center rounded-xl ${
+                    index % 2 === 0
+                      ? "bg-primary-soft text-primary-deep"
+                      : "bg-secondary-soft text-secondary-foreground"
+                  }`}
+                >
+                  <GraduationCap className="size-5" />
+                </span>
+                <h3 className="mt-4 text-lg">{persona.label}</h3>
                 <p className="mt-2 flex-1 text-sm text-muted-foreground">{persona.description}</p>
                 <span className="mt-4 flex items-center gap-1 text-sm font-semibold text-primary">
                   {persona.cta}
-                  <ArrowRight className="size-4" />
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                 </span>
               </a>
             ))}
@@ -228,7 +245,7 @@ function HomePage() {
       ) : null}
 
       {/* How it works */}
-      <section className="border-y border-border bg-card">
+      <section className="band-tint border-y border-border">
         <div className="container-site section-y">
           <SectionHeading
             eyebrow="How it works"
@@ -239,22 +256,36 @@ function HomePage() {
               </Button>
             }
           />
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {STEPS.map((step, index) => (
-              <div key={step.title} className="card-warm p-5">
-                <span className="flex size-10 items-center justify-center rounded-md bg-primary-soft text-primary-deep">
-                  <step.icon className="size-5" />
-                </span>
-                <p className="mt-4 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  Step {index + 1}
-                </p>
-                <h3 className="mt-1 text-lg">{step.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{step.body}</p>
-              </div>
-            ))}
+          <div className="mt-8 grid items-center gap-8 lg:grid-cols-[minmax(18rem,0.9fr)_minmax(20rem,1.1fr)]">
+            <div className="media-frame aspect-[4/3] w-full">
+              <img
+                src={tutorTeaching}
+                alt="An African tutor teaching a live online lesson from her home study"
+                width={1280}
+                height={960}
+                loading="lazy"
+              />
+            </div>
+            <ol className="grid gap-4">
+              {STEPS.map((step, index) => (
+                <li key={step.title} className="card-warm hover-lift flex gap-4 p-5">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-deep">
+                    <step.icon className="size-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                      Step {index + 1}
+                    </p>
+                    <h3 className="mt-1 text-lg">{step.title}</h3>
+                    <p className="mt-1.5 text-sm text-muted-foreground">{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
+
 
       {/* Explore by subject */}
       <section className="container-site section-y">
