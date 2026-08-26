@@ -79,9 +79,33 @@ function TutorProfilePage() {
   if (isLoading) {
     return (
       <PublicShell>
-        <div className="container-site space-y-4 py-10">
-          <Skeleton className="h-40 rounded-2xl" />
-          <Skeleton className="h-64 rounded-2xl" />
+        <section className="band-hero border-b border-border">
+          <div className="container-site py-8 md:py-12">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+              <div className="flex items-start gap-4">
+                <Skeleton className="size-20 shrink-0 rounded-full md:size-24" />
+                <div className="min-w-0 flex-1 space-y-3">
+                  <Skeleton className="h-8 w-2/3" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-5 w-24 rounded-full" />
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </div>
+                </div>
+              </div>
+              <Skeleton className="h-44 rounded-2xl" />
+            </div>
+          </div>
+        </section>
+        <div className="container-site grid gap-6 py-8 md:py-12 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-11/12" />
+            <Skeleton className="h-3 w-4/5" />
+            <Skeleton className="mt-6 h-32 rounded-2xl" />
+          </div>
+          <Skeleton className="h-52 rounded-2xl" />
         </div>
       </PublicShell>
     );
@@ -90,18 +114,22 @@ function TutorProfilePage() {
   if (!tutor) {
     return (
       <PublicShell>
-        <div className="container-site py-16 text-center">
-          <h1 className="display-section">This tutor profile is not available</h1>
-          <p className="lead mx-auto mt-3 max-w-lg">
-            The tutor may have paused their listing or is still completing verification.
-          </p>
-          <Button asChild className="mt-6" variant="cta">
-            <Link to="/tutors">Browse other tutors</Link>
-          </Button>
+        <div className="container-site py-16">
+          <EmptyState
+            icon={UserSearch}
+            title="This tutor profile is not available"
+            description="The tutor may have paused their listing or is still completing verification."
+            action={
+              <Button asChild variant="cta">
+                <Link to="/tutors">Browse other tutors</Link>
+              </Button>
+            }
+          />
         </div>
       </PublicShell>
     );
   }
+
 
   const rating = Number(tutor.rating_avg ?? 0);
   const qualifications = stringList(tutor.qualifications);
