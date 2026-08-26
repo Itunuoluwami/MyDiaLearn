@@ -13,13 +13,16 @@ import {
   MapPin,
   MessageCircle,
   MessagesSquare,
+  ShieldCheck,
   Sigma,
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TutorCard } from "@/components/public/TutorCard";
+import { TutorCard, TutorCardSkeleton } from "@/components/public/TutorCard";
+
 import {
   countryLabel,
   settingMap,
