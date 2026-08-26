@@ -54,9 +54,13 @@ function stringList(value: unknown): string[] {
       if (typeof item === "string") return item;
       if (item && typeof item === "object") {
         const record = item as Record<string, unknown>;
-        const parts = [record.title, record.name, record.institution, record.year].filter(
-          (part) => typeof part === "string" || typeof part === "number",
-        );
+        const parts = [
+          record['title'],
+          record['name'],
+          record['institution'],
+          record['year'],
+        ].filter((part) => typeof part === "string" || typeof part === "number");
+
         return parts.join(" — ");
       }
       return "";
