@@ -11,12 +11,16 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BecomeATutorRouteImport } from './routes/become-a-tutor'
 import { Route as ClassPreviewRouteImport } from './routes/class-preview'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ForAgenciesRouteImport } from './routes/for-agencies'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as TrustAndSafetyRouteImport } from './routes/trust-and-safety'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedFamilyRouteImport } from './routes/_authenticated/family'
 import { Route as TutorsIndexRouteImport } from './routes/tutors.index'
@@ -30,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -47,6 +56,11 @@ const ClassPreviewRoute = ClassPreviewRouteImport.update({
   path: '/class-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExploreRoute = ExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
@@ -60,6 +74,16 @@ const ForAgenciesRoute = ForAgenciesRouteImport.update({
 const HowItWorksRoute = HowItWorksRouteImport.update({
   id: '/how-it-works',
   path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrustAndSafetyRoute = TrustAndSafetyRouteImport.update({
+  id: '/trust-and-safety',
+  path: '/trust-and-safety',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
@@ -91,12 +115,16 @@ const AuthenticatedAdminSettingsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/become-a-tutor': typeof BecomeATutorRoute
   '/class-preview': typeof ClassPreviewRoute
+  '/contact': typeof ContactRoute
   '/explore': typeof ExploreRoute
   '/for-agencies': typeof ForAgenciesRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/pricing': typeof PricingRoute
+  '/trust-and-safety': typeof TrustAndSafetyRoute
   '/account': typeof AuthenticatedAccountRoute
   '/family': typeof AuthenticatedFamilyRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
@@ -105,12 +133,16 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/become-a-tutor': typeof BecomeATutorRoute
   '/class-preview': typeof ClassPreviewRoute
+  '/contact': typeof ContactRoute
   '/explore': typeof ExploreRoute
   '/for-agencies': typeof ForAgenciesRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/pricing': typeof PricingRoute
+  '/trust-and-safety': typeof TrustAndSafetyRoute
   '/account': typeof AuthenticatedAccountRoute
   '/family': typeof AuthenticatedFamilyRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
@@ -121,12 +153,16 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/become-a-tutor': typeof BecomeATutorRoute
   '/class-preview': typeof ClassPreviewRoute
+  '/contact': typeof ContactRoute
   '/explore': typeof ExploreRoute
   '/for-agencies': typeof ForAgenciesRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/pricing': typeof PricingRoute
+  '/trust-and-safety': typeof TrustAndSafetyRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/family': typeof AuthenticatedFamilyRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
@@ -137,12 +173,16 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/auth'
     | '/become-a-tutor'
     | '/class-preview'
+    | '/contact'
     | '/explore'
     | '/for-agencies'
     | '/how-it-works'
+    | '/pricing'
+    | '/trust-and-safety'
     | '/account'
     | '/family'
     | '/tutors/$tutorId'
@@ -151,12 +191,16 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/auth'
     | '/become-a-tutor'
     | '/class-preview'
+    | '/contact'
     | '/explore'
     | '/for-agencies'
     | '/how-it-works'
+    | '/pricing'
+    | '/trust-and-safety'
     | '/account'
     | '/family'
     | '/tutors/$tutorId'
@@ -166,12 +210,16 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/about'
     | '/auth'
     | '/become-a-tutor'
     | '/class-preview'
+    | '/contact'
     | '/explore'
     | '/for-agencies'
     | '/how-it-works'
+    | '/pricing'
+    | '/trust-and-safety'
     | '/_authenticated/account'
     | '/_authenticated/family'
     | '/tutors/$tutorId'
@@ -182,12 +230,16 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   BecomeATutorRoute: typeof BecomeATutorRoute
   ClassPreviewRoute: typeof ClassPreviewRoute
+  ContactRoute: typeof ContactRoute
   ExploreRoute: typeof ExploreRoute
   ForAgenciesRoute: typeof ForAgenciesRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  PricingRoute: typeof PricingRoute
+  TrustAndSafetyRoute: typeof TrustAndSafetyRoute
   TutorsTutorIdRoute: typeof TutorsTutorIdRoute
   TutorsIndexRoute: typeof TutorsIndexRoute
 }
@@ -206,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -229,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClassPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/explore': {
       id: '/explore'
       path: '/explore'
@@ -248,6 +314,20 @@ declare module '@tanstack/react-router' {
       path: '/how-it-works'
       fullPath: '/how-it-works'
       preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trust-and-safety': {
+      id: '/trust-and-safety'
+      path: '/trust-and-safety'
+      fullPath: '/trust-and-safety'
+      preLoaderRoute: typeof TrustAndSafetyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/account': {
@@ -306,12 +386,16 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   BecomeATutorRoute: BecomeATutorRoute,
   ClassPreviewRoute: ClassPreviewRoute,
+  ContactRoute: ContactRoute,
   ExploreRoute: ExploreRoute,
   ForAgenciesRoute: ForAgenciesRoute,
   HowItWorksRoute: HowItWorksRoute,
+  PricingRoute: PricingRoute,
+  TrustAndSafetyRoute: TrustAndSafetyRoute,
   TutorsTutorIdRoute: TutorsTutorIdRoute,
   TutorsIndexRoute: TutorsIndexRoute,
 }
