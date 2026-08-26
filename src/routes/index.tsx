@@ -1,9 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, CalendarCheck, ShieldCheck, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BRAND } from "@/lib/brand";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -56,8 +58,24 @@ function Section({
 }
 
 function DesignSystemPage() {
+  const { session, loading } = useAuth();
+
   return (
     <main className="min-h-screen">
+      <header className="border-b border-border bg-card">
+        <div className="container-site flex min-h-16 flex-wrap items-center justify-between gap-3 py-2">
+          <img src={BRAND.logoUrl} alt="DiaLearn" className="h-8 w-auto md:h-9" />
+          {loading ? null : session ? (
+            <Button asChild>
+              <Link to="/account">Go to my account</Link>
+            </Button>
+          ) : (
+            <Button asChild>
+              <Link to="/auth">Sign in</Link>
+            </Button>
+          )}
+        </div>
+      </header>
       <div className="container-site py-14">
         <p className="eyebrow">Sahara Hub Limited</p>
         <h1 className="display-hero mt-3">DiaLearn design system</h1>
