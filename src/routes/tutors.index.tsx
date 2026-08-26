@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SearchX, SlidersHorizontal, X } from "lucide-react";
 
 import { PublicShell } from "@/components/public/PublicShell";
 import { SiteSearch } from "@/components/public/SiteSearch";
-import { TutorCard } from "@/components/public/TutorCard";
+import { TutorCard, TutorCardSkeleton } from "@/components/public/TutorCard";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
