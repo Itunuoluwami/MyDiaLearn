@@ -61,7 +61,7 @@ function ScrollRow({ children, cols = 4 }: { children: React.ReactNode; cols?: 3
   );
 }
 
-const TILE = "w-[15rem] shrink-0 snap-start sm:w-auto";
+const TILE = "w-[16.5rem] shrink-0 snap-start sm:w-auto";
 
 function TileSkeletons({ count = 4 }: { count?: number }) {
   return (
@@ -94,7 +94,7 @@ export function SubjectGrid({ limit }: { limit?: number }) {
             search={{ subject: subject.id }}
             className={`card-interactive focus-ring flex flex-col p-4 ${TILE}`}
           >
-            <span className="flex size-10 items-center justify-center rounded-md bg-primary-soft text-primary-deep">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-soft to-primary-soft/40 text-primary-deep shadow-soft">
               <Icon className="size-5" />
             </span>
             <span className="mt-3 text-base font-semibold">{subject.name}</span>
@@ -125,7 +125,7 @@ export function CurriculumGrid({ limit }: { limit?: number }) {
           search={{ curriculum: curriculum.id }}
           className={`card-interactive focus-ring flex flex-col p-4 ${TILE}`}
         >
-          <span className="flex size-10 items-center justify-center rounded-md bg-secondary-soft text-secondary-foreground">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-secondary-soft to-secondary-soft/40 text-secondary-foreground shadow-soft">
             <GraduationCap className="size-5" />
           </span>
           <span className="mt-3 text-base font-semibold">{curriculum.name}</span>
@@ -167,7 +167,7 @@ export function LocationGrid() {
           search={{ country: country.country_code }}
           className={`card-interactive focus-ring flex items-center gap-3 p-4 ${TILE}`}
         >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-soft to-accent-soft/40 text-accent shadow-soft">
             <MapPin className="size-5" />
           </span>
           <span className="min-w-0">
