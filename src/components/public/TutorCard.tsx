@@ -30,15 +30,20 @@ export function TutorCard({
     <Link
       to="/tutors/$tutorId"
       params={{ tutorId: tutor.id }}
-      className={`card-interactive focus-ring flex flex-col p-4 md:p-5 ${className}`}
+      className={`card-interactive focus-ring group relative flex flex-col overflow-hidden p-4 md:p-5 ${className}`}
     >
+      <span
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-secondary opacity-0 transition-opacity group-hover:opacity-100"
+      />
       <div className="flex min-w-0 items-start gap-3">
-        <Avatar className="size-14 shrink-0">
+        <Avatar className="size-14 shrink-0 ring-2 ring-primary-soft ring-offset-2 ring-offset-card">
           {tutor.avatar_url ? <AvatarImage src={tutor.avatar_url} alt={tutor.full_name ?? "Tutor"} /> : null}
-          <AvatarFallback className="bg-primary-soft text-primary-deep">
+          <AvatarFallback className="bg-gradient-to-br from-primary-soft to-secondary-soft font-semibold text-primary-deep">
             {initials(tutor.full_name)}
           </AvatarFallback>
         </Avatar>
+
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-base font-semibold">{tutor.full_name ?? "DiaLearn tutor"}</h3>
           <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
