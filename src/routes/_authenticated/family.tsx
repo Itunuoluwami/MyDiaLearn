@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Plus, Trash2, UserRound } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 import { PortalShell } from "@/components/layout/PortalShell";
 import { Button } from "@/components/ui/button";
