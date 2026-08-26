@@ -192,22 +192,24 @@ export function TutorStrip({ sort = "top_rated", limit = 8 }: { sort?: string; l
 
   if (!isLoading && tutors.length === 0) {
     return (
-      <div className="card-warm p-6">
-        <h3 className="text-lg">Our first tutors are being verified</h3>
-        <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-          Every DiaLearn tutor completes identity, qualification and teaching checks before they are
-          listed. Tutor profiles appear here as they clear verification.
-        </p>
-      </div>
+      <EmptyState
+        icon={ShieldCheck}
+        title="Our first tutors are being verified"
+        description="Every DiaLearn tutor completes identity, qualification and teaching checks before they are listed. Tutor profiles appear here as they clear verification."
+      />
     );
   }
 
   return (
     <ScrollRow>
-      {isLoading ? <TileSkeletons /> : null}
-      {tutors.map((tutor) => (
-        <TutorCard key={tutor.id} tutor={tutor} countryLabels={labels} className={TILE} />
-      ))}
+      {isLoading
+        ? Array.from({ length: 4 }).map((_, index) => (
+            <TutorCardSkeleton key={index} className={TILE} />
+          ))
+        : tutors.map((tutor) => (
+            <TutorCard key={tutor.id} tutor={tutor} countryLabels={labels} className={TILE} />
+          ))}
     </ScrollRow>
   );
+
 }
