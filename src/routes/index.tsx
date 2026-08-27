@@ -295,37 +295,60 @@ function HomePage() {
       {/* How it works */}
       <section className="band-tint border-y border-border">
         <div className="container-site section-y">
-          <SectionHeading
-            eyebrow="How it works"
-            title="Search, book, learn."
-            action={
-              <Button asChild variant="subtle">
-                <Link to="/how-it-works">See the full walkthrough</Link>
-              </Button>
-            }
-          />
-          <div className="mt-8 grid items-center gap-8 lg:grid-cols-[minmax(18rem,0.9fr)_minmax(20rem,1.1fr)]">
-            <div className="media-frame aspect-[4/3] w-full">
-              <img
-                src={tutorTeaching}
-                alt="An African tutor teaching a live online lesson from her home study"
-                width={1280}
-                height={960}
-                loading="lazy"
-              />
+          <div className="grid items-start gap-10 lg:grid-cols-[minmax(20rem,1fr)_minmax(20rem,1fr)] lg:gap-14">
+            {/* Left: heading, copy, gradient image card */}
+            <div className="min-w-0">
+              <p className="eyebrow">How it works</p>
+              <h2 className="display-section mt-2">Search, book, learn.</h2>
+              <p className="lead mt-3 max-w-md">
+                Three simple steps take your child from first search to a live lesson with a
+                tutor who knows their curriculum.
+              </p>
+
+              <div className="group relative mt-8 overflow-hidden rounded-2xl shadow-lift">
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-gradient-to-br from-primary via-primary/85 to-primary-deep"
+                />
+                <img
+                  src={tutorTeaching}
+                  alt="An African tutor teaching a live online lesson from her home study"
+                  width={1280}
+                  height={960}
+                  loading="lazy"
+                  className="absolute inset-0 size-full object-cover opacity-35 mix-blend-luminosity transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="relative flex min-h-56 flex-col items-start justify-end gap-4 p-6 md:p-8">
+                  <p className="font-display text-xl leading-snug text-primary-foreground md:text-2xl">
+                    Quality one-to-one lessons, for every diaspora family.
+                  </p>
+                  <Button asChild variant="cta">
+                    <Link to="/how-it-works">
+                      See the full walkthrough
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             </div>
-            <ol className="grid gap-4">
+
+            {/* Right: stacked step list */}
+            <ol className="grid content-center gap-8 lg:py-6">
               {STEPS.map((step, index) => (
-                <li key={step.title} className="card-warm hover-lift flex gap-4 p-5">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-deep">
+                <li key={step.title} className="flex items-start gap-4">
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-deep shadow-soft">
                     <step.icon className="size-5" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                      Step {index + 1}
+                    <h3 className="text-lg font-semibold">
+                      <span className="mr-2 text-sm font-semibold text-muted-foreground">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      {step.title}
+                    </h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                      {step.body}
                     </p>
-                    <h3 className="mt-1 text-lg">{step.title}</h3>
-                    <p className="mt-1.5 text-sm text-muted-foreground">{step.body}</p>
                   </div>
                 </li>
               ))}
