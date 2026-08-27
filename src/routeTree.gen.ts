@@ -44,6 +44,7 @@ import { Route as AuthenticatedTutorNotificationsRouteImport } from './routes/_a
 import { Route as AuthenticatedTutorOnboardingRouteImport } from './routes/_authenticated/tutor.onboarding'
 import { Route as AuthenticatedTutorProfileRouteImport } from './routes/_authenticated/tutor.profile'
 import { Route as AuthenticatedTutorResourcesRouteImport } from './routes/_authenticated/tutor.resources'
+import { Route as AuthenticatedTutorReviewsRouteImport } from './routes/_authenticated/tutor.reviews'
 import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authenticated/tutor.students'
 import { Route as AuthenticatedTutorVerificationRouteImport } from './routes/_authenticated/tutor.verification'
 import { Route as AuthenticatedTutorClassroomBookingIdRouteImport } from './routes/_authenticated/tutor.classroom.$bookingId'
@@ -238,6 +239,12 @@ const AuthenticatedTutorResourcesRoute =
     path: '/tutor/resources',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTutorReviewsRoute =
+  AuthenticatedTutorReviewsRouteImport.update({
+    id: '/tutor/reviews',
+    path: '/tutor/reviews',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTutorStudentsRoute =
   AuthenticatedTutorStudentsRouteImport.update({
     id: '/tutor/students',
@@ -297,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/tutor/profile': typeof AuthenticatedTutorProfileRoute
   '/tutor/resources': typeof AuthenticatedTutorResourcesRoute
+  '/tutor/reviews': typeof AuthenticatedTutorReviewsRoute
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/children/': typeof AuthenticatedChildrenIndexRoute
@@ -337,6 +345,7 @@ export interface FileRoutesByTo {
   '/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/tutor/profile': typeof AuthenticatedTutorProfileRoute
   '/tutor/resources': typeof AuthenticatedTutorResourcesRoute
+  '/tutor/reviews': typeof AuthenticatedTutorReviewsRoute
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/children': typeof AuthenticatedChildrenIndexRoute
@@ -379,6 +388,7 @@ export interface FileRoutesById {
   '/_authenticated/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/_authenticated/tutor/profile': typeof AuthenticatedTutorProfileRoute
   '/_authenticated/tutor/resources': typeof AuthenticatedTutorResourcesRoute
+  '/_authenticated/tutor/reviews': typeof AuthenticatedTutorReviewsRoute
   '/_authenticated/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/_authenticated/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/_authenticated/children/': typeof AuthenticatedChildrenIndexRoute
@@ -421,6 +431,7 @@ export interface FileRouteTypes {
     | '/tutor/onboarding'
     | '/tutor/profile'
     | '/tutor/resources'
+    | '/tutor/reviews'
     | '/tutor/students'
     | '/tutor/verification'
     | '/children/'
@@ -461,6 +472,7 @@ export interface FileRouteTypes {
     | '/tutor/onboarding'
     | '/tutor/profile'
     | '/tutor/resources'
+    | '/tutor/reviews'
     | '/tutor/students'
     | '/tutor/verification'
     | '/children'
@@ -502,6 +514,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor/onboarding'
     | '/_authenticated/tutor/profile'
     | '/_authenticated/tutor/resources'
+    | '/_authenticated/tutor/reviews'
     | '/_authenticated/tutor/students'
     | '/_authenticated/tutor/verification'
     | '/_authenticated/children/'
@@ -773,6 +786,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTutorResourcesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tutor/reviews': {
+      id: '/_authenticated/tutor/reviews'
+      path: '/tutor/reviews'
+      fullPath: '/tutor/reviews'
+      preLoaderRoute: typeof AuthenticatedTutorReviewsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tutor/students': {
       id: '/_authenticated/tutor/students'
       path: '/tutor/students'
@@ -825,6 +845,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTutorOnboardingRoute: typeof AuthenticatedTutorOnboardingRoute
   AuthenticatedTutorProfileRoute: typeof AuthenticatedTutorProfileRoute
   AuthenticatedTutorResourcesRoute: typeof AuthenticatedTutorResourcesRoute
+  AuthenticatedTutorReviewsRoute: typeof AuthenticatedTutorReviewsRoute
   AuthenticatedTutorStudentsRoute: typeof AuthenticatedTutorStudentsRoute
   AuthenticatedTutorVerificationRoute: typeof AuthenticatedTutorVerificationRoute
   AuthenticatedChildrenIndexRoute: typeof AuthenticatedChildrenIndexRoute
@@ -853,6 +874,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTutorOnboardingRoute: AuthenticatedTutorOnboardingRoute,
   AuthenticatedTutorProfileRoute: AuthenticatedTutorProfileRoute,
   AuthenticatedTutorResourcesRoute: AuthenticatedTutorResourcesRoute,
+  AuthenticatedTutorReviewsRoute: AuthenticatedTutorReviewsRoute,
   AuthenticatedTutorStudentsRoute: AuthenticatedTutorStudentsRoute,
   AuthenticatedTutorVerificationRoute: AuthenticatedTutorVerificationRoute,
   AuthenticatedChildrenIndexRoute: AuthenticatedChildrenIndexRoute,
