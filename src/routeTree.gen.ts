@@ -22,10 +22,14 @@ import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as TrustAndSafetyRouteImport } from './routes/trust-and-safety'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedFamilyRouteImport } from './routes/_authenticated/family'
+import { Route as AuthenticatedFindTutorRouteImport } from './routes/_authenticated/find-tutor'
 import { Route as TutorsIndexRouteImport } from './routes/tutors.index'
 import { Route as TutorsTutorIdRouteImport } from './routes/tutors.$tutorId'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedChildrenIndexRouteImport } from './routes/_authenticated/children.index'
+import { Route as AuthenticatedChildrenStudentIdRouteImport } from './routes/_authenticated/children.$studentId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -91,9 +95,19 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFamilyRoute = AuthenticatedFamilyRouteImport.update({
   id: '/family',
   path: '/family',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFindTutorRoute = AuthenticatedFindTutorRouteImport.update({
+  id: '/find-tutor',
+  path: '/find-tutor',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const TutorsIndexRoute = TutorsIndexRouteImport.update({
@@ -112,6 +126,18 @@ const AuthenticatedAdminSettingsRoute =
     path: '/admin/settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedChildrenIndexRoute =
+  AuthenticatedChildrenIndexRouteImport.update({
+    id: '/children/',
+    path: '/children/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedChildrenStudentIdRoute =
+  AuthenticatedChildrenStudentIdRouteImport.update({
+    id: '/children/$studentId',
+    path: '/children/$studentId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -126,10 +152,14 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/family': typeof AuthenticatedFamilyRoute
+  '/find-tutor': typeof AuthenticatedFindTutorRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors/': typeof TutorsIndexRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/children/': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -144,10 +174,14 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/family': typeof AuthenticatedFamilyRoute
+  '/find-tutor': typeof AuthenticatedFindTutorRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors': typeof TutorsIndexRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/children': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -164,10 +198,14 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/family': typeof AuthenticatedFamilyRoute
+  '/_authenticated/find-tutor': typeof AuthenticatedFindTutorRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors/': typeof TutorsIndexRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/_authenticated/children/': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -184,10 +222,14 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/trust-and-safety'
     | '/account'
+    | '/dashboard'
     | '/family'
+    | '/find-tutor'
     | '/tutors/$tutorId'
     | '/tutors/'
     | '/admin/settings'
+    | '/children/$studentId'
+    | '/children/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -202,10 +244,14 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/trust-and-safety'
     | '/account'
+    | '/dashboard'
     | '/family'
+    | '/find-tutor'
     | '/tutors/$tutorId'
     | '/tutors'
     | '/admin/settings'
+    | '/children/$studentId'
+    | '/children'
   id:
     | '__root__'
     | '/'
@@ -221,10 +267,14 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/trust-and-safety'
     | '/_authenticated/account'
+    | '/_authenticated/dashboard'
     | '/_authenticated/family'
+    | '/_authenticated/find-tutor'
     | '/tutors/$tutorId'
     | '/tutors/'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/children/$studentId'
+    | '/_authenticated/children/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -337,11 +387,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/family': {
       id: '/_authenticated/family'
       path: '/family'
       fullPath: '/family'
       preLoaderRoute: typeof AuthenticatedFamilyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/find-tutor': {
+      id: '/_authenticated/find-tutor'
+      path: '/find-tutor'
+      fullPath: '/find-tutor'
+      preLoaderRoute: typeof AuthenticatedFindTutorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/tutors/': {
@@ -365,19 +429,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/children/': {
+      id: '/_authenticated/children/'
+      path: '/children'
+      fullPath: '/children/'
+      preLoaderRoute: typeof AuthenticatedChildrenIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/children/$studentId': {
+      id: '/_authenticated/children/$studentId'
+      path: '/children/$studentId'
+      fullPath: '/children/$studentId'
+      preLoaderRoute: typeof AuthenticatedChildrenStudentIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFamilyRoute: typeof AuthenticatedFamilyRoute
+  AuthenticatedFindTutorRoute: typeof AuthenticatedFindTutorRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedChildrenStudentIdRoute: typeof AuthenticatedChildrenStudentIdRoute
+  AuthenticatedChildrenIndexRoute: typeof AuthenticatedChildrenIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFamilyRoute: AuthenticatedFamilyRoute,
+  AuthenticatedFindTutorRoute: AuthenticatedFindTutorRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+  AuthenticatedChildrenStudentIdRoute: AuthenticatedChildrenStudentIdRoute,
+  AuthenticatedChildrenIndexRoute: AuthenticatedChildrenIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

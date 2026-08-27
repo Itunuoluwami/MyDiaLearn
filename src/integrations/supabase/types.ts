@@ -1399,6 +1399,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      booking_quote: {
+        Args: { p_duration_minutes: number; p_tutor_id: string }
+        Returns: {
+          cancellation_policy_id: string
+          commission_amount: number
+          commission_rule_id: string
+          currency: string
+          duration_minutes: number
+          hourly_rate: number
+          lesson_amount: number
+          platform_fee: number
+          processing_fee: number
+          total_amount: number
+        }[]
+      }
       can_access_booking: { Args: { _booking_id: string }; Returns: boolean }
       can_access_student: { Args: { _student_id: string }; Returns: boolean }
       has_permission: {
@@ -1414,6 +1429,37 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       owns_tutor: { Args: { _tutor_id: string }; Returns: boolean }
+      parent_child_progress: {
+        Args: { p_student_id: string }
+        Returns: {
+          attended_count: number
+          avg_rating: number
+          cancelled_count: number
+          completed_lessons: number
+          learning_minutes: number
+          missed_count: number
+          scheduled_lessons: number
+          subject_id: string
+          subject_name: string
+        }[]
+      }
+      parent_dashboard_summary: {
+        Args: never
+        Returns: {
+          active_students: number
+          active_tutors: number
+          attendance_rate: number
+          completed_lessons: number
+          learning_minutes: number
+          month_spend: number
+          month_spend_currency: string
+          outstanding_amount: number
+          outstanding_count: number
+          outstanding_currency: string
+          pending_approvals: number
+          upcoming_classes: number
+        }[]
+      }
       public_country_facets: {
         Args: never
         Returns: {
@@ -1450,6 +1496,25 @@ export type Database = {
           name: string
           slug: string
           tutor_count: number
+        }[]
+      }
+      public_tutor_cards: {
+        Args: { p_ids: string[] }
+        Returns: {
+          avatar_url: string
+          country_code: string
+          currency: string
+          full_name: string
+          headline: string
+          hourly_rate: number
+          id: string
+          lessons_completed: number
+          rating_avg: number
+          rating_count: number
+          subjects: string[]
+          timezone: string
+          verification_status: Database["public"]["Enums"]["verification_status"]
+          years_experience: number
         }[]
       }
       public_tutor_detail: {
@@ -1518,6 +1583,19 @@ export type Database = {
           subjects: string[]
           total_count: number
           years_experience: number
+        }[]
+      }
+      tutor_available_slots: {
+        Args: {
+          p_days?: number
+          p_duration_minutes?: number
+          p_from?: string
+          p_tutor_id: string
+        }
+        Returns: {
+          ends_at: string
+          starts_at: string
+          tutor_timezone: string
         }[]
       }
     }
