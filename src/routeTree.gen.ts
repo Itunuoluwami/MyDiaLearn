@@ -34,6 +34,8 @@ import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedBookTutorIdRouteImport } from './routes/_authenticated/book.$tutorId'
 import { Route as AuthenticatedChildrenIndexRouteImport } from './routes/_authenticated/children.index'
 import { Route as AuthenticatedChildrenStudentIdRouteImport } from './routes/_authenticated/children.$studentId'
+import { Route as AuthenticatedTutorClassesRouteImport } from './routes/_authenticated/tutor.classes'
+import { Route as AuthenticatedTutorDashboardRouteImport } from './routes/_authenticated/tutor.dashboard'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -164,6 +166,18 @@ const AuthenticatedChildrenStudentIdRoute =
     path: '/children/$studentId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTutorClassesRoute =
+  AuthenticatedTutorClassesRouteImport.update({
+    id: '/tutor/classes',
+    path: '/tutor/classes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTutorDashboardRoute =
+  AuthenticatedTutorDashboardRouteImport.update({
+    id: '/tutor/dashboard',
+    path: '/tutor/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -189,6 +203,8 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/tutor/classes': typeof AuthenticatedTutorClassesRoute
+  '/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
   '/children/': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRoutesByTo {
@@ -215,6 +231,8 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/tutor/classes': typeof AuthenticatedTutorClassesRoute
+  '/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
   '/children': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRoutesById {
@@ -243,6 +261,8 @@ export interface FileRoutesById {
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/_authenticated/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/_authenticated/tutor/classes': typeof AuthenticatedTutorClassesRoute
+  '/_authenticated/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
   '/_authenticated/children/': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRouteTypes {
@@ -271,6 +291,8 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/book/$tutorId'
     | '/children/$studentId'
+    | '/tutor/classes'
+    | '/tutor/dashboard'
     | '/children/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -297,6 +319,8 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/book/$tutorId'
     | '/children/$studentId'
+    | '/tutor/classes'
+    | '/tutor/dashboard'
     | '/children'
   id:
     | '__root__'
@@ -324,6 +348,8 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/settings'
     | '/_authenticated/book/$tutorId'
     | '/_authenticated/children/$studentId'
+    | '/_authenticated/tutor/classes'
+    | '/_authenticated/tutor/dashboard'
     | '/_authenticated/children/'
   fileRoutesById: FileRoutesById
 }
@@ -521,6 +547,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChildrenStudentIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tutor/classes': {
+      id: '/_authenticated/tutor/classes'
+      path: '/tutor/classes'
+      fullPath: '/tutor/classes'
+      preLoaderRoute: typeof AuthenticatedTutorClassesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tutor/dashboard': {
+      id: '/_authenticated/tutor/dashboard'
+      path: '/tutor/dashboard'
+      fullPath: '/tutor/dashboard'
+      preLoaderRoute: typeof AuthenticatedTutorDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -535,6 +575,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedBookTutorIdRoute: typeof AuthenticatedBookTutorIdRoute
   AuthenticatedChildrenStudentIdRoute: typeof AuthenticatedChildrenStudentIdRoute
+  AuthenticatedTutorClassesRoute: typeof AuthenticatedTutorClassesRoute
+  AuthenticatedTutorDashboardRoute: typeof AuthenticatedTutorDashboardRoute
   AuthenticatedChildrenIndexRoute: typeof AuthenticatedChildrenIndexRoute
 }
 
@@ -549,6 +591,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedBookTutorIdRoute: AuthenticatedBookTutorIdRoute,
   AuthenticatedChildrenStudentIdRoute: AuthenticatedChildrenStudentIdRoute,
+  AuthenticatedTutorClassesRoute: AuthenticatedTutorClassesRoute,
+  AuthenticatedTutorDashboardRoute: AuthenticatedTutorDashboardRoute,
   AuthenticatedChildrenIndexRoute: AuthenticatedChildrenIndexRoute,
 }
 

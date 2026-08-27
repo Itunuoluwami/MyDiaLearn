@@ -1155,6 +1155,76 @@ export type Database = {
         }
         Relationships: []
       }
+      tutor_documents: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          mime_type: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_notes: string | null
+          size_bytes: number | null
+          status: Database["public"]["Enums"]["verification_status"]
+          step_id: string | null
+          storage_path: string
+          tutor_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          mime_type?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          size_bytes?: number | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          step_id?: string | null
+          storage_path: string
+          tutor_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          mime_type?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          size_bytes?: number | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          step_id?: string | null
+          storage_path?: string
+          tutor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_documents_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_documents_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "verification_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_documents_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tutor_subjects: {
         Row: {
           created_at: string
@@ -1268,14 +1338,19 @@ export type Database = {
           biography: string | null
           created_at: string
           currency: string
+          education: Json
           headline: string | null
           hourly_rate: number | null
           id: string
           intro_video_url: string | null
           is_listed: boolean
           languages: Json
+          methodology: string | null
+          onboarding_step: number
           profile_id: string
           qualifications: Json
+          submitted_at: string | null
+          teaching_context: string | null
           timezone: string
           updated_at: string
           verification_status: Database["public"]["Enums"]["verification_status"]
@@ -1286,14 +1361,19 @@ export type Database = {
           biography?: string | null
           created_at?: string
           currency?: string
+          education?: Json
           headline?: string | null
           hourly_rate?: number | null
           id?: string
           intro_video_url?: string | null
           is_listed?: boolean
           languages?: Json
+          methodology?: string | null
+          onboarding_step?: number
           profile_id: string
           qualifications?: Json
+          submitted_at?: string | null
+          teaching_context?: string | null
           timezone?: string
           updated_at?: string
           verification_status?: Database["public"]["Enums"]["verification_status"]
@@ -1304,14 +1384,19 @@ export type Database = {
           biography?: string | null
           created_at?: string
           currency?: string
+          education?: Json
           headline?: string | null
           hourly_rate?: number | null
           id?: string
           intro_video_url?: string | null
           is_listed?: boolean
           languages?: Json
+          methodology?: string | null
+          onboarding_step?: number
           profile_id?: string
           qualifications?: Json
+          submitted_at?: string | null
+          teaching_context?: string | null
           timezone?: string
           updated_at?: string
           verification_status?: Database["public"]["Enums"]["verification_status"]
@@ -1416,6 +1501,8 @@ export type Database = {
       }
       can_access_booking: { Args: { _booking_id: string }; Returns: boolean }
       can_access_student: { Args: { _student_id: string }; Returns: boolean }
+      current_tutor_id: { Args: never; Returns: string }
+      ensure_tutor_record: { Args: never; Returns: string }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
@@ -1597,6 +1684,74 @@ export type Database = {
           starts_at: string
           tutor_timezone: string
         }[]
+      }
+      tutor_bookings: {
+        Args: {
+          p_from?: string
+          p_limit?: number
+          p_offset?: number
+          p_statuses?: Database["public"]["Enums"]["booking_status"][]
+          p_to?: string
+        }
+        Returns: {
+          booking_timezone: string
+          currency: string
+          duration_minutes: number
+          education_level_name: string
+          ends_at: string
+          hourly_rate: number
+          id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["booking_status"]
+          student_avatar_url: string
+          student_first_name: string
+          student_id: string
+          student_notes: string
+          subject_id: string
+          subject_name: string
+          total_amount: number
+        }[]
+      }
+      tutor_dashboard_summary: {
+        Args: never
+        Returns: {
+          active_students: number
+          classes_today: number
+          completed_lessons: number
+          currency: string
+          hourly_rate: number
+          is_listed: boolean
+          onboarding_step: number
+          pending_requests: number
+          profile_complete: boolean
+          tutor_timezone: string
+          upcoming_classes: number
+          verification_status: Database["public"]["Enums"]["verification_status"]
+        }[]
+      }
+      tutor_respond_booking: {
+        Args: { p_accept: boolean; p_booking_id: string }
+        Returns: Database["public"]["Enums"]["booking_status"]
+      }
+      tutor_students: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          avatar_url: string
+          curriculum_name: string
+          education_level_name: string
+          first_name: string
+          last_class_at: string
+          lessons_completed: number
+          lessons_upcoming: number
+          next_class_at: string
+          student_id: string
+          student_timezone: string
+          subjects: string[]
+        }[]
+      }
+      tutor_submit_verification: {
+        Args: never
+        Returns: Database["public"]["Enums"]["verification_status"]
       }
     }
     Enums: {
