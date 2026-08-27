@@ -286,6 +286,45 @@ export function SignUpForm({
         <FieldError id="role-error" message={errors.role?.message} />
       </fieldset>
 
+      <Button
+        type="button"
+        variant="cta"
+        className="min-h-12 w-full text-base"
+        onClick={async () => {
+          const valid = await form.trigger("role");
+          if (valid) setStep(2);
+        }}
+      >
+        Continue
+      </Button>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <button
+          type="button"
+          onClick={onSwitchToSignIn}
+          className="font-semibold text-primary underline"
+        >
+          Sign in
+        </button>
+      </p>
+      </>
+      ) : (
+      <>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-foreground">
+          Step 2 of 2 — your details
+        </p>
+        <button
+          type="button"
+          onClick={() => setStep(1)}
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary underline"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          {ROLE_META[role]?.label ?? role}
+        </button>
+      </div>
+
       {/* Names */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
