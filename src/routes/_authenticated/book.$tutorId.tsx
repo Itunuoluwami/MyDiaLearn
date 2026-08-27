@@ -314,7 +314,7 @@ function BookClassPage() {
                 <p className="truncate text-sm font-semibold">
                   {tutorInfo?.full_name ?? "Tutor"}
                 </p>
-                <VerifiedChip status={tutorInfo?.verification_status} />
+                <VerifiedChip status={tutorInfo?.verification_status ?? null} />
               </div>
             </div>
 
