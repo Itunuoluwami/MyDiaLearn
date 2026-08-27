@@ -15,7 +15,7 @@ import {
 /* ---------------- status badges (labels only, values are backend enums) ---------------- */
 
 const BOOKING_TONE: Record<BookingStatus, string> = {
-  pending: "bg-secondary-soft text-secondary-ink",
+  pending: "bg-secondary-soft text-foreground",
   confirmed: "bg-primary-soft text-primary-deep",
   in_progress: "bg-accent/15 text-accent",
   completed: "bg-success/12 text-success",
@@ -48,7 +48,7 @@ export function BookingStatusBadge({
 }
 
 const PAYMENT_TONE: Record<PaymentStatus, string> = {
-  pending: "bg-secondary-soft text-secondary-ink",
+  pending: "bg-secondary-soft text-foreground",
   processing: "bg-primary-soft text-primary-deep",
   paid: "bg-success/12 text-success",
   failed: "bg-destructive/12 text-destructive",
@@ -257,7 +257,7 @@ export function NotAvailableYet({
 }) {
   return (
     <div className="card-elevated flex flex-col items-center px-5 py-12 text-center">
-      <span className="flex size-14 items-center justify-center rounded-2xl bg-secondary-soft text-secondary-ink">
+      <span className="flex size-14 items-center justify-center rounded-2xl bg-secondary-soft text-foreground">
         <Icon className="size-7" aria-hidden="true" />
       </span>
       <h2 className="display-section mt-5 text-xl">{title}</h2>
