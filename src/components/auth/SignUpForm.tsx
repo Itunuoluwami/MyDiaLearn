@@ -404,7 +404,7 @@ export function SignUpForm({
           <FieldError id="email-error" message={errors.email.message} />
         ) : (
           <p id="email-hint" className="text-xs text-muted-foreground">
-            We'll send a 6-digit verification code to this address.
+            We'll send a verification link to this address.
           </p>
         )}
       </div>
