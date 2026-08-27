@@ -21,11 +21,15 @@ import {
 } from "@/lib/public-data";
 import { childName, useChildren, useLevelOptions } from "@/lib/parent-data";
 
+type FindTutorSearch = { child?: string; subject?: string };
+
 export const Route = createFileRoute("/_authenticated/find-tutor")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    child: typeof search['child'] === "string" ? (search['child'] as string) : undefined,
-    subject: typeof search['subject'] === "string" ? (search['subject'] as string) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): FindTutorSearch => {
+    const next: FindTutorSearch = {};
+    if (typeof search['child'] === "string") next.child = search['child'];
+    if (typeof search['subject'] === "string") next.subject = search['subject'];
+    return next;
+  },
   head: () => ({
     meta: [
       { title: "Find a tutor — DiaLearn parent portal" },
