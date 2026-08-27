@@ -211,16 +211,17 @@ function HomePage() {
         return trending.length > 0 ? (
           <section className="border-b border-border bg-card">
             <div className="container-site py-4">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  Trending
-                </span>
-                {trending.map((item) => (
+              <div className="flex flex-wrap items-center gap-3">
+                {trending.map((item, index) => (
                   <Link
                     key={item}
                     to="/tutors"
                     search={{ q: item }}
-                    className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground transition-colors hover:border-primary-soft hover:bg-primary-soft/40"
+                    className={`rounded-full px-4 py-2 text-sm font-medium shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift ${
+                      index % 2 === 0
+                        ? "bg-primary-soft text-primary-deep"
+                        : "bg-secondary-soft text-secondary-foreground"
+                    }`}
                   >
                     {item}
                   </Link>

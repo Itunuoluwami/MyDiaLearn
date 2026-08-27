@@ -1,0 +1,1 @@
+UPDATE public.platform_settings SET value = '["IGCSE Maths","WAEC English","A-Level Physics","Yoruba for beginners","SAT Prep","French DELF","Cambridge Primary Science","IB Chemistry","Hausa Language","Nigerian Common Entrance","KCSE Mathematics","Python for Kids","Spoken Arabic","IELTS Preparation","Advanced Calculus"]' WHERE key = 'content.trending_searches';
