@@ -77,8 +77,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
             <div className="hidden items-center gap-2 sm:flex">
               {loading ? null : session ? (
                 <Button asChild>
-                  <Link to={portalPath}>My account</Link>
+                  <Link to={portalPath}>{portalPath === "/account" ? "My account" : "Dashboard"}</Link>
                 </Button>
+
               ) : (
                 <>
                   <Button asChild variant="ghost">
