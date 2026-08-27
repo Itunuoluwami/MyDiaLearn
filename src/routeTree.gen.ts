@@ -34,14 +34,19 @@ import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedBookTutorIdRouteImport } from './routes/_authenticated/book.$tutorId'
 import { Route as AuthenticatedChildrenIndexRouteImport } from './routes/_authenticated/children.index'
 import { Route as AuthenticatedChildrenStudentIdRouteImport } from './routes/_authenticated/children.$studentId'
+import { Route as AuthenticatedTutorAssignmentsRouteImport } from './routes/_authenticated/tutor.assignments'
 import { Route as AuthenticatedTutorAvailabilityRouteImport } from './routes/_authenticated/tutor.availability'
 import { Route as AuthenticatedTutorClassesRouteImport } from './routes/_authenticated/tutor.classes'
 import { Route as AuthenticatedTutorDashboardRouteImport } from './routes/_authenticated/tutor.dashboard'
+import { Route as AuthenticatedTutorEarningsRouteImport } from './routes/_authenticated/tutor.earnings'
 import { Route as AuthenticatedTutorNotificationsRouteImport } from './routes/_authenticated/tutor.notifications'
 import { Route as AuthenticatedTutorOnboardingRouteImport } from './routes/_authenticated/tutor.onboarding'
 import { Route as AuthenticatedTutorProfileRouteImport } from './routes/_authenticated/tutor.profile'
+import { Route as AuthenticatedTutorResourcesRouteImport } from './routes/_authenticated/tutor.resources'
 import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authenticated/tutor.students'
 import { Route as AuthenticatedTutorVerificationRouteImport } from './routes/_authenticated/tutor.verification'
+import { Route as AuthenticatedTutorClassroomBookingIdRouteImport } from './routes/_authenticated/tutor.classroom.$bookingId'
+import { Route as AuthenticatedTutorNotesBookingIdRouteImport } from './routes/_authenticated/tutor.notes.$bookingId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -172,6 +177,12 @@ const AuthenticatedChildrenStudentIdRoute =
     path: '/children/$studentId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTutorAssignmentsRoute =
+  AuthenticatedTutorAssignmentsRouteImport.update({
+    id: '/tutor/assignments',
+    path: '/tutor/assignments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTutorAvailabilityRoute =
   AuthenticatedTutorAvailabilityRouteImport.update({
     id: '/tutor/availability',
@@ -188,6 +199,12 @@ const AuthenticatedTutorDashboardRoute =
   AuthenticatedTutorDashboardRouteImport.update({
     id: '/tutor/dashboard',
     path: '/tutor/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTutorEarningsRoute =
+  AuthenticatedTutorEarningsRouteImport.update({
+    id: '/tutor/earnings',
+    path: '/tutor/earnings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedTutorNotificationsRoute =
@@ -208,6 +225,12 @@ const AuthenticatedTutorProfileRoute =
     path: '/tutor/profile',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTutorResourcesRoute =
+  AuthenticatedTutorResourcesRouteImport.update({
+    id: '/tutor/resources',
+    path: '/tutor/resources',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTutorStudentsRoute =
   AuthenticatedTutorStudentsRouteImport.update({
     id: '/tutor/students',
@@ -218,6 +241,18 @@ const AuthenticatedTutorVerificationRoute =
   AuthenticatedTutorVerificationRouteImport.update({
     id: '/tutor/verification',
     path: '/tutor/verification',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTutorClassroomBookingIdRoute =
+  AuthenticatedTutorClassroomBookingIdRouteImport.update({
+    id: '/tutor/classroom/$bookingId',
+    path: '/tutor/classroom/$bookingId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTutorNotesBookingIdRoute =
+  AuthenticatedTutorNotesBookingIdRouteImport.update({
+    id: '/tutor/notes/$bookingId',
+    path: '/tutor/notes/$bookingId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -245,15 +280,20 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/tutor/assignments': typeof AuthenticatedTutorAssignmentsRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/tutor/classes': typeof AuthenticatedTutorClassesRoute
   '/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
+  '/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
   '/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
   '/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/tutor/profile': typeof AuthenticatedTutorProfileRoute
+  '/tutor/resources': typeof AuthenticatedTutorResourcesRoute
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/children/': typeof AuthenticatedChildrenIndexRoute
+  '/tutor/classroom/$bookingId': typeof AuthenticatedTutorClassroomBookingIdRoute
+  '/tutor/notes/$bookingId': typeof AuthenticatedTutorNotesBookingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -279,15 +319,20 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/tutor/assignments': typeof AuthenticatedTutorAssignmentsRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/tutor/classes': typeof AuthenticatedTutorClassesRoute
   '/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
+  '/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
   '/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
   '/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/tutor/profile': typeof AuthenticatedTutorProfileRoute
+  '/tutor/resources': typeof AuthenticatedTutorResourcesRoute
   '/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/children': typeof AuthenticatedChildrenIndexRoute
+  '/tutor/classroom/$bookingId': typeof AuthenticatedTutorClassroomBookingIdRoute
+  '/tutor/notes/$bookingId': typeof AuthenticatedTutorNotesBookingIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -315,15 +360,20 @@ export interface FileRoutesById {
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/_authenticated/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/_authenticated/tutor/assignments': typeof AuthenticatedTutorAssignmentsRoute
   '/_authenticated/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/_authenticated/tutor/classes': typeof AuthenticatedTutorClassesRoute
   '/_authenticated/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
+  '/_authenticated/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
   '/_authenticated/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
   '/_authenticated/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/_authenticated/tutor/profile': typeof AuthenticatedTutorProfileRoute
+  '/_authenticated/tutor/resources': typeof AuthenticatedTutorResourcesRoute
   '/_authenticated/tutor/students': typeof AuthenticatedTutorStudentsRoute
   '/_authenticated/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/_authenticated/children/': typeof AuthenticatedChildrenIndexRoute
+  '/_authenticated/tutor/classroom/$bookingId': typeof AuthenticatedTutorClassroomBookingIdRoute
+  '/_authenticated/tutor/notes/$bookingId': typeof AuthenticatedTutorNotesBookingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -351,15 +401,20 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/book/$tutorId'
     | '/children/$studentId'
+    | '/tutor/assignments'
     | '/tutor/availability'
     | '/tutor/classes'
     | '/tutor/dashboard'
+    | '/tutor/earnings'
     | '/tutor/notifications'
     | '/tutor/onboarding'
     | '/tutor/profile'
+    | '/tutor/resources'
     | '/tutor/students'
     | '/tutor/verification'
     | '/children/'
+    | '/tutor/classroom/$bookingId'
+    | '/tutor/notes/$bookingId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -385,15 +440,20 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/book/$tutorId'
     | '/children/$studentId'
+    | '/tutor/assignments'
     | '/tutor/availability'
     | '/tutor/classes'
     | '/tutor/dashboard'
+    | '/tutor/earnings'
     | '/tutor/notifications'
     | '/tutor/onboarding'
     | '/tutor/profile'
+    | '/tutor/resources'
     | '/tutor/students'
     | '/tutor/verification'
     | '/children'
+    | '/tutor/classroom/$bookingId'
+    | '/tutor/notes/$bookingId'
   id:
     | '__root__'
     | '/'
@@ -420,15 +480,20 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/settings'
     | '/_authenticated/book/$tutorId'
     | '/_authenticated/children/$studentId'
+    | '/_authenticated/tutor/assignments'
     | '/_authenticated/tutor/availability'
     | '/_authenticated/tutor/classes'
     | '/_authenticated/tutor/dashboard'
+    | '/_authenticated/tutor/earnings'
     | '/_authenticated/tutor/notifications'
     | '/_authenticated/tutor/onboarding'
     | '/_authenticated/tutor/profile'
+    | '/_authenticated/tutor/resources'
     | '/_authenticated/tutor/students'
     | '/_authenticated/tutor/verification'
     | '/_authenticated/children/'
+    | '/_authenticated/tutor/classroom/$bookingId'
+    | '/_authenticated/tutor/notes/$bookingId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -625,6 +690,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChildrenStudentIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tutor/assignments': {
+      id: '/_authenticated/tutor/assignments'
+      path: '/tutor/assignments'
+      fullPath: '/tutor/assignments'
+      preLoaderRoute: typeof AuthenticatedTutorAssignmentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tutor/availability': {
       id: '/_authenticated/tutor/availability'
       path: '/tutor/availability'
@@ -644,6 +716,13 @@ declare module '@tanstack/react-router' {
       path: '/tutor/dashboard'
       fullPath: '/tutor/dashboard'
       preLoaderRoute: typeof AuthenticatedTutorDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tutor/earnings': {
+      id: '/_authenticated/tutor/earnings'
+      path: '/tutor/earnings'
+      fullPath: '/tutor/earnings'
+      preLoaderRoute: typeof AuthenticatedTutorEarningsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/tutor/notifications': {
@@ -667,6 +746,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTutorProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tutor/resources': {
+      id: '/_authenticated/tutor/resources'
+      path: '/tutor/resources'
+      fullPath: '/tutor/resources'
+      preLoaderRoute: typeof AuthenticatedTutorResourcesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tutor/students': {
       id: '/_authenticated/tutor/students'
       path: '/tutor/students'
@@ -679,6 +765,20 @@ declare module '@tanstack/react-router' {
       path: '/tutor/verification'
       fullPath: '/tutor/verification'
       preLoaderRoute: typeof AuthenticatedTutorVerificationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tutor/classroom/$bookingId': {
+      id: '/_authenticated/tutor/classroom/$bookingId'
+      path: '/tutor/classroom/$bookingId'
+      fullPath: '/tutor/classroom/$bookingId'
+      preLoaderRoute: typeof AuthenticatedTutorClassroomBookingIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tutor/notes/$bookingId': {
+      id: '/_authenticated/tutor/notes/$bookingId'
+      path: '/tutor/notes/$bookingId'
+      fullPath: '/tutor/notes/$bookingId'
+      preLoaderRoute: typeof AuthenticatedTutorNotesBookingIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -695,15 +795,20 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedBookTutorIdRoute: typeof AuthenticatedBookTutorIdRoute
   AuthenticatedChildrenStudentIdRoute: typeof AuthenticatedChildrenStudentIdRoute
+  AuthenticatedTutorAssignmentsRoute: typeof AuthenticatedTutorAssignmentsRoute
   AuthenticatedTutorAvailabilityRoute: typeof AuthenticatedTutorAvailabilityRoute
   AuthenticatedTutorClassesRoute: typeof AuthenticatedTutorClassesRoute
   AuthenticatedTutorDashboardRoute: typeof AuthenticatedTutorDashboardRoute
+  AuthenticatedTutorEarningsRoute: typeof AuthenticatedTutorEarningsRoute
   AuthenticatedTutorNotificationsRoute: typeof AuthenticatedTutorNotificationsRoute
   AuthenticatedTutorOnboardingRoute: typeof AuthenticatedTutorOnboardingRoute
   AuthenticatedTutorProfileRoute: typeof AuthenticatedTutorProfileRoute
+  AuthenticatedTutorResourcesRoute: typeof AuthenticatedTutorResourcesRoute
   AuthenticatedTutorStudentsRoute: typeof AuthenticatedTutorStudentsRoute
   AuthenticatedTutorVerificationRoute: typeof AuthenticatedTutorVerificationRoute
   AuthenticatedChildrenIndexRoute: typeof AuthenticatedChildrenIndexRoute
+  AuthenticatedTutorClassroomBookingIdRoute: typeof AuthenticatedTutorClassroomBookingIdRoute
+  AuthenticatedTutorNotesBookingIdRoute: typeof AuthenticatedTutorNotesBookingIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -717,15 +822,21 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedBookTutorIdRoute: AuthenticatedBookTutorIdRoute,
   AuthenticatedChildrenStudentIdRoute: AuthenticatedChildrenStudentIdRoute,
+  AuthenticatedTutorAssignmentsRoute: AuthenticatedTutorAssignmentsRoute,
   AuthenticatedTutorAvailabilityRoute: AuthenticatedTutorAvailabilityRoute,
   AuthenticatedTutorClassesRoute: AuthenticatedTutorClassesRoute,
   AuthenticatedTutorDashboardRoute: AuthenticatedTutorDashboardRoute,
+  AuthenticatedTutorEarningsRoute: AuthenticatedTutorEarningsRoute,
   AuthenticatedTutorNotificationsRoute: AuthenticatedTutorNotificationsRoute,
   AuthenticatedTutorOnboardingRoute: AuthenticatedTutorOnboardingRoute,
   AuthenticatedTutorProfileRoute: AuthenticatedTutorProfileRoute,
+  AuthenticatedTutorResourcesRoute: AuthenticatedTutorResourcesRoute,
   AuthenticatedTutorStudentsRoute: AuthenticatedTutorStudentsRoute,
   AuthenticatedTutorVerificationRoute: AuthenticatedTutorVerificationRoute,
   AuthenticatedChildrenIndexRoute: AuthenticatedChildrenIndexRoute,
+  AuthenticatedTutorClassroomBookingIdRoute:
+    AuthenticatedTutorClassroomBookingIdRoute,
+  AuthenticatedTutorNotesBookingIdRoute: AuthenticatedTutorNotesBookingIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

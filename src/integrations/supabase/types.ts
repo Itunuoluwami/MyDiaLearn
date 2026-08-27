@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignments: {
+        Row: {
+          assigned_at: string | null
+          booking_id: string | null
+          created_at: string
+          due_at: string | null
+          feedback: string | null
+          id: string
+          instructions: string | null
+          resource_id: string | null
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["assignment_status"]
+          student_id: string
+          subject_id: string | null
+          submission_path: string | null
+          submission_requirements: string | null
+          submission_text: string | null
+          submitted_at: string | null
+          title: string
+          tutor_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          booking_id?: string | null
+          created_at?: string
+          due_at?: string | null
+          feedback?: string | null
+          id?: string
+          instructions?: string | null
+          resource_id?: string | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          student_id: string
+          subject_id?: string | null
+          submission_path?: string | null
+          submission_requirements?: string | null
+          submission_text?: string | null
+          submitted_at?: string | null
+          title: string
+          tutor_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string | null
+          booking_id?: string | null
+          created_at?: string
+          due_at?: string | null
+          feedback?: string | null
+          id?: string
+          instructions?: string | null
+          resource_id?: string | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          student_id?: string
+          subject_id?: string | null
+          submission_path?: string | null
+          submission_requirements?: string | null
+          submission_text?: string | null
+          submitted_at?: string | null
+          title?: string
+          tutor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "learning_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       availability_windows: {
         Row: {
           created_at: string
@@ -80,6 +182,7 @@ export type Database = {
           student_notes: string | null
           subject_id: string | null
           total_amount: number
+          tutor_accepted_at: string | null
           tutor_id: string
           updated_at: string
         }
@@ -104,6 +207,7 @@ export type Database = {
           student_notes?: string | null
           subject_id?: string | null
           total_amount: number
+          tutor_accepted_at?: string | null
           tutor_id: string
           updated_at?: string
         }
@@ -128,6 +232,7 @@ export type Database = {
           student_notes?: string | null
           subject_id?: string | null
           total_amount?: number
+          tutor_accepted_at?: string | null
           tutor_id?: string
           updated_at?: string
         }
@@ -386,6 +491,103 @@ export type Database = {
           },
         ]
       }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          last_read_at: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          last_read_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          last_read_at?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          last_message_at: string | null
+          student_id: string | null
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          last_message_at?: string | null
+          student_id?: string | null
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          last_message_at?: string | null
+          student_id?: string | null
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       currencies: {
         Row: {
           code: string
@@ -544,6 +746,175 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "currencies"
             referencedColumns: ["code"]
+          },
+        ]
+      }
+      learning_resources: {
+        Row: {
+          created_at: string
+          description: string | null
+          external_url: string | null
+          id: string
+          is_shared: boolean
+          mime_type: string | null
+          resource_type: Database["public"]["Enums"]["resource_type"]
+          size_bytes: number | null
+          storage_path: string | null
+          student_id: string | null
+          subject_id: string | null
+          title: string
+          tutor_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          external_url?: string | null
+          id?: string
+          is_shared?: boolean
+          mime_type?: string | null
+          resource_type?: Database["public"]["Enums"]["resource_type"]
+          size_bytes?: number | null
+          storage_path?: string | null
+          student_id?: string | null
+          subject_id?: string | null
+          title: string
+          tutor_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          external_url?: string | null
+          id?: string
+          is_shared?: boolean
+          mime_type?: string | null
+          resource_type?: Database["public"]["Enums"]["resource_type"]
+          size_bytes?: number | null
+          storage_path?: string | null
+          student_id?: string | null
+          subject_id?: string | null
+          title?: string
+          tutor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_resources_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_resources_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_resources_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_notes: {
+        Row: {
+          booking_id: string
+          covered: string | null
+          created_at: string
+          id: string
+          improvements: string | null
+          next_steps: string | null
+          tutor_id: string
+          understanding: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          covered?: string | null
+          created_at?: string
+          id?: string
+          improvements?: string | null
+          next_steps?: string | null
+          tutor_id: string
+          understanding?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          covered?: string | null
+          created_at?: string
+          id?: string
+          improvements?: string | null
+          next_steps?: string | null
+          tutor_id?: string
+          understanding?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_notes_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_notes_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          attachment_name: string | null
+          attachment_path: string | null
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_path?: string | null
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_path?: string | null
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -751,6 +1122,63 @@ export type Database = {
           },
         ]
       }
+      payouts: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          reference: string | null
+          requested_at: string
+          settled_at: string | null
+          status: Database["public"]["Enums"]["payout_status"]
+          tutor_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency: string
+          id?: string
+          notes?: string | null
+          reference?: string | null
+          requested_at?: string
+          settled_at?: string | null
+          status?: Database["public"]["Enums"]["payout_status"]
+          tutor_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          reference?: string | null
+          requested_at?: string
+          settled_at?: string | null
+          status?: Database["public"]["Enums"]["payout_status"]
+          tutor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currencies"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "payouts_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           category: string
@@ -866,6 +1294,81 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      rating_categories: {
+        Row: {
+          applies_to: Database["public"]["Enums"]["app_role"]
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          applies_to?: Database["public"]["Enums"]["app_role"]
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: Database["public"]["Enums"]["app_role"]
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rating_category_scores: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          rating_id: string
+          score: number
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          rating_id: string
+          score: number
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          rating_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rating_category_scores_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "rating_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rating_category_scores_rating_id_fkey"
+            columns: ["rating_id"]
+            isOneToOne: false
+            referencedRelation: "ratings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ratings: {
         Row: {
@@ -1514,7 +2017,30 @@ export type Database = {
         }
         Returns: boolean
       }
+      in_conversation: { Args: { _conversation_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      my_conversations: {
+        Args: never
+        Returns: {
+          id: string
+          last_message: string
+          last_message_at: string
+          last_sender_name: string
+          student_first_name: string
+          student_id: string
+          subject: string
+          unread_count: number
+        }[]
+      }
+      notify_user: {
+        Args: {
+          _link: string
+          _trigger_key: string
+          _user_id: string
+          _vars: Json
+        }
+        Returns: undefined
+      }
       owns_tutor: { Args: { _tutor_id: string }; Returns: boolean }
       parent_child_progress: {
         Args: { p_student_id: string }
@@ -1672,6 +2198,7 @@ export type Database = {
           years_experience: number
         }[]
       }
+      render_template: { Args: { _body: string; _vars: Json }; Returns: string }
       tutor_available_slots: {
         Args: {
           p_days?: number
@@ -1695,12 +2222,19 @@ export type Database = {
         }
         Returns: {
           booking_timezone: string
+          cancellation_reason: string
+          cancelled_at: string
           currency: string
           duration_minutes: number
           education_level_name: string
           ends_at: string
+          has_notes: boolean
           hourly_rate: number
           id: string
+          payment_amount: number
+          payment_currency: string
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          session_id: string
           starts_at: string
           status: Database["public"]["Enums"]["booking_status"]
           student_avatar_url: string
@@ -1710,6 +2244,7 @@ export type Database = {
           subject_id: string
           subject_name: string
           total_amount: number
+          tutor_accepted_at: string
         }[]
       }
       tutor_dashboard_summary: {
@@ -1729,9 +2264,103 @@ export type Database = {
           verification_status: Database["public"]["Enums"]["verification_status"]
         }[]
       }
+      tutor_earnings_records: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          booking_id: string
+          commission_amount: number
+          currency: string
+          exchange_rate: number
+          gross_amount: number
+          net_amount: number
+          occurred_at: string
+          payment_id: string
+          platform_fee: number
+          settlement_currency: string
+          status: Database["public"]["Enums"]["payment_status"]
+          student_first_name: string
+          subject_name: string
+        }[]
+      }
+      tutor_earnings_summary: {
+        Args: never
+        Returns: {
+          available_balance: number
+          currency: string
+          gross_revenue: number
+          minimum_payout: number
+          net_earnings: number
+          next_payout_date: string
+          paid_out: number
+          payment_fees: number
+          pending_earnings: number
+          pending_payouts: number
+          platform_commission: number
+          schedule_label: string
+        }[]
+      }
+      tutor_end_class: {
+        Args: { p_booking_id: string; p_student_attended?: boolean }
+        Returns: undefined
+      }
+      tutor_open_class: {
+        Args: { p_booking_id: string }
+        Returns: {
+          duration_minutes: number
+          ended_at: string
+          ends_at: string
+          meeting_provider: string
+          meeting_url: string
+          session_id: string
+          started_at: string
+          starts_at: string
+          status: Database["public"]["Enums"]["booking_status"]
+          student_first_name: string
+          subject_name: string
+        }[]
+      }
+      tutor_rating_categories: {
+        Args: never
+        Returns: {
+          average_score: number
+          category_id: string
+          name: string
+          response_count: number
+        }[]
+      }
+      tutor_rating_summary: {
+        Args: never
+        Returns: {
+          five_star: number
+          four_star: number
+          one_star: number
+          rating_avg: number
+          rating_count: number
+          three_star: number
+          two_star: number
+        }[]
+      }
+      tutor_request_payout: { Args: { p_amount: number }; Returns: string }
       tutor_respond_booking: {
         Args: { p_accept: boolean; p_booking_id: string }
         Returns: Database["public"]["Enums"]["booking_status"]
+      }
+      tutor_reviews: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          comment: string
+          created_at: string
+          id: string
+          reviewer_name: string
+          score: number
+          student_first_name: string
+          subject_name: string
+        }[]
+      }
+      tutor_start_class: { Args: { p_booking_id: string }; Returns: undefined }
+      tutor_start_conversation: {
+        Args: { p_student_id: string; p_subject?: string }
+        Returns: string
       }
       tutor_students: {
         Args: { p_limit?: number; p_offset?: number }
@@ -1756,6 +2385,7 @@ export type Database = {
     }
     Enums: {
       app_role: "student" | "parent" | "tutor" | "agency" | "admin"
+      assignment_status: "draft" | "assigned" | "submitted" | "reviewed"
       booking_status:
         | "pending"
         | "confirmed"
@@ -1773,6 +2403,13 @@ export type Database = {
         | "failed"
         | "refunded"
         | "partially_refunded"
+      payout_status:
+        | "requested"
+        | "processing"
+        | "paid"
+        | "rejected"
+        | "cancelled"
+      resource_type: "pdf" | "video" | "link" | "document" | "image" | "other"
       verification_status:
         | "unverified"
         | "pending"
@@ -1908,6 +2545,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["student", "parent", "tutor", "agency", "admin"],
+      assignment_status: ["draft", "assigned", "submitted", "reviewed"],
       booking_status: [
         "pending",
         "confirmed",
@@ -1927,6 +2565,14 @@ export const Constants = {
         "refunded",
         "partially_refunded",
       ],
+      payout_status: [
+        "requested",
+        "processing",
+        "paid",
+        "rejected",
+        "cancelled",
+      ],
+      resource_type: ["pdf", "video", "link", "document", "image", "other"],
       verification_status: [
         "unverified",
         "pending",
