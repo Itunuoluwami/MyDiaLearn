@@ -27,6 +27,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedFamilyRouteImport } from './routes/_authenticated/family'
 import { Route as AuthenticatedFindTutorRouteImport } from './routes/_authenticated/find-tutor'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as TutorsIndexRouteImport } from './routes/tutors.index'
 import { Route as TutorsTutorIdRouteImport } from './routes/tutors.$tutorId'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
@@ -124,6 +125,11 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const TutorsIndexRoute = TutorsIndexRouteImport.update({
   id: '/tutors/',
   path: '/tutors/',
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/family': typeof AuthenticatedFamilyRoute
   '/find-tutor': typeof AuthenticatedFindTutorRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors/': typeof TutorsIndexRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -202,6 +209,7 @@ export interface FileRoutesByTo {
   '/family': typeof AuthenticatedFamilyRoute
   '/find-tutor': typeof AuthenticatedFindTutorRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors': typeof TutorsIndexRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/_authenticated/family': typeof AuthenticatedFamilyRoute
   '/_authenticated/find-tutor': typeof AuthenticatedFindTutorRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors/': typeof TutorsIndexRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -256,6 +265,7 @@ export interface FileRouteTypes {
     | '/family'
     | '/find-tutor'
     | '/notifications'
+    | '/settings'
     | '/tutors/$tutorId'
     | '/tutors/'
     | '/admin/settings'
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/family'
     | '/find-tutor'
     | '/notifications'
+    | '/settings'
     | '/tutors/$tutorId'
     | '/tutors'
     | '/admin/settings'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/_authenticated/family'
     | '/_authenticated/find-tutor'
     | '/_authenticated/notifications'
+    | '/_authenticated/settings'
     | '/tutors/$tutorId'
     | '/tutors/'
     | '/_authenticated/admin/settings'
@@ -460,6 +472,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/tutors/': {
       id: '/tutors/'
       path: '/tutors'
@@ -512,6 +531,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFamilyRoute: typeof AuthenticatedFamilyRoute
   AuthenticatedFindTutorRoute: typeof AuthenticatedFindTutorRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedBookTutorIdRoute: typeof AuthenticatedBookTutorIdRoute
   AuthenticatedChildrenStudentIdRoute: typeof AuthenticatedChildrenStudentIdRoute
@@ -525,6 +545,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFamilyRoute: AuthenticatedFamilyRoute,
   AuthenticatedFindTutorRoute: AuthenticatedFindTutorRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedBookTutorIdRoute: AuthenticatedBookTutorIdRoute,
   AuthenticatedChildrenStudentIdRoute: AuthenticatedChildrenStudentIdRoute,
