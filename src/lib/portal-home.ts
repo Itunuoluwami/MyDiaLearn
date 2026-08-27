@@ -6,6 +6,7 @@ import type { AppRole } from "@/hooks/use-auth";
  */
 const ROLE_HOME: Partial<Record<AppRole, string>> = {
   parent: "/dashboard",
+  tutor: "/tutor/dashboard",
 };
 
 export function portalHome(roles: AppRole[]): string {

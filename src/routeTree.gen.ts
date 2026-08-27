@@ -37,7 +37,11 @@ import { Route as AuthenticatedChildrenStudentIdRouteImport } from './routes/_au
 import { Route as AuthenticatedTutorAvailabilityRouteImport } from './routes/_authenticated/tutor.availability'
 import { Route as AuthenticatedTutorClassesRouteImport } from './routes/_authenticated/tutor.classes'
 import { Route as AuthenticatedTutorDashboardRouteImport } from './routes/_authenticated/tutor.dashboard'
+import { Route as AuthenticatedTutorNotificationsRouteImport } from './routes/_authenticated/tutor.notifications'
+import { Route as AuthenticatedTutorOnboardingRouteImport } from './routes/_authenticated/tutor.onboarding'
 import { Route as AuthenticatedTutorProfileRouteImport } from './routes/_authenticated/tutor.profile'
+import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authenticated/tutor.students'
+import { Route as AuthenticatedTutorVerificationRouteImport } from './routes/_authenticated/tutor.verification'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -186,10 +190,34 @@ const AuthenticatedTutorDashboardRoute =
     path: '/tutor/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTutorNotificationsRoute =
+  AuthenticatedTutorNotificationsRouteImport.update({
+    id: '/tutor/notifications',
+    path: '/tutor/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTutorOnboardingRoute =
+  AuthenticatedTutorOnboardingRouteImport.update({
+    id: '/tutor/onboarding',
+    path: '/tutor/onboarding',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTutorProfileRoute =
   AuthenticatedTutorProfileRouteImport.update({
     id: '/tutor/profile',
     path: '/tutor/profile',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTutorStudentsRoute =
+  AuthenticatedTutorStudentsRouteImport.update({
+    id: '/tutor/students',
+    path: '/tutor/students',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTutorVerificationRoute =
+  AuthenticatedTutorVerificationRouteImport.update({
+    id: '/tutor/verification',
+    path: '/tutor/verification',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -220,7 +248,11 @@ export interface FileRoutesByFullPath {
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/tutor/classes': typeof AuthenticatedTutorClassesRoute
   '/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
+  '/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
+  '/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/tutor/profile': typeof AuthenticatedTutorProfileRoute
+  '/tutor/students': typeof AuthenticatedTutorStudentsRoute
+  '/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/children/': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRoutesByTo {
@@ -250,7 +282,11 @@ export interface FileRoutesByTo {
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/tutor/classes': typeof AuthenticatedTutorClassesRoute
   '/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
+  '/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
+  '/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/tutor/profile': typeof AuthenticatedTutorProfileRoute
+  '/tutor/students': typeof AuthenticatedTutorStudentsRoute
+  '/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/children': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRoutesById {
@@ -282,7 +318,11 @@ export interface FileRoutesById {
   '/_authenticated/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/_authenticated/tutor/classes': typeof AuthenticatedTutorClassesRoute
   '/_authenticated/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
+  '/_authenticated/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
+  '/_authenticated/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/_authenticated/tutor/profile': typeof AuthenticatedTutorProfileRoute
+  '/_authenticated/tutor/students': typeof AuthenticatedTutorStudentsRoute
+  '/_authenticated/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/_authenticated/children/': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRouteTypes {
@@ -314,7 +354,11 @@ export interface FileRouteTypes {
     | '/tutor/availability'
     | '/tutor/classes'
     | '/tutor/dashboard'
+    | '/tutor/notifications'
+    | '/tutor/onboarding'
     | '/tutor/profile'
+    | '/tutor/students'
+    | '/tutor/verification'
     | '/children/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -344,7 +388,11 @@ export interface FileRouteTypes {
     | '/tutor/availability'
     | '/tutor/classes'
     | '/tutor/dashboard'
+    | '/tutor/notifications'
+    | '/tutor/onboarding'
     | '/tutor/profile'
+    | '/tutor/students'
+    | '/tutor/verification'
     | '/children'
   id:
     | '__root__'
@@ -375,7 +423,11 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor/availability'
     | '/_authenticated/tutor/classes'
     | '/_authenticated/tutor/dashboard'
+    | '/_authenticated/tutor/notifications'
+    | '/_authenticated/tutor/onboarding'
     | '/_authenticated/tutor/profile'
+    | '/_authenticated/tutor/students'
+    | '/_authenticated/tutor/verification'
     | '/_authenticated/children/'
   fileRoutesById: FileRoutesById
 }
@@ -594,11 +646,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTutorDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tutor/notifications': {
+      id: '/_authenticated/tutor/notifications'
+      path: '/tutor/notifications'
+      fullPath: '/tutor/notifications'
+      preLoaderRoute: typeof AuthenticatedTutorNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tutor/onboarding': {
+      id: '/_authenticated/tutor/onboarding'
+      path: '/tutor/onboarding'
+      fullPath: '/tutor/onboarding'
+      preLoaderRoute: typeof AuthenticatedTutorOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tutor/profile': {
       id: '/_authenticated/tutor/profile'
       path: '/tutor/profile'
       fullPath: '/tutor/profile'
       preLoaderRoute: typeof AuthenticatedTutorProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tutor/students': {
+      id: '/_authenticated/tutor/students'
+      path: '/tutor/students'
+      fullPath: '/tutor/students'
+      preLoaderRoute: typeof AuthenticatedTutorStudentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tutor/verification': {
+      id: '/_authenticated/tutor/verification'
+      path: '/tutor/verification'
+      fullPath: '/tutor/verification'
+      preLoaderRoute: typeof AuthenticatedTutorVerificationRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -618,7 +698,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTutorAvailabilityRoute: typeof AuthenticatedTutorAvailabilityRoute
   AuthenticatedTutorClassesRoute: typeof AuthenticatedTutorClassesRoute
   AuthenticatedTutorDashboardRoute: typeof AuthenticatedTutorDashboardRoute
+  AuthenticatedTutorNotificationsRoute: typeof AuthenticatedTutorNotificationsRoute
+  AuthenticatedTutorOnboardingRoute: typeof AuthenticatedTutorOnboardingRoute
   AuthenticatedTutorProfileRoute: typeof AuthenticatedTutorProfileRoute
+  AuthenticatedTutorStudentsRoute: typeof AuthenticatedTutorStudentsRoute
+  AuthenticatedTutorVerificationRoute: typeof AuthenticatedTutorVerificationRoute
   AuthenticatedChildrenIndexRoute: typeof AuthenticatedChildrenIndexRoute
 }
 
@@ -636,7 +720,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTutorAvailabilityRoute: AuthenticatedTutorAvailabilityRoute,
   AuthenticatedTutorClassesRoute: AuthenticatedTutorClassesRoute,
   AuthenticatedTutorDashboardRoute: AuthenticatedTutorDashboardRoute,
+  AuthenticatedTutorNotificationsRoute: AuthenticatedTutorNotificationsRoute,
+  AuthenticatedTutorOnboardingRoute: AuthenticatedTutorOnboardingRoute,
   AuthenticatedTutorProfileRoute: AuthenticatedTutorProfileRoute,
+  AuthenticatedTutorStudentsRoute: AuthenticatedTutorStudentsRoute,
+  AuthenticatedTutorVerificationRoute: AuthenticatedTutorVerificationRoute,
   AuthenticatedChildrenIndexRoute: AuthenticatedChildrenIndexRoute,
 }
 
