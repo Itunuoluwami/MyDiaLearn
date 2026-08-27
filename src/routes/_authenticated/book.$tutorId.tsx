@@ -28,10 +28,14 @@ import {
   useViewerTimezone,
 } from "@/lib/parent-data";
 
+type BookSearch = { child?: string };
+
 export const Route = createFileRoute("/_authenticated/book/$tutorId")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    child: typeof search['child'] === "string" ? (search['child'] as string) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): BookSearch => {
+    const next: BookSearch = {};
+    if (typeof search['child'] === "string") next.child = search['child'];
+    return next;
+  },
   head: () => ({
     meta: [
       { title: "Book a class — DiaLearn parent portal" },
@@ -61,7 +65,7 @@ function BookClassPage() {
   const timezone = useViewerTimezone();
 
   const children = useChildren();
-  const tutor = useTutorCard(tutorId);
+  const { tutor: tutorInfo } = useTutorCard(tutorId);
   const durations = useDurationOptions();
   const tutorSubjects = useTutorSubjects(tutorId);
 
@@ -79,6 +83,14 @@ function BookClassPage() {
     durationMinutes: effectiveDuration,
   });
   const quote = useBookingQuote(tutorId, effectiveDuration);
+
+  const uniqueSubjects = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    for (const row of tutorSubjects.data ?? []) {
+      if (row.subject_id) map.set(row.subject_id, { id: row.subject_id, name: row.subjects?.name ?? "Subject" });
+    }
+    return [...map.values()];
+  }, [tutorSubjects.data]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, typeof slots.data>();
@@ -135,7 +147,7 @@ function BookClassPage() {
 
   return (
     <ParentShell
-      title={tutor.data ? `Book ${tutor.data.full_name}` : "Book a class"}
+      title={tutorInfo ? `Book ${tutor.data.full_name}` : "Book a class"}
       description="Times are shown in your local timezone, with the tutor's local time alongside."
       actions={
         <Button asChild variant="outline" className="min-h-11">
@@ -185,7 +197,7 @@ function BookClassPage() {
                       <SelectValue placeholder="Select a subject" />
                     </SelectTrigger>
                     <SelectContent>
-                      {(tutorSubjects.data ?? []).map((item) => (
+                      {uniqueSubjects.map((item) => (
                         <SelectItem key={item.id} value={item.id}>
                           {item.name}
                         </SelectItem>
@@ -231,7 +243,7 @@ function BookClassPage() {
           <SectionCard
             title="Choose a time"
             description={`Your timezone · ${timezone}${
-              tutor.data?.timezone ? ` · Tutor · ${tutor.data.timezone}` : ""
+              tutorInfo?.timezone ? ` · Tutor · ${tutor.data.timezone}` : ""
             }`}
           >
             {slots.isLoading ? (
@@ -296,13 +308,13 @@ function BookClassPage() {
           <div className="card-elevated space-y-4 p-4">
             <div className="flex items-start gap-3">
               <span className="flex size-11 items-center justify-center rounded-xl bg-primary-soft text-sm font-semibold text-primary-deep">
-                {(tutor.data?.full_name ?? "T").charAt(0)}
+                {(tutorInfo?.full_name ?? "T").charAt(0)}
               </span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">
-                  {tutor.data?.full_name ?? "Tutor"}
+                  {tutorInfo?.full_name ?? "Tutor"}
                 </p>
-                <VerifiedChip status={tutor.data?.verification_status} />
+                <VerifiedChip status={tutorInfo?.verification_status} />
               </div>
             </div>
 

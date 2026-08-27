@@ -44,13 +44,13 @@ export function ParentTutorCard({
           ) : null}
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
             {rating ? (
-              <MetaItem icon={Star} label={`${rating.toFixed(1)} (${Number(tutor.rating_count)})`} />
+              <MetaItem icon={Star}>{`${rating.toFixed(1)} (${Number(tutor.rating_count)})`}</MetaItem>
             ) : (
               <span className="text-xs text-muted-foreground">New on DiaLearn</span>
             )}
-            {tutor.country_code ? <MetaItem icon={MapPin} label={tutor.country_code} /> : null}
+            {tutor.country_code ? <MetaItem icon={MapPin}>{tutor.country_code}</MetaItem> : null}
             {tutor.years_experience ? (
-              <MetaItem icon={GraduationCap} label={`${tutor.years_experience} yrs`} />
+              <MetaItem icon={GraduationCap}>{`${tutor.years_experience} yrs`}</MetaItem>
             ) : null}
           </div>
         </div>

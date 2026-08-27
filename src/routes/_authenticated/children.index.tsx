@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ChevronRight, Loader2, Lock, Plus, ShieldCheck, UserRound, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 import { ParentShell } from "@/components/parent/ParentShell";
 import { CardSkeletonList, EmptyPanel, LoadError, SectionCard } from "@/components/parent/ui";
@@ -129,7 +130,7 @@ function ChildrenPage() {
   });
 
   const updatePermission = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, boolean> }) => {
+    mutationFn: async ({ id, patch }: { id: string; patch: Partial<Pick<Database["public"]["Tables"]["students"]["Update"], "can_self_login" | "can_book_lessons" | "can_message_tutors">> }) => {
       const { error } = await supabase.from("students").update(patch).eq("id", id);
       if (error) throw error;
     },
