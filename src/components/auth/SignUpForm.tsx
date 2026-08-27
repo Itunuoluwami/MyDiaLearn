@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   AlertCircle,
+  ArrowLeft,
   Check,
   GraduationCap,
   Loader2,
@@ -76,6 +77,7 @@ export function SignUpForm({
   const { data: settings } = usePublicSettings();
   const runServerValidation = useServerFn(validateSignup);
   const [formError, setFormError] = useState<{ message: string; showSignIn?: boolean } | null>(null);
+  const [step, setStep] = useState<1 | 2>(1);
 
   const countries = useMemo(
     () => settingList<CountryOption>(settings, "auth.countries"),
