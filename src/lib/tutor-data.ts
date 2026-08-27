@@ -90,9 +90,9 @@ export function useTutorBookings(params?: {
     enabled: Boolean(user?.id),
     queryFn: async () => {
       const { data, error } = await supabase.rpc("tutor_bookings", {
-        p_from: params?.from ?? undefined,
-        p_to: params?.to ?? undefined,
-        p_statuses: params?.statuses ?? undefined,
+        ...(params?.from ? { p_from: params.from } : {}),
+        ...(params?.to ? { p_to: params.to } : {}),
+        ...(params?.statuses ? { p_statuses: params.statuses } : {}),
       });
       if (error) throw error;
       return data ?? [];
