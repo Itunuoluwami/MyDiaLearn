@@ -335,7 +335,7 @@ export function useUploadTutorDocument() {
       const path = `${tutor.id}/${crypto.randomUUID()}.${extension}`;
 
       const upload = await supabase.storage.from("tutor-documents").upload(path, input.file, {
-        contentType: input.file.type || undefined,
+        ...(input.file.type ? { contentType: input.file.type } : {}),
         upsert: false,
       });
       if (upload.error) throw upload.error;
