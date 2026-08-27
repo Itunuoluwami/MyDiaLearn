@@ -626,6 +626,8 @@ export function SignUpForm({
           Sign in
         </button>
       </p>
+      </>
+      )}
     </form>
   );
 }
