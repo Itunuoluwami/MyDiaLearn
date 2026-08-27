@@ -205,27 +205,40 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Trending searches */}
+      {/* Trending searches — pastel category palette, capped at two rows */}
       {(() => {
+        const CHIP_STYLES = [
+          "bg-cat-lavender text-cat-lavender-ink",
+          "bg-cat-mint text-cat-mint-ink",
+          "bg-cat-rose text-cat-rose-ink",
+          "bg-cat-peach text-cat-peach-ink",
+          "bg-cat-sky text-cat-sky-ink",
+          "bg-cat-cream text-cat-cream-ink",
+        ];
         const trending = settingList<string>(settings, "content.trending_searches");
-        return trending.length > 0 ? (
+        const visible = trending.slice(0, 10);
+        return visible.length > 0 ? (
           <section className="border-b border-border bg-card">
-            <div className="container-site py-4">
+            <div className="container-site py-5">
               <div className="flex flex-wrap items-center gap-3">
-                {trending.map((item, index) => (
+                {visible.map((item, index) => (
                   <Link
                     key={item}
                     to="/tutors"
                     search={{ q: item }}
-                    className={`rounded-full px-4 py-2 text-sm font-medium shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift ${
-                      index % 2 === 0
-                        ? "bg-primary-soft text-primary-deep"
-                        : "bg-secondary-soft text-secondary-foreground"
-                    }`}
+                    className={`rounded-full px-4 py-2 text-sm font-medium shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift ${CHIP_STYLES[index % CHIP_STYLES.length]}`}
                   >
                     {item}
                   </Link>
                 ))}
+                {trending.length > visible.length ? (
+                  <Button asChild variant="subtle" size="sm" className="rounded-full">
+                    <Link to="/explore">
+                      Explore more
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
+                ) : null}
               </div>
             </div>
           </section>
