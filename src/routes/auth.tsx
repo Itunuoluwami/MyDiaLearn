@@ -101,8 +101,8 @@ function AuthPage() {
       </header>
 
       <main className="container-site py-6 md:py-12">
-        <div className="grid items-stretch gap-8 lg:grid-cols-[minmax(22rem,1fr)_minmax(20rem,1fr)] lg:gap-12">
-          <div className="mx-auto w-full max-w-lg">
+        <div className="grid items-start gap-8 lg:h-[36rem] lg:grid-cols-[minmax(22rem,1fr)_minmax(20rem,1fr)] lg:gap-12">
+          <div className="mx-auto w-full max-w-lg lg:h-full lg:overflow-y-auto">
             {pendingEmail ? (
               <section className="card-elevated p-5 md:p-8">
                 <span className="flex size-12 items-center justify-center rounded-xl bg-primary-soft">
