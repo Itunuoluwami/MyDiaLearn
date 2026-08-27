@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useRedirectToPortalHome } from "@/hooks/use-portal-redirect";
+
 import { PortalShell } from "@/components/layout/PortalShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,8 +33,10 @@ export const Route = createFileRoute("/_authenticated/account")({
 });
 
 function AccountPage() {
+  useRedirectToPortalHome();
   const { profile, permissions, refresh, user } = useAuth();
   const queryClient = useQueryClient();
+
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");

@@ -7,6 +7,8 @@ import { Loader2, Plus, Trash2, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
+import { useRedirectToPortalHome } from "@/hooks/use-portal-redirect";
+
 import { PortalShell } from "@/components/layout/PortalShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,7 +59,9 @@ const EMPTY = {
 };
 
 function FamilyPage() {
+  useRedirectToPortalHome();
   const { user, hasPermission } = useAuth();
+
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);

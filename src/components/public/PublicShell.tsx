@@ -77,8 +77,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
             <div className="hidden items-center gap-2 sm:flex">
               {loading ? null : session ? (
                 <Button asChild>
-                  <Link to={portalPath}>My account</Link>
+                  <Link to={portalPath}>{portalPath === "/account" ? "My account" : "Dashboard"}</Link>
                 </Button>
+
               ) : (
                 <>
                   <Button asChild variant="ghost">
@@ -131,8 +132,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
                 <div className="flex flex-col gap-2 p-4">
                   {session ? (
                     <Button asChild onClick={() => setOpen(false)}>
-                      <Link to={portalPath}>My account</Link>
+                      <Link to={portalPath}>{portalPath === "/account" ? "My account" : "Dashboard"}</Link>
                     </Button>
+
                   ) : (
                     <>
                       <Button asChild variant="cta" onClick={() => setOpen(false)}>
