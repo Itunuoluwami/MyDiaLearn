@@ -114,8 +114,8 @@ export function SiteSearch({
       </div>
 
       {showTrending && trending.length > 0 ? (
-        <div className="-mx-1 mt-3 flex items-center gap-2 overflow-x-auto px-1 pb-1">
-          <span className="shrink-0 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             Trending
           </span>
           {trending.map((item) => (
@@ -123,7 +123,7 @@ export function SiteSearch({
               key={item}
               to="/tutors"
               search={{ q: item }}
-              className="shrink-0 rounded-md border border-border bg-card px-3 py-2 text-sm whitespace-nowrap text-foreground transition-colors hover:border-primary-soft hover:bg-primary-soft/40"
+              className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground transition-colors hover:border-primary-soft hover:bg-primary-soft/40"
             >
               {item}
             </Link>
