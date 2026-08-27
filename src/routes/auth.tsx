@@ -104,20 +104,24 @@ function AuthPage() {
         <div className="grid items-start gap-8 lg:h-[36rem] lg:grid-cols-[minmax(22rem,1fr)_minmax(20rem,1fr)] lg:gap-12">
           <div className="mx-auto w-full max-w-lg lg:h-full lg:overflow-y-auto">
             {pendingEmail ? (
-              <section className="card-elevated p-5 md:p-8">
-                <span className="flex size-12 items-center justify-center rounded-xl bg-primary-soft">
-                  <MailCheck className="size-6 text-primary" aria-hidden="true" />
+              <section className="card-elevated flex flex-col items-center p-5 text-center md:p-8">
+                <span className="flex size-14 items-center justify-center rounded-2xl bg-primary-soft">
+                  <MailCheck className="size-7 text-primary" aria-hidden="true" />
                 </span>
-                <h1 className="display-section mt-5 text-2xl">Verify your email</h1>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <h1 className="display-section mt-6 text-2xl">Verify your email</h1>
+                <p className="mt-2 max-w-xs text-sm text-muted-foreground">
                   Enter the 6-digit code we sent to{" "}
                   <span className="font-medium text-foreground">{pendingEmail}</span>.
                 </p>
-                <form onSubmit={handleVerifyOtp} className="mt-6 space-y-5">
+                <form onSubmit={handleVerifyOtp} className="mt-8 w-full max-w-sm space-y-6">
                   <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                    <InputOTPGroup>
+                    <InputOTPGroup className="justify-center gap-2.5">
                       {[0, 1, 2, 3, 4, 5].map((index) => (
-                        <InputOTPSlot key={index} index={index} />
+                        <InputOTPSlot
+                          key={index}
+                          index={index}
+                          className="h-12 w-12 rounded-xl border border-input text-lg shadow-sm md:h-14 md:w-14"
+                        />
                       ))}
                     </InputOTPGroup>
                   </InputOTP>
@@ -130,27 +134,26 @@ function AuthPage() {
                     {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
                     Verify and continue
                   </Button>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
-                    <Button
+                  <div className="flex flex-col items-center gap-3 text-sm">
+                    <button
                       type="button"
-                      variant="ghost"
-                      className="min-h-11"
                       onClick={handleResend}
+                      className="text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      Resend code
-                    </Button>
-                    <Button
+                      Didn’t receive the code?{" "}
+                      <span className="font-medium text-primary">Resend</span>
+                    </button>
+                    <button
                       type="button"
-                      variant="ghost"
-                      className="min-h-11"
                       onClick={() => {
                         setPendingEmail(null);
                         setOtp("");
                         setMode("signup");
                       }}
+                      className="text-muted-foreground transition-colors hover:text-foreground"
                     >
                       Use a different email
-                    </Button>
+                    </button>
                   </div>
                 </form>
               </section>
