@@ -57,7 +57,9 @@ const EMPTY = {
 };
 
 function FamilyPage() {
+  useRedirectToPortalHome();
   const { user, hasPermission } = useAuth();
+
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
