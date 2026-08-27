@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ArrowLeft, MailCheck } from "lucide-react";
@@ -6,6 +6,7 @@ import { ArrowLeft, MailCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { BRAND } from "@/lib/brand";
 import { useAuth } from "@/hooks/use-auth";
+import { portalHome } from "@/lib/portal-home";
 import { Button } from "@/components/ui/button";
 import { AuthSidePanel } from "@/components/auth/AuthSidePanel";
 import { SignInForm } from "@/components/auth/SignInForm";
@@ -36,14 +37,15 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { session, loading: authLoading, refresh } = useAuth();
+  const { session, loading: authLoading, refresh, roles } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
-  if (!authLoading && session) {
-    void navigate({ to: "/account", replace: true });
-  }
+  useEffect(() => {
+    if (authLoading || !session) return;
+    void navigate({ to: portalHome(roles), replace: true });
+  }, [authLoading, session, roles, navigate]);
 
   async function handleResend() {
     if (!pendingEmail) return;
@@ -151,7 +153,6 @@ function AuthPage() {
                       onSuccess={async () => {
                         await refresh();
                         toast.success("Welcome back");
-                        void navigate({ to: "/account", replace: true });
                       }}
                       onSwitchToSignUp={() => setMode("signup")}
                     />
