@@ -5,16 +5,22 @@ import {
   BadgeCheck,
   Bell,
   CalendarDays,
+  ClipboardList,
   Clock3,
+  FolderOpen,
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  MessagesSquare,
   MoreHorizontal,
   Settings,
   ShieldCheck,
+  Star,
   UserRound,
   Users,
+  Wallet,
 } from "lucide-react";
+
 import { toast } from "sonner";
 
 import { BRAND } from "@/lib/brand";
