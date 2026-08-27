@@ -34,11 +34,17 @@ const NAV_ITEMS: NavItem[] = [
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const { hasPermission, roles } = useAuth();
   const home = portalHome(roles);
+  // Users with a dedicated portal (e.g. parents) navigate from their portal
+  // shell; the generic account/family entries are only for fallback accounts.
   const items: NavItem[] =
     home === "/account"
       ? NAV_ITEMS
-      : [{ to: home, label: "My portal", icon: LayoutDashboard }, ...NAV_ITEMS];
+      : [
+          { to: home, label: "My portal", icon: LayoutDashboard },
+          ...NAV_ITEMS.filter((item) => item.to !== "/account" && item.to !== "/family"),
+        ];
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+
 
   return (
     <nav className="flex flex-col gap-1">
