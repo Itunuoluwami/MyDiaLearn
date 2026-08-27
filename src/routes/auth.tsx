@@ -36,7 +36,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, refresh } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
@@ -159,7 +159,7 @@ function AuthPage() {
                     <SignUpForm
                       onVerificationRequired={(email) => {
                         setPendingEmail(email);
-                        toast.success("We sent a 6-digit code to your email");
+                        toast.success("We sent a verification link to your email");
                       }}
                       onSwitchToSignIn={() => setMode("signin")}
                     />
