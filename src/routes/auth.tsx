@@ -77,49 +77,29 @@ function AuthPage() {
           <div className="mx-auto w-full max-w-lg lg:h-full lg:overflow-y-auto">
             {pendingEmail ? (
               <section className="card-elevated flex flex-col items-center p-5 text-center md:p-8">
-                <span className="flex size-14 items-center justify-center rounded-2xl bg-primary-soft">
-                  <MailCheck className="size-7 text-primary" aria-hidden="true" />
+                <span className="flex size-16 items-center justify-center rounded-2xl bg-primary-soft">
+                  <MailCheck className="size-8 text-primary" aria-hidden="true" />
                 </span>
-                <h1 className="display-section mt-6 text-2xl">Verify your email</h1>
+                <h1 className="display-section mt-6 text-2xl">Confirm your email</h1>
                 <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-                  Enter the 6-digit code we sent to{" "}
-                  <span className="font-medium text-foreground">{pendingEmail}</span>.
+                  We sent a verification link to{" "}
+                  <span className="font-medium text-foreground">{pendingEmail}</span>. Click the
+                  link in that email to finish setting up your account.
                 </p>
-                <form onSubmit={handleVerifyOtp} className="mt-8 w-full max-w-sm space-y-6">
-                  <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                    <InputOTPGroup className="justify-center gap-2.5">
-                      {[0, 1, 2, 3, 4, 5].map((index) => (
-                        <InputOTPSlot
-                          key={index}
-                          index={index}
-                          className="h-12 w-12 rounded-xl border border-input text-lg shadow-sm md:h-14 md:w-14"
-                        />
-                      ))}
-                    </InputOTPGroup>
-                  </InputOTP>
+                <div className="mt-8 w-full max-w-sm space-y-6">
                   <Button
-                    type="submit"
+                    type="button"
                     variant="cta"
                     className="min-h-12 w-full"
-                    disabled={busy || otp.length < 6}
+                    onClick={handleResend}
                   >
-                    {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-                    Verify and continue
+                    Resend verification email
                   </Button>
                   <div className="flex flex-col items-center gap-3 text-sm">
                     <button
                       type="button"
-                      onClick={handleResend}
-                      className="text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      Didn’t receive the code?{" "}
-                      <span className="font-medium text-primary">Resend</span>
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => {
                         setPendingEmail(null);
-                        setOtp("");
                         setMode("signup");
                       }}
                       className="text-muted-foreground transition-colors hover:text-foreground"
@@ -127,7 +107,7 @@ function AuthPage() {
                       Use a different email
                     </button>
                   </div>
-                </form>
+                </div>
               </section>
             ) : (
               <section className="card-elevated p-5 md:p-8">
