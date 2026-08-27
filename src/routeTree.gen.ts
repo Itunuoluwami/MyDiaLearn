@@ -28,6 +28,7 @@ import { Route as TutorsIndexRouteImport } from './routes/tutors.index'
 import { Route as TutorsTutorIdRouteImport } from './routes/tutors.$tutorId'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedChildrenIndexRouteImport } from './routes/_authenticated/children.index'
+import { Route as AuthenticatedChildrenStudentIdRouteImport } from './routes/_authenticated/children.$studentId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -125,6 +126,12 @@ const AuthenticatedChildrenIndexRoute =
     path: '/children/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedChildrenStudentIdRoute =
+  AuthenticatedChildrenStudentIdRouteImport.update({
+    id: '/children/$studentId',
+    path: '/children/$studentId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors/': typeof TutorsIndexRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
   '/children/': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRoutesByTo {
@@ -164,6 +172,7 @@ export interface FileRoutesByTo {
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors': typeof TutorsIndexRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
   '/children': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRoutesById {
@@ -186,6 +195,7 @@ export interface FileRoutesById {
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors/': typeof TutorsIndexRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
   '/_authenticated/children/': typeof AuthenticatedChildrenIndexRoute
 }
 export interface FileRouteTypes {
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/tutors/$tutorId'
     | '/tutors/'
     | '/admin/settings'
+    | '/children/$studentId'
     | '/children/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/tutors/$tutorId'
     | '/tutors'
     | '/admin/settings'
+    | '/children/$studentId'
     | '/children'
   id:
     | '__root__'
@@ -249,6 +261,7 @@ export interface FileRouteTypes {
     | '/tutors/$tutorId'
     | '/tutors/'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/children/$studentId'
     | '/_authenticated/children/'
   fileRoutesById: FileRoutesById
 }
@@ -404,6 +417,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChildrenIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/children/$studentId': {
+      id: '/_authenticated/children/$studentId'
+      path: '/children/$studentId'
+      fullPath: '/children/$studentId'
+      preLoaderRoute: typeof AuthenticatedChildrenStudentIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -412,6 +432,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFamilyRoute: typeof AuthenticatedFamilyRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedChildrenStudentIdRoute: typeof AuthenticatedChildrenStudentIdRoute
   AuthenticatedChildrenIndexRoute: typeof AuthenticatedChildrenIndexRoute
 }
 
@@ -420,6 +441,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFamilyRoute: AuthenticatedFamilyRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+  AuthenticatedChildrenStudentIdRoute: AuthenticatedChildrenStudentIdRoute,
   AuthenticatedChildrenIndexRoute: AuthenticatedChildrenIndexRoute,
 }
 
