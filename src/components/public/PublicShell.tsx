@@ -4,6 +4,7 @@ import { Menu } from "lucide-react";
 
 import { BRAND } from "@/lib/brand";
 import { useAuth } from "@/hooks/use-auth";
+import { portalHome } from "@/lib/portal-home";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
@@ -48,7 +49,8 @@ const FOOTER_GROUPS = [
 
 export function PublicShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const { session, loading } = useAuth();
+  const { session, loading, roles } = useAuth();
+  const portalPath = portalHome(roles);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -75,7 +77,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
             <div className="hidden items-center gap-2 sm:flex">
               {loading ? null : session ? (
                 <Button asChild>
-                  <Link to="/account">My account</Link>
+                  <Link to={portalPath}>My account</Link>
                 </Button>
               ) : (
                 <>
@@ -129,7 +131,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
                 <div className="flex flex-col gap-2 p-4">
                   {session ? (
                     <Button asChild onClick={() => setOpen(false)}>
-                      <Link to="/account">My account</Link>
+                      <Link to={portalPath}>My account</Link>
                     </Button>
                   ) : (
                     <>
