@@ -14,6 +14,22 @@
  * All colors are oklch tokens. Never hardcode colors in components.
  */
 
+@theme {
+  /* Pastel category chip palette (soft fill + matching deep ink) */
+  --color-cat-lavender: oklch(0.92 0.03 295);
+  --color-cat-lavender-ink: oklch(0.45 0.13 290);
+  --color-cat-mint: oklch(0.93 0.04 155);
+  --color-cat-mint-ink: oklch(0.43 0.1 160);
+  --color-cat-rose: oklch(0.93 0.035 5);
+  --color-cat-rose-ink: oklch(0.5 0.14 10);
+  --color-cat-peach: oklch(0.94 0.04 70);
+  --color-cat-peach-ink: oklch(0.5 0.13 55);
+  --color-cat-sky: oklch(0.92 0.035 255);
+  --color-cat-sky-ink: oklch(0.45 0.12 260);
+  --color-cat-cream: oklch(0.95 0.05 95);
+  --color-cat-cream-ink: oklch(0.52 0.12 85);
+}
+
 @theme inline {
   --radius: 1rem; /* 16px cards */
   --radius-sm: calc(var(--radius) - 8px);
