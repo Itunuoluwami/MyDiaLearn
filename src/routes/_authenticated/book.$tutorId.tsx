@@ -147,7 +147,7 @@ function BookClassPage() {
 
   return (
     <ParentShell
-      title={tutorInfo ? `Book ${tutor.data.full_name}` : "Book a class"}
+      title={tutorInfo ? `Book ${tutorInfo.full_name}` : "Book a class"}
       description="Times are shown in your local timezone, with the tutor's local time alongside."
       actions={
         <Button asChild variant="outline" className="min-h-11">
@@ -243,7 +243,7 @@ function BookClassPage() {
           <SectionCard
             title="Choose a time"
             description={`Your timezone · ${timezone}${
-              tutorInfo?.timezone ? ` · Tutor · ${tutor.data.timezone}` : ""
+              tutorInfo?.timezone ? ` · Tutor · ${tutorInfo.timezone}` : ""
             }`}
           >
             {slots.isLoading ? (
