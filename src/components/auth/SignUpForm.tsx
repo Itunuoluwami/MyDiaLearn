@@ -234,9 +234,13 @@ export function SignUpForm({
         </div>
       ) : null}
 
-      {/* Account type */}
+      {step === 1 ? (
+      <>
+      {/* Step 1 — account type */}
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-foreground">I'm signing up as</legend>
+        <legend className="text-sm font-medium text-foreground">
+          Step 1 of 2 — I'm signing up as
+        </legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {roles.map((option) => {
             const meta = ROLE_META[option] ?? {
