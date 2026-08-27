@@ -21,7 +21,7 @@ export function AuthSidePanel() {
   const authorRole = panel["author_role"];
 
   return (
-    <aside className="relative hidden overflow-hidden rounded-2xl lg:block">
+    <aside className="relative hidden h-full overflow-hidden rounded-2xl lg:block">
       <img
         src={image}
         alt="A parent and child learning together with a DiaLearn tutor"

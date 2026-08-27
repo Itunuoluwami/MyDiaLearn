@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   AlertCircle,
+  ArrowLeft,
   Check,
   GraduationCap,
   Loader2,
@@ -76,6 +77,7 @@ export function SignUpForm({
   const { data: settings } = usePublicSettings();
   const runServerValidation = useServerFn(validateSignup);
   const [formError, setFormError] = useState<{ message: string; showSignIn?: boolean } | null>(null);
+  const [step, setStep] = useState<1 | 2>(1);
 
   const countries = useMemo(
     () => settingList<CountryOption>(settings, "auth.countries"),
@@ -234,9 +236,13 @@ export function SignUpForm({
         </div>
       ) : null}
 
-      {/* Account type */}
+      {step === 1 ? (
+      <>
+      {/* Step 1 — account type */}
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-foreground">I'm signing up as</legend>
+        <legend className="text-sm font-medium text-foreground">
+          Step 1 of 2 — I'm signing up as
+        </legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {roles.map((option) => {
             const meta = ROLE_META[option] ?? {
@@ -281,6 +287,45 @@ export function SignUpForm({
         </div>
         <FieldError id="role-error" message={errors.role?.message} />
       </fieldset>
+
+      <Button
+        type="button"
+        variant="cta"
+        className="min-h-12 w-full text-base"
+        onClick={async () => {
+          const valid = await form.trigger("role");
+          if (valid) setStep(2);
+        }}
+      >
+        Continue
+      </Button>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <button
+          type="button"
+          onClick={onSwitchToSignIn}
+          className="font-semibold text-primary underline"
+        >
+          Sign in
+        </button>
+      </p>
+      </>
+      ) : (
+      <>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-foreground">
+          Step 2 of 2 — your details
+        </p>
+        <button
+          type="button"
+          onClick={() => setStep(1)}
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary underline"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          {ROLE_META[role]?.label ?? role}
+        </button>
+      </div>
 
       {/* Names */}
       <div className="grid gap-4 sm:grid-cols-2">
@@ -583,6 +628,8 @@ export function SignUpForm({
           Sign in
         </button>
       </p>
+      </>
+      )}
     </form>
   );
 }
