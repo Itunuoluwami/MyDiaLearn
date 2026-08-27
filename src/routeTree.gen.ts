@@ -39,6 +39,7 @@ import { Route as AuthenticatedTutorAvailabilityRouteImport } from './routes/_au
 import { Route as AuthenticatedTutorClassesRouteImport } from './routes/_authenticated/tutor.classes'
 import { Route as AuthenticatedTutorDashboardRouteImport } from './routes/_authenticated/tutor.dashboard'
 import { Route as AuthenticatedTutorEarningsRouteImport } from './routes/_authenticated/tutor.earnings'
+import { Route as AuthenticatedTutorMessagesRouteImport } from './routes/_authenticated/tutor.messages'
 import { Route as AuthenticatedTutorNotificationsRouteImport } from './routes/_authenticated/tutor.notifications'
 import { Route as AuthenticatedTutorOnboardingRouteImport } from './routes/_authenticated/tutor.onboarding'
 import { Route as AuthenticatedTutorProfileRouteImport } from './routes/_authenticated/tutor.profile'
@@ -207,6 +208,12 @@ const AuthenticatedTutorEarningsRoute =
     path: '/tutor/earnings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTutorMessagesRoute =
+  AuthenticatedTutorMessagesRouteImport.update({
+    id: '/tutor/messages',
+    path: '/tutor/messages',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTutorNotificationsRoute =
   AuthenticatedTutorNotificationsRouteImport.update({
     id: '/tutor/notifications',
@@ -285,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/tutor/classes': typeof AuthenticatedTutorClassesRoute
   '/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
   '/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
+  '/tutor/messages': typeof AuthenticatedTutorMessagesRoute
   '/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
   '/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/tutor/profile': typeof AuthenticatedTutorProfileRoute
@@ -324,6 +332,7 @@ export interface FileRoutesByTo {
   '/tutor/classes': typeof AuthenticatedTutorClassesRoute
   '/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
   '/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
+  '/tutor/messages': typeof AuthenticatedTutorMessagesRoute
   '/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
   '/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/tutor/profile': typeof AuthenticatedTutorProfileRoute
@@ -365,6 +374,7 @@ export interface FileRoutesById {
   '/_authenticated/tutor/classes': typeof AuthenticatedTutorClassesRoute
   '/_authenticated/tutor/dashboard': typeof AuthenticatedTutorDashboardRoute
   '/_authenticated/tutor/earnings': typeof AuthenticatedTutorEarningsRoute
+  '/_authenticated/tutor/messages': typeof AuthenticatedTutorMessagesRoute
   '/_authenticated/tutor/notifications': typeof AuthenticatedTutorNotificationsRoute
   '/_authenticated/tutor/onboarding': typeof AuthenticatedTutorOnboardingRoute
   '/_authenticated/tutor/profile': typeof AuthenticatedTutorProfileRoute
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/tutor/classes'
     | '/tutor/dashboard'
     | '/tutor/earnings'
+    | '/tutor/messages'
     | '/tutor/notifications'
     | '/tutor/onboarding'
     | '/tutor/profile'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/tutor/classes'
     | '/tutor/dashboard'
     | '/tutor/earnings'
+    | '/tutor/messages'
     | '/tutor/notifications'
     | '/tutor/onboarding'
     | '/tutor/profile'
@@ -485,6 +497,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor/classes'
     | '/_authenticated/tutor/dashboard'
     | '/_authenticated/tutor/earnings'
+    | '/_authenticated/tutor/messages'
     | '/_authenticated/tutor/notifications'
     | '/_authenticated/tutor/onboarding'
     | '/_authenticated/tutor/profile'
@@ -725,6 +738,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTutorEarningsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tutor/messages': {
+      id: '/_authenticated/tutor/messages'
+      path: '/tutor/messages'
+      fullPath: '/tutor/messages'
+      preLoaderRoute: typeof AuthenticatedTutorMessagesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tutor/notifications': {
       id: '/_authenticated/tutor/notifications'
       path: '/tutor/notifications'
@@ -800,6 +820,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTutorClassesRoute: typeof AuthenticatedTutorClassesRoute
   AuthenticatedTutorDashboardRoute: typeof AuthenticatedTutorDashboardRoute
   AuthenticatedTutorEarningsRoute: typeof AuthenticatedTutorEarningsRoute
+  AuthenticatedTutorMessagesRoute: typeof AuthenticatedTutorMessagesRoute
   AuthenticatedTutorNotificationsRoute: typeof AuthenticatedTutorNotificationsRoute
   AuthenticatedTutorOnboardingRoute: typeof AuthenticatedTutorOnboardingRoute
   AuthenticatedTutorProfileRoute: typeof AuthenticatedTutorProfileRoute
@@ -827,6 +848,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTutorClassesRoute: AuthenticatedTutorClassesRoute,
   AuthenticatedTutorDashboardRoute: AuthenticatedTutorDashboardRoute,
   AuthenticatedTutorEarningsRoute: AuthenticatedTutorEarningsRoute,
+  AuthenticatedTutorMessagesRoute: AuthenticatedTutorMessagesRoute,
   AuthenticatedTutorNotificationsRoute: AuthenticatedTutorNotificationsRoute,
   AuthenticatedTutorOnboardingRoute: AuthenticatedTutorOnboardingRoute,
   AuthenticatedTutorProfileRoute: AuthenticatedTutorProfileRoute,
