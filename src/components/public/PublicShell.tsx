@@ -55,7 +55,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur">
         <div className="container-site grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-2 lg:flex lg:justify-between">
           <Link to="/" className="flex min-w-0 items-center" aria-label="DiaLearn home">
-            <img src={BRAND.logoUrl} alt="DiaLearn" className="h-10 w-auto md:h-11" />
+            <img src={BRAND.logoUrl} alt="DiaLearn" className="h-11 w-auto md:h-12" />
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
@@ -97,7 +97,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
               </SheetTrigger>
               <SheetContent side="right" className="w-[19rem] overflow-y-auto p-0">
                 <div className="border-b border-border p-4">
-                  <img src={BRAND.logoUrl} alt="DiaLearn" className="h-10 w-auto" />
+                  <img src={BRAND.logoUrl} alt="DiaLearn" className="h-11 w-auto" />
                 </div>
                 <nav className="flex flex-col p-2" aria-label="Mobile">
                   {NAV_LINKS.map((link) => (
@@ -157,7 +157,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
               <img
                 src={BRAND.logoUrl}
                 alt="DiaLearn"
-                className="h-10 w-auto brightness-0 invert"
+                className="h-11 w-auto brightness-0 invert"
                 loading="lazy"
               />
               <p className="mt-4 max-w-xs text-sm text-ink-foreground/70">
