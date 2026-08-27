@@ -10,11 +10,12 @@ import {
   Inbox,
   ShieldCheck,
   Users,
+  Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { TutorShell } from "@/components/tutor/TutorShell";
-import { TutorClassCard } from "@/components/tutor/TutorClassCard";
+import { TutorBookingCard } from "@/components/tutor/TutorBookingCard";
 import {
   CardSkeletonList,
   EmptyPanel,
@@ -26,6 +27,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/use-auth";
+import { useEarningsSummary } from "@/lib/tutor-workspace";
+import { formatMoney } from "@/lib/parent-data";
 import {
   useRespondToBooking,
   useTutorBookings,
@@ -69,6 +72,7 @@ function TutorDashboardPage() {
   const summary = useTutorSummary();
   const bookings = useTutorBookings();
   const respond = useRespondToBooking();
+  const earnings = useEarningsSummary();
 
   const s = summary.data;
   const firstName = (profile?.full_name ?? "").split(" ")[0];
@@ -193,6 +197,57 @@ function TutorDashboardPage() {
           </div>
         )}
 
+        {/* Earnings snapshot — figures come from the backend pricing rules */}
+        <SectionCard
+          title="Earnings snapshot"
+          description="Balances after DiaLearn's commission and payment fees."
+          action={
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/tutor/earnings">Open earnings</Link>
+            </Button>
+          }
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl bg-primary-soft/60 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Available
+              </p>
+              <p className="mt-1 text-xl font-semibold tabular-nums text-primary-deep">
+                {formatMoney(
+                  Number(earnings.data?.available_balance ?? 0),
+                  earnings.data?.currency ?? s?.currency ?? "USD",
+                )}
+              </p>
+            </div>
+            <div className="rounded-xl bg-surface/70 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Pending
+              </p>
+              <p className="mt-1 text-xl font-semibold tabular-nums">
+                {formatMoney(
+                  Number(earnings.data?.pending_earnings ?? 0),
+                  earnings.data?.currency ?? s?.currency ?? "USD",
+                )}
+              </p>
+            </div>
+            <div className="rounded-xl bg-surface/70 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Net earned
+              </p>
+              <p className="mt-1 text-xl font-semibold tabular-nums">
+                {formatMoney(
+                  Number(earnings.data?.net_earnings ?? 0),
+                  earnings.data?.currency ?? s?.currency ?? "USD",
+                )}
+              </p>
+            </div>
+          </div>
+          <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+            <Wallet className="size-3.5 text-primary" aria-hidden="true" />
+            {earnings.data?.schedule_label ?? "Payouts follow the platform payout policy."}
+          </p>
+        </SectionCard>
+
         {/* Teaching readiness */}
         <SectionCard
           title="Teaching readiness"
@@ -236,7 +291,7 @@ function TutorDashboardPage() {
           >
             <div className="space-y-3">
               {requests.slice(0, 4).map((booking) => (
-                <TutorClassCard
+                <TutorBookingCard
                   key={booking.id}
                   booking={booking}
                   timezone={timezone}
@@ -299,7 +354,7 @@ function TutorDashboardPage() {
           ) : (
             <div className="grid gap-3">
               {upcoming.slice(0, 4).map((booking) => (
-                <TutorClassCard key={booking.id} booking={booking} timezone={timezone} />
+                <TutorBookingCard key={booking.id} booking={booking} timezone={timezone} />
               ))}
             </div>
           )}
