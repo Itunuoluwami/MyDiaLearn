@@ -1,12 +1,13 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, Menu, Settings, User as UserIcon, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, Settings, User as UserIcon, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { BRAND } from "@/lib/brand";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { portalHome } from "@/lib/portal-home";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -31,12 +32,17 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
-  const { hasPermission } = useAuth();
+  const { hasPermission, roles } = useAuth();
+  const home = portalHome(roles);
+  const items: NavItem[] =
+    home === "/account"
+      ? NAV_ITEMS
+      : [{ to: home, label: "My portal", icon: LayoutDashboard }, ...NAV_ITEMS];
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   return (
     <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.filter((item) => !item.permission || hasPermission(item.permission)).map((item) => {
+      {items.filter((item) => !item.permission || hasPermission(item.permission)).map((item) => {
         const Icon = item.icon;
         const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
         return (
