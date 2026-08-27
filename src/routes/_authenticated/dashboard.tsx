@@ -381,7 +381,7 @@ function DashboardPage() {
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="display-section text-base">Your tutors</h2>
               <Button asChild variant="ghost" size="sm">
-                <Link to="/my-tutors">See all</Link>
+                <Link to="/find-tutor">Find more</Link>
               </Button>
             </div>
             {tutorList.length === 0 ? (
