@@ -5,16 +5,22 @@ import {
   BadgeCheck,
   Bell,
   CalendarDays,
+  ClipboardList,
   Clock3,
+  FolderOpen,
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  MessagesSquare,
   MoreHorizontal,
   Settings,
   ShieldCheck,
+  Star,
   UserRound,
   Users,
+  Wallet,
 } from "lucide-react";
+
 import { toast } from "sonner";
 
 import { BRAND } from "@/lib/brand";
@@ -42,6 +48,11 @@ const NAV: NavItem[] = [
   { to: "/tutor/classes", label: "Classes", icon: CalendarDays },
   { to: "/tutor/availability", label: "Availability", icon: Clock3 },
   { to: "/tutor/students", label: "Students", icon: Users },
+  { to: "/tutor/assignments", label: "Assignments", icon: ClipboardList },
+  { to: "/tutor/resources", label: "Materials", icon: FolderOpen },
+  { to: "/tutor/messages", label: "Messages", icon: MessagesSquare },
+  { to: "/tutor/earnings", label: "Earnings", icon: Wallet },
+  { to: "/tutor/reviews", label: "Reviews", icon: Star },
   { to: "/tutor/profile", label: "Teaching profile", icon: UserRound },
   { to: "/tutor/verification", label: "Verification", icon: ShieldCheck },
   { to: "/tutor/notifications", label: "Notifications", icon: Bell },
@@ -51,9 +62,10 @@ const NAV: NavItem[] = [
 const MOBILE_PRIMARY = [
   "/tutor/dashboard",
   "/tutor/classes",
-  "/tutor/availability",
   "/tutor/students",
+  "/tutor/earnings",
 ];
+
 
 function useActivePath() {
   return useRouterState({ select: (state) => state.location.pathname });
