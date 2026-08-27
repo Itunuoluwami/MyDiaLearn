@@ -22,6 +22,7 @@ import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as TrustAndSafetyRouteImport } from './routes/trust-and-safety'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedFamilyRouteImport } from './routes/_authenticated/family'
 import { Route as AuthenticatedFindTutorRouteImport } from './routes/_authenticated/find-tutor'
@@ -96,6 +97,11 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/bookings': typeof AuthenticatedBookingsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/family': typeof AuthenticatedFamilyRoute
   '/find-tutor': typeof AuthenticatedFindTutorRoute
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/bookings': typeof AuthenticatedBookingsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/family': typeof AuthenticatedFamilyRoute
   '/find-tutor': typeof AuthenticatedFindTutorRoute
@@ -207,6 +215,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/family': typeof AuthenticatedFamilyRoute
   '/_authenticated/find-tutor': typeof AuthenticatedFindTutorRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/trust-and-safety'
     | '/account'
+    | '/bookings'
     | '/dashboard'
     | '/family'
     | '/find-tutor'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/trust-and-safety'
     | '/account'
+    | '/bookings'
     | '/dashboard'
     | '/family'
     | '/find-tutor'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/trust-and-safety'
     | '/_authenticated/account'
+    | '/_authenticated/bookings'
     | '/_authenticated/dashboard'
     | '/_authenticated/family'
     | '/_authenticated/find-tutor'
@@ -400,6 +412,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/bookings': {
+      id: '/_authenticated/bookings'
+      path: '/bookings'
+      fullPath: '/bookings'
+      preLoaderRoute: typeof AuthenticatedBookingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -468,6 +487,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFamilyRoute: typeof AuthenticatedFamilyRoute
   AuthenticatedFindTutorRoute: typeof AuthenticatedFindTutorRoute
@@ -479,6 +499,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFamilyRoute: AuthenticatedFamilyRoute,
   AuthenticatedFindTutorRoute: AuthenticatedFindTutorRoute,
