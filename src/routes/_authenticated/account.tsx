@@ -31,8 +31,10 @@ export const Route = createFileRoute("/_authenticated/account")({
 });
 
 function AccountPage() {
+  useRedirectToPortalHome();
   const { profile, permissions, refresh, user } = useAuth();
   const queryClient = useQueryClient();
+
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
