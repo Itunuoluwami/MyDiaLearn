@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, MailCheck } from "lucide-react";
+import { ArrowLeft, MailCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { BRAND } from "@/lib/brand";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { AuthSidePanel } from "@/components/auth/AuthSidePanel";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
@@ -20,7 +19,7 @@ export const Route = createFileRoute("/auth")({
       {
         name: "description",
         content:
-          "Sign in to DiaLearn or create a parent, student, tutor or agency account, verified by email code.",
+          "Sign in to DiaLearn or create a parent, student, tutor or agency account, verified by email link.",
       },
       { property: "og:title", content: "Sign in or create a DiaLearn account" },
       {
@@ -37,39 +36,12 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { session, loading: authLoading, refresh } = useAuth();
+  const { session, loading: authLoading } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-  const [otp, setOtp] = useState("");
-  const [busy, setBusy] = useState(false);
 
-  if (!authLoading && session && !pendingEmail) {
-    void navigate({ to: "/account", replace: true });
-  }
-
-  async function handleVerifyOtp(event: React.FormEvent) {
-    event.preventDefault();
-    if (!pendingEmail) return;
-    setBusy(true);
-    const { error } = await supabase.auth.verifyOtp({
-      email: pendingEmail,
-      token: otp,
-      type: "email",
-    });
-    setBusy(false);
-    if (error) {
-      toast.error(
-        error.message.toLowerCase().includes("expired")
-          ? "That code has expired. Request a new one."
-          : "That code isn't valid. Please check and try again.",
-      );
-      return;
-    }
-    setPendingEmail(null);
-    setOtp("");
-    await refresh();
-    toast.success("Email verified — your account is ready");
+  if (!authLoading && session) {
     void navigate({ to: "/account", replace: true });
   }
 
@@ -77,10 +49,10 @@ function AuthPage() {
     if (!pendingEmail) return;
     const { error } = await supabase.auth.resend({ type: "signup", email: pendingEmail });
     if (error) {
-      toast.error("We couldn't resend the code right now. Please try again shortly.");
+      toast.error("We couldn't resend the email right now. Please try again shortly.");
       return;
     }
-    toast.success("A new code is on its way");
+    toast.success("A new verification email is on its way");
   }
 
   return (
