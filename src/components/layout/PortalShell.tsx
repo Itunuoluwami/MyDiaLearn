@@ -96,7 +96,7 @@ export function PortalShell({
               <SheetContent side="left" className="w-[17rem] p-0">
                 <SheetTitle className="sr-only">Menu</SheetTitle>
                 <div className="border-b border-border p-4">
-                  <img src={BRAND.logoUrl} alt="DiaLearn" className="h-10 w-auto" />
+                  <img src={BRAND.logoUrl} alt="DiaLearn" className="h-11 w-auto" />
                 </div>
                 <div className="p-3">
                   <NavLinks onNavigate={() => setMenuOpen(false)} />
@@ -104,7 +104,7 @@ export function PortalShell({
               </SheetContent>
             </Sheet>
             <Link to="/" className="flex items-center gap-2">
-              <img src={BRAND.logoUrl} alt="DiaLearn" className="h-10 w-auto md:h-11" />
+              <img src={BRAND.logoUrl} alt="DiaLearn" className="h-11 w-auto md:h-12" />
             </Link>
           </div>
 
