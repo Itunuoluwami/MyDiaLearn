@@ -336,7 +336,7 @@ function DashboardPage() {
               </p>
             ) : null}
             <Button asChild variant="cta" size="sm" className="mt-4 min-h-11 w-full">
-              <Link to="/progress">View progress</Link>
+              <Link to="/children">View progress</Link>
             </Button>
           </div>
 
@@ -345,7 +345,7 @@ function DashboardPage() {
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="display-section text-base">Payments</h2>
               <Button asChild variant="ghost" size="sm">
-                <Link to="/payments">See all</Link>
+                <Link to="/bookings">See all</Link>
               </Button>
             </div>
             <dl className="space-y-3">
