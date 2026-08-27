@@ -107,90 +107,72 @@ function DashboardPage() {
   const s = summary.data;
   const firstName = (profile?.full_name ?? "").split(" ")[0];
 
+  const tutorList = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const row of bookings.data ?? []) {
+      counts.set(row.tutor_id, (counts.get(row.tutor_id) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .map(([id, count]) => ({ tutor: tutors.map.get(id), count }))
+      .filter((row) => row.tutor)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [bookings.data, tutors.map]);
+
   return (
-    <ParentShell
-      title={`${greeting()}${firstName ? `, ${firstName}` : ""}`}
-      description={
-        kids.length === 0
-          ? "Start by adding a learner — then we can help you find the right tutor."
-          : `Here's what's happening across ${kids.length} ${kids.length === 1 ? "learner" : "learners"} today.`
-      }
-      actions={
-        <>
-          <Button asChild variant="cta" className="min-h-11">
-            <Link to="/find-tutor">
-              <Search className="size-4" /> Find a tutor
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="min-h-11">
-            <Link to="/children">
-              <Plus className="size-4" /> Add child
-            </Link>
-          </Button>
-        </>
-      }
-    >
-      <div className="space-y-6">
-        {/* Children */}
-        <SectionCard
-          title="My children"
-          description="Switch a child to focus every section below on them."
-          action={
-            kids.length > 0 ? (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/children">Manage</Link>
-              </Button>
-            ) : null
-          }
-        >
-          {children.isLoading ? (
-            <CardSkeletonList rows={1} height="h-14" />
-          ) : children.isError ? (
+    <ParentShell title="Dashboard">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        {/* ---------------- main column ---------------- */}
+        <div className="min-w-0 space-y-6">
+          {/* Welcome banner */}
+          <section className="relative overflow-hidden rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft md:p-7">
+            <div className="relative z-10 max-w-xl">
+              <h2 className="display-section text-2xl text-primary-foreground md:text-3xl">
+                {greeting()}
+                {firstName ? `, ${firstName}` : ""}
+              </h2>
+              <p className="mt-2 text-sm text-primary-foreground/85 md:text-base">
+                {kids.length === 0
+                  ? "Start by adding a learner — then we can help you find the right tutor."
+                  : `Here's what's happening across ${kids.length} ${kids.length === 1 ? "learner" : "learners"} today.`}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Button asChild variant="cta" className="min-h-11">
+                  <Link to="/find-tutor">
+                    <Search className="size-4" /> Find a tutor
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="min-h-11 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground"
+                >
+                  <Link to="/children">
+                    <Plus className="size-4" /> Add child
+                  </Link>
+                </Button>
+              </div>
+            </div>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-10 -top-16 size-56 rounded-full bg-secondary/25 blur-2xl"
+            />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-20 right-24 size-48 rounded-full bg-accent/20 blur-2xl"
+            />
+          </section>
+
+          {/* KPI strip */}
+          {summary.isLoading ? (
+            <KpiSkeletonGrid count={4} />
+          ) : summary.isError ? (
             <LoadError
-              message="We couldn't load your children right now."
-              onRetry={() => void children.refetch()}
+              message="We couldn't load your family summary right now."
+              onRetry={() => void summary.refetch()}
             />
           ) : (
-            <ChildSwitcher children={kids} selectedId={selectedChild} onSelect={setSelectedChild} />
-          )}
-        </SectionCard>
-
-        {/* Approvals — only shown when something actually needs the parent */}
-        {approvals.length > 0 ? (
-          <SectionCard
-            title="Needs your approval"
-            description="Requests waiting on you before a lesson is confirmed."
-          >
-            <div className="space-y-3">
-              {approvals.slice(0, 3).map((booking) => (
-                <ClassCard
-                  key={booking.id}
-                  booking={booking}
-                  child={childById.get(booking.student_id)}
-                  tutor={tutors.map.get(booking.tutor_id)}
-                  viewerTimezone={timezone}
-                />
-              ))}
-            </div>
-            {approvals.length > 3 ? (
-              <Button asChild variant="ghost" size="sm" className="mt-3">
-                <Link to="/bookings">See all {approvals.length} requests</Link>
-              </Button>
-            ) : null}
-          </SectionCard>
-        ) : null}
-
-        {/* KPIs — two primary, the rest secondary */}
-        {summary.isLoading ? (
-          <KpiSkeletonGrid count={4} />
-        ) : summary.isError ? (
-          <LoadError
-            message="We couldn't load your family summary right now."
-            onRetry={() => void summary.refetch()}
-          />
-        ) : (
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <KpiCard
                 variant="primary"
                 label="Upcoming classes"
@@ -199,122 +181,109 @@ function DashboardPage() {
                 icon={CalendarDays}
               />
               <KpiCard
-                variant="primary"
                 label="Active students"
                 value={Number(s?.active_students ?? 0)}
-                hint="Learners on your account"
+                hint="On your account"
                 icon={Users}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
               <KpiCard label="Active tutors" value={Number(s?.active_tutors ?? 0)} icon={GraduationCap} />
-              <KpiCard label="Completed lessons" value={Number(s?.completed_lessons ?? 0)} icon={CheckCircle2} />
               <KpiCard
-                label="Learning hours"
-                value={formatHoursFromMinutes(Number(s?.learning_minutes ?? 0))}
-                icon={Timer}
+                label="Completed lessons"
+                value={Number(s?.completed_lessons ?? 0)}
+                icon={CheckCircle2}
               />
-              <KpiCard
-                label="This month"
-                value={formatMoney(s?.month_spend ?? 0, s?.month_spend_currency ?? profile?.preferred_currency)}
-                hint="Spending"
-                icon={Wallet}
-              />
-              <KpiCard
-                label="Outstanding"
-                value={formatMoney(s?.outstanding_amount ?? 0, s?.outstanding_currency ?? profile?.preferred_currency)}
-                hint={`${Number(s?.outstanding_count ?? 0)} payment(s)`}
-                icon={CreditCard}
-              />
-            </div>
-            {s?.attendance_rate != null ? (
-              <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                <BadgeCheck className="size-3.5" aria-hidden="true" />
-                Attendance rate across recorded classes: {Number(s.attendance_rate)}%
-              </p>
-            ) : null}
-          </div>
-        )}
-
-        {/* Upcoming classes */}
-        <SectionCard
-          title="Upcoming classes"
-          description={`Times shown in your timezone · ${timezone}`}
-          action={
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/bookings">Open calendar</Link>
-            </Button>
-          }
-        >
-          {bookings.isLoading ? (
-            <CardSkeletonList rows={2} height="h-36" />
-          ) : bookings.isError ? (
-            <LoadError
-              message="We couldn't load your classes right now."
-              onRetry={() => void bookings.refetch()}
-            />
-          ) : upcoming.length === 0 ? (
-            <EmptyPanel
-              icon={CalendarPlus}
-              title="No upcoming classes"
-              body="Your scheduled lessons will appear here as soon as a booking is confirmed."
-              action={
-                <Button asChild variant="cta" className="min-h-11">
-                  <Link to="/find-tutor">Find a tutor</Link>
-                </Button>
-              }
-            />
-          ) : (
-            <div className="grid gap-3 xl:grid-cols-2">
-              {upcoming.slice(0, 4).map((booking) => (
-                <ClassCard
-                  key={booking.id}
-                  booking={booking}
-                  child={childById.get(booking.student_id)}
-                  tutor={tutors.map.get(booking.tutor_id)}
-                  viewerTimezone={timezone}
-                />
-              ))}
             </div>
           )}
-        </SectionCard>
 
-        <div className="grid gap-6 xl:grid-cols-2">
-          {/* Notifications preview — content comes from the template system */}
+          {/* Children */}
           <SectionCard
-            title="Recent updates"
+            title="My children"
+            description="Switch a child to focus every section below on them."
+            action={
+              kids.length > 0 ? (
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/children">Manage</Link>
+                </Button>
+              ) : null
+            }
+          >
+            {children.isLoading ? (
+              <CardSkeletonList rows={1} height="h-14" />
+            ) : children.isError ? (
+              <LoadError
+                message="We couldn't load your children right now."
+                onRetry={() => void children.refetch()}
+              />
+            ) : (
+              <ChildSwitcher children={kids} selectedId={selectedChild} onSelect={setSelectedChild} />
+            )}
+          </SectionCard>
+
+          {/* Approvals — only shown when something actually needs the parent */}
+          {approvals.length > 0 ? (
+            <SectionCard
+              title="Needs your approval"
+              description="Requests waiting on you before a lesson is confirmed."
+            >
+              <div className="space-y-3">
+                {approvals.slice(0, 3).map((booking) => (
+                  <ClassCard
+                    key={booking.id}
+                    booking={booking}
+                    child={childById.get(booking.student_id)}
+                    tutor={tutors.map.get(booking.tutor_id)}
+                    viewerTimezone={timezone}
+                  />
+                ))}
+              </div>
+              {approvals.length > 3 ? (
+                <Button asChild variant="ghost" size="sm" className="mt-3">
+                  <Link to="/bookings">See all {approvals.length} requests</Link>
+                </Button>
+              ) : null}
+            </SectionCard>
+          ) : null}
+
+          {/* Upcoming classes */}
+          <SectionCard
+            title="Upcoming classes"
+            description={`Times shown in your timezone · ${timezone}`}
             action={
               <Button asChild variant="ghost" size="sm">
-                <Link to="/notifications">View all</Link>
+                <Link to="/bookings">Open calendar</Link>
               </Button>
             }
           >
-            {notifications.isLoading ? (
-              <CardSkeletonList rows={3} height="h-14" />
-            ) : unread.length === 0 ? (
+            {bookings.isLoading ? (
+              <CardSkeletonList rows={2} height="h-36" />
+            ) : bookings.isError ? (
+              <LoadError
+                message="We couldn't load your classes right now."
+                onRetry={() => void bookings.refetch()}
+              />
+            ) : upcoming.length === 0 ? (
               <EmptyPanel
-                icon={Bell}
-                title="You're all caught up"
-                body="Booking, class and payment updates will appear here."
+                icon={CalendarPlus}
+                title="No upcoming classes"
+                body="Your scheduled lessons will appear here as soon as a booking is confirmed."
+                action={
+                  <Button asChild variant="cta" className="min-h-11">
+                    <Link to="/find-tutor">Find a tutor</Link>
+                  </Button>
+                }
               />
             ) : (
-              <ul className="space-y-2">
-                {unread.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex items-start gap-3 rounded-xl border border-border bg-surface/50 p-3"
-                  >
-                    <span className="mt-1.5 size-2 shrink-0 rounded-full bg-secondary" aria-hidden="true" />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{item.title ?? item.trigger_key}</p>
-                      <p className="line-clamp-2 text-xs text-muted-foreground">{item.body}</p>
-                      <p className="mt-1 text-[0.7rem] text-muted-foreground">
-                        {formatRelative(item.created_at)}
-                      </p>
-                    </div>
-                  </li>
+              <div className="grid gap-3">
+                {upcoming.slice(0, 3).map((booking) => (
+                  <ClassCard
+                    key={booking.id}
+                    booking={booking}
+                    child={childById.get(booking.student_id)}
+                    tutor={tutors.map.get(booking.tutor_id)}
+                    viewerTimezone={timezone}
+                  />
                 ))}
-              </ul>
+              </div>
             )}
           </SectionCard>
 
@@ -342,10 +311,161 @@ function DashboardPage() {
             ) : null}
           </SectionCard>
         </div>
+
+        {/* ---------------- right rail ---------------- */}
+        <aside className="min-w-0 space-y-4 xl:space-y-5">
+          {/* Learning + attendance highlight */}
+          <div className="rounded-2xl border border-secondary/25 bg-secondary-soft/60 p-4 shadow-soft">
+            <div className="flex items-start gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground">
+                <Timer className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Learning hours
+                </p>
+                <p className="text-2xl font-semibold tabular-nums">
+                  {formatHoursFromMinutes(Number(s?.learning_minutes ?? 0))}
+                </p>
+              </div>
+            </div>
+            {s?.attendance_rate != null ? (
+              <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                <BadgeCheck className="size-3.5 shrink-0" aria-hidden="true" />
+                Attendance rate across recorded classes: {Number(s.attendance_rate)}%
+              </p>
+            ) : null}
+            <Button asChild variant="cta" size="sm" className="mt-4 min-h-11 w-full">
+              <Link to="/progress">View progress</Link>
+            </Button>
+          </div>
+
+          {/* Money */}
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="display-section text-base">Payments</h2>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/payments">See all</Link>
+              </Button>
+            </div>
+            <dl className="space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <dt className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Wallet className="size-3.5" aria-hidden="true" /> This month
+                </dt>
+                <dd className="text-sm font-semibold tabular-nums">
+                  {formatMoney(s?.month_spend ?? 0, s?.month_spend_currency ?? profile?.preferred_currency)}
+                </dd>
+              </div>
+              <div className="flex items-start justify-between gap-3 border-t border-border pt-3">
+                <dt className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <CreditCard className="size-3.5" aria-hidden="true" /> Outstanding
+                </dt>
+                <dd className="text-right">
+                  <span className="block text-sm font-semibold tabular-nums">
+                    {formatMoney(
+                      s?.outstanding_amount ?? 0,
+                      s?.outstanding_currency ?? profile?.preferred_currency,
+                    )}
+                  </span>
+                  <span className="block text-[0.7rem] text-muted-foreground">
+                    {Number(s?.outstanding_count ?? 0)} payment(s)
+                  </span>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          {/* Tutors — leaderboard style list */}
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="display-section text-base">Your tutors</h2>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/my-tutors">See all</Link>
+              </Button>
+            </div>
+            {tutorList.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Tutors appear here once you book your first class.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {tutorList.map(({ tutor, count }) => (
+                  <li
+                    key={tutor!.id}
+                    className="flex items-center gap-3 rounded-xl border border-border bg-surface/50 p-2.5"
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-sm font-semibold text-primary-deep">
+                      {tutor!.avatar_url ? (
+                        <img
+                          src={tutor!.avatar_url}
+                          alt={tutor!.full_name ?? "Tutor"}
+                          className="size-9 object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        (tutor!.full_name ?? "T").charAt(0)
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">
+                        {tutor!.full_name ?? "Tutor"}
+                      </span>
+                      <span className="block truncate text-[0.7rem] text-muted-foreground">
+                        {count} {count === 1 ? "class" : "classes"}
+                      </span>
+                    </span>
+                    {tutor!.verification_status === "verified" ? (
+                      <BadgeCheck className="size-4 shrink-0 text-success" aria-hidden="true" />
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Notifications preview — content comes from the template system */}
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="display-section text-base">Recent updates</h2>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/notifications">View all</Link>
+              </Button>
+            </div>
+            {notifications.isLoading ? (
+              <CardSkeletonList rows={3} height="h-14" />
+            ) : unread.length === 0 ? (
+              <EmptyPanel
+                icon={Bell}
+                title="You're all caught up"
+                body="Booking, class and payment updates will appear here."
+              />
+            ) : (
+              <ul className="space-y-2">
+                {unread.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex items-start gap-3 rounded-xl border border-border bg-surface/50 p-3"
+                  >
+                    <span className="mt-1.5 size-2 shrink-0 rounded-full bg-secondary" aria-hidden="true" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{item.title ?? item.trigger_key}</p>
+                      <p className="line-clamp-2 text-xs text-muted-foreground">{item.body}</p>
+                      <p className="mt-1 text-[0.7rem] text-muted-foreground">
+                        {formatRelative(item.created_at)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </aside>
       </div>
     </ParentShell>
   );
 }
+
 
 function QuickAction({
   to,
