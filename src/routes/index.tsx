@@ -143,7 +143,7 @@ function HomePage() {
             </p>
 
             <div className="mt-6 max-w-xl">
-              <SiteSearch />
+              <SiteSearch showTrending={false} />
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -205,6 +205,31 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Trending searches */}
+      {(() => {
+        const trending = settingList<string>(settings, "content.trending_searches");
+        return trending.length > 0 ? (
+          <section className="border-b border-border bg-card">
+            <div className="container-site py-4">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  Trending
+                </span>
+                {trending.map((item) => (
+                  <Link
+                    key={item}
+                    to="/tutors"
+                    search={{ q: item }}
+                    className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground transition-colors hover:border-primary-soft hover:bg-primary-soft/40"
+                  >
+                    {item}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null;
+      })()}
 
       {/* Persona picker */}
       {personas.length > 0 ? (
