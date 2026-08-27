@@ -148,7 +148,7 @@ function AuthPage() {
       <header className="border-b border-border bg-card">
         <div className="container-site flex min-h-16 items-center">
           <Link to="/" className="flex items-center gap-2">
-            <img src={BRAND.logoUrl} alt="DiaLearn" className="h-8 w-auto md:h-9" />
+            <img src={BRAND.logoUrl} alt="DiaLearn" className="h-10 w-auto md:h-11" />
           </Link>
         </div>
       </header>
