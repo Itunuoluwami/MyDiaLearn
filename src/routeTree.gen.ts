@@ -20,6 +20,7 @@ import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ForAgenciesRouteImport } from './routes/for-agencies'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as SeltestRouteImport } from './routes/seltest'
 import { Route as TrustAndSafetyRouteImport } from './routes/trust-and-safety'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
@@ -104,6 +105,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeltestRoute = SeltestRouteImport.update({
+  id: '/seltest',
+  path: '/seltest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrustAndSafetyRoute = TrustAndSafetyRouteImport.update({
@@ -295,6 +301,7 @@ export interface FileRoutesByFullPath {
   '/for-agencies': typeof ForAgenciesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/seltest': typeof SeltestRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/account': typeof AuthenticatedAccountRoute
   '/bookings': typeof AuthenticatedBookingsRoute
@@ -338,6 +345,7 @@ export interface FileRoutesByTo {
   '/for-agencies': typeof ForAgenciesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/seltest': typeof SeltestRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/account': typeof AuthenticatedAccountRoute
   '/bookings': typeof AuthenticatedBookingsRoute
@@ -383,6 +391,7 @@ export interface FileRoutesById {
   '/for-agencies': typeof ForAgenciesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/seltest': typeof SeltestRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
@@ -428,6 +437,7 @@ export interface FileRouteTypes {
     | '/for-agencies'
     | '/how-it-works'
     | '/pricing'
+    | '/seltest'
     | '/trust-and-safety'
     | '/account'
     | '/bookings'
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/for-agencies'
     | '/how-it-works'
     | '/pricing'
+    | '/seltest'
     | '/trust-and-safety'
     | '/account'
     | '/bookings'
@@ -515,6 +526,7 @@ export interface FileRouteTypes {
     | '/for-agencies'
     | '/how-it-works'
     | '/pricing'
+    | '/seltest'
     | '/trust-and-safety'
     | '/_authenticated/account'
     | '/_authenticated/bookings'
@@ -560,6 +572,7 @@ export interface RootRouteChildren {
   ForAgenciesRoute: typeof ForAgenciesRoute
   HowItWorksRoute: typeof HowItWorksRoute
   PricingRoute: typeof PricingRoute
+  SeltestRoute: typeof SeltestRoute
   TrustAndSafetyRoute: typeof TrustAndSafetyRoute
   TutorsTutorIdRoute: typeof TutorsTutorIdRoute
   TutorsIndexRoute: typeof TutorsIndexRoute
@@ -642,6 +655,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seltest': {
+      id: '/seltest'
+      path: '/seltest'
+      fullPath: '/seltest'
+      preLoaderRoute: typeof SeltestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trust-and-safety': {
@@ -955,6 +975,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForAgenciesRoute: ForAgenciesRoute,
   HowItWorksRoute: HowItWorksRoute,
   PricingRoute: PricingRoute,
+  SeltestRoute: SeltestRoute,
   TrustAndSafetyRoute: TrustAndSafetyRoute,
   TutorsTutorIdRoute: TutorsTutorIdRoute,
   TutorsIndexRoute: TutorsIndexRoute,
