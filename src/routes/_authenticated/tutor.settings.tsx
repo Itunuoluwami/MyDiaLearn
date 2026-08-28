@@ -106,6 +106,8 @@ function TutorSettingsPage() {
     onError: () => toast.error("We couldn't send the reset link. Please try again."),
   });
 
+  console.log("DBG state", JSON.stringify({ timezone, currency, fullName, p: profile?.timezone, pc: profile?.preferred_currency }));
+
   return (
     <TutorShell title="Settings" description="Your account, security, payouts and teaching hours.">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
