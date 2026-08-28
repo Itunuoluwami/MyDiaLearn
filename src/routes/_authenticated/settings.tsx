@@ -36,8 +36,17 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 function SettingsPage() {
-  const { profile, user, roles, refresh } = useAuth();
+  const { profile, user, roles, refresh, loading } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  // Tutor-only accounts get the tutor settings surface, not the parent one.
+  useEffect(() => {
+    if (loading) return;
+    if (roles.includes("tutor") && !roles.includes("parent")) {
+      void navigate({ to: "/tutor/settings", replace: true });
+    }
+  }, [loading, roles, navigate]);
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
