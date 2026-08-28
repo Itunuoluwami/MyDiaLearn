@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { KeyRound, Loader2, Save, ShieldCheck } from "lucide-react";
@@ -36,8 +36,17 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 function SettingsPage() {
-  const { profile, user, roles, refresh } = useAuth();
+  const { profile, user, roles, refresh, loading } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  // Tutor-only accounts get the tutor settings surface, not the parent one.
+  useEffect(() => {
+    if (loading) return;
+    if (roles.includes("tutor") && !roles.includes("parent")) {
+      void navigate({ to: "/tutor/settings", replace: true });
+    }
+  }, [loading, roles, navigate]);
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
