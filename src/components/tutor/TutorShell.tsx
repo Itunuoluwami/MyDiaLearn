@@ -256,7 +256,7 @@ export function TutorShell({
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/settings">
+                  <Link to="/tutor/settings">
                     <Settings className="size-4" /> Settings
                   </Link>
                 </DropdownMenuItem>
