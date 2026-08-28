@@ -34,6 +34,18 @@ function Page() {
         </SelectContent>
       </Select>
       <Select value={val} onValueChange={setVal}>
+        <SelectTrigger id="many-trigger" className="w-64">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"].map((i) => (
+            <SelectItem key={i} value={i}>
+              {labels[i] ?? i.toUpperCase()}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={val} onValueChange={setVal}>
         <SelectTrigger id="static-trigger" className="w-64">
           <SelectValue />
         </SelectTrigger>
