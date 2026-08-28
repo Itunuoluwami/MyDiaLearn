@@ -56,7 +56,7 @@ const NAV: NavItem[] = [
   { to: "/tutor/profile", label: "Teaching profile", icon: UserRound },
   { to: "/tutor/verification", label: "Verification", icon: ShieldCheck },
   { to: "/tutor/notifications", label: "Notifications", icon: Bell },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/tutor/settings", label: "Settings", icon: Settings },
 ];
 
 const MOBILE_PRIMARY = [
