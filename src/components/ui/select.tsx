@@ -6,7 +6,27 @@ import { Check, ChevronDown, ChevronUp, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const Select = SelectPrimitive.Root;
+/**
+ * Radix renders a hidden native <select> when the trigger sits inside a <form>.
+ * When a controlled value is applied before the matching option has registered,
+ * that native element bounces back a change event with an empty value, which
+ * silently wipes the caller's state (forms then "save" empty fields).
+ * Empty strings are never valid item values, so swallow them.
+ */
+const Select = ({
+  onValueChange,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) => (
+  <SelectPrimitive.Root
+    {...props}
+    onValueChange={(next) => {
+      if (next === "") return;
+      onValueChange?.(next);
+    }}
+  />
+);
+Select.displayName = "Select";
+
 
 const SelectGroup = SelectPrimitive.Group;
 
