@@ -106,16 +106,6 @@ function TutorSettingsPage() {
     onError: () => toast.error("We couldn't send the reset link. Please try again."),
   });
 
-  useEffect(() => {
-    (window as unknown as Record<string, unknown>)["__dbg"] = {
-      timezone,
-      currency,
-      fullName,
-      p: profile?.timezone,
-      pc: profile?.preferred_currency,
-    };
-  }, [timezone, currency, fullName, profile]);
-
   return (
     <TutorShell title="Settings" description="Your account, security, payouts and teaching hours.">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
