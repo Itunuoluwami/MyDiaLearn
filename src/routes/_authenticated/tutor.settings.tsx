@@ -68,10 +68,6 @@ function TutorSettingsPage() {
     },
   });
 
-  useEffect(() => {
-    (window as unknown as Record<string, unknown>)["__dbg"] = { timezone, currency, p: profile?.timezone };
-  }, [timezone, currency, profile]);
-
   const timezones =
     typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : ["UTC"];
 
