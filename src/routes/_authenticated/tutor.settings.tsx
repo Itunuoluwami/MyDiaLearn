@@ -106,7 +106,15 @@ function TutorSettingsPage() {
     onError: () => toast.error("We couldn't send the reset link. Please try again."),
   });
 
-  if (typeof window !== "undefined") { (window as any).__dbg = { timezone, currency, fullName, p: profile?.timezone, pc: profile?.preferred_currency }; }
+  useEffect(() => {
+    (window as unknown as Record<string, unknown>)["__dbg"] = {
+      timezone,
+      currency,
+      fullName,
+      p: profile?.timezone,
+      pc: profile?.preferred_currency,
+    };
+  }, [timezone, currency, fullName, profile]);
 
   return (
     <TutorShell title="Settings" description="Your account, security, payouts and teaching hours.">
