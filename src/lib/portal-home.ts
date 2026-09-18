@@ -5,6 +5,7 @@ import type { AppRole } from "@/hooks/use-auth";
  * Portals that are not built yet fall back to the shared account page.
  */
 const ROLE_HOME: Partial<Record<AppRole, string>> = {
+  super_admin: "/admin/dashboard",
   admin: "/admin/dashboard",
   parent: "/dashboard",
   tutor: "/tutor/dashboard",

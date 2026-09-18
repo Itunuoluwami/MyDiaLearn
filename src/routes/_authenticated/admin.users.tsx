@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, ShieldAlert, UserCog } from "lucide-react";
+import { Loader2, Search, ShieldAlert, UserCog } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/use-auth";
 import { AdminShell } from "@/components/admin/AdminShell";
@@ -12,13 +13,27 @@ import {
   type AdminUser,
   type AppRole,
 } from "@/lib/admin-data";
+import { friendlyAdminError } from "@/lib/admin-governance";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -28,21 +43,51 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import { adminBeforeLoad } from "@/lib/admin-guard";
+
 export const Route = createFileRoute("/_authenticated/admin/users")({
+  beforeLoad: adminBeforeLoad(),
   head: () => ({
     meta: [
       { title: "Users — DiaLearn admin" },
-      { name: "description", content: "Search, suspend and edit accounts across every role on DiaLearn." },
+      {
+        name: "description",
+        content: "Search, suspend and edit accounts across every role on DiaLearn.",
+      },
     ],
   }),
   component: AdminUsersPage,
 });
 
-const ALL_ROLES: AppRole[] = ["student", "parent", "tutor", "agency", "admin"];
+/** Everyday roles only. admin and super_admin are deliberately absent: granting
+ * either is a privilege change that goes through Admins & roles and the
+ * approval queue, never a checkbox on the general user list. */
+const ALL_ROLES: AppRole[] = ["student", "parent", "tutor", "agency"];
+
+/** Still needed for the filter dropdown and the role badges on the table. */
+const FILTER_ROLES: AppRole[] = ["student", "parent", "tutor", "agency", "admin", "super_admin"];
+
+/** The embedded user_roles(role) select resolves to a SelectQueryError against
+ *  the stale generated types, so the shape is asserted once here rather than at
+ *  each use. Regenerating types.ts makes this cast redundant. */
+function rolesOf(user: AdminUser): AppRole[] {
+  const rows = (user.user_roles ?? []) as unknown as { role: AppRole }[];
+  return rows.map((row) => row.role);
+}
 
 function EditRolesDialog({ user, onClose }: { user: AdminUser; onClose: () => void }) {
-  const currentRoles = useMemo(() => (user.user_roles ?? []).map((r) => r.role), [user]);
-  const [selected, setSelected] = useState<Set<AppRole>>(new Set(currentRoles));
+  const currentRoles = useMemo(() => rolesOf(user), [user]);
+
+  /** Held aside and merged back on save, so this dialog can never strip an
+   *  elevated role by omission — removing one is an approval-gated action. */
+  const elevatedRoles = useMemo(
+    () => currentRoles.filter((role) => role === "admin" || role === "super_admin"),
+    [currentRoles],
+  );
+
+  const [selected, setSelected] = useState<Set<AppRole>>(
+    () => new Set(currentRoles.filter((role) => ALL_ROLES.includes(role))),
+  );
   const updateRoles = useUpdateUserRoles();
 
   function toggle(role: AppRole, checked: boolean) {
@@ -60,13 +105,16 @@ function EditRolesDialog({ user, onClose }: { user: AdminUser; onClose: () => vo
         <DialogHeader>
           <DialogTitle>Edit roles</DialogTitle>
           <DialogDescription>
-            {user.full_name ?? user.email ?? "This account"} — role changes take effect immediately across every
-            portal.
+            {user.full_name ?? user.email ?? "This account"} — changes take effect immediately
+            across every portal.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 py-2">
           {ALL_ROLES.map((role) => (
-            <label key={role} className="flex items-center gap-3 rounded-md border border-border p-3 text-sm">
+            <label
+              key={role}
+              className="focus-within:ring-ring flex min-h-11 items-center gap-3 rounded-md border border-border p-3 text-sm transition-colors hover:bg-surface"
+            >
               <Checkbox
                 checked={selected.has(role)}
                 onCheckedChange={(checked) => toggle(role, checked === true)}
@@ -74,20 +122,38 @@ function EditRolesDialog({ user, onClose }: { user: AdminUser; onClose: () => vo
               {ROLE_LABEL[role]}
             </label>
           ))}
+
+          {elevatedRoles.length > 0 ? (
+            <p className="rounded-md bg-secondary-soft px-3 py-2.5 text-xs text-foreground">
+              This account also holds{" "}
+              <span className="font-semibold">
+                {elevatedRoles.map((role) => ROLE_LABEL[role]).join(" and ")}
+              </span>
+              . Admin access is changed in Admins &amp; roles and needs a second approver, so it is
+              left untouched here.
+            </p>
+          ) : null}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
           <Button
-            disabled={updateRoles.isPending || selected.size === 0}
+            disabled={updateRoles.isPending || selected.size + elevatedRoles.length === 0}
             onClick={() =>
               updateRoles.mutate(
-                { userId: user.id, roles: [...selected] },
-                { onSuccess: onClose },
+                { userId: user.id, roles: [...selected, ...elevatedRoles] },
+                {
+                  onSuccess: () => {
+                    toast.success("Roles updated");
+                    onClose();
+                  },
+                  onError: (error) => toast.error(friendlyAdminError(error)),
+                },
               )
             }
           >
+            {updateRoles.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
             Save roles
           </Button>
         </DialogFooter>
@@ -130,7 +196,10 @@ function AdminUsersPage() {
   }
 
   return (
-    <AdminShell title="Users" description="Every account across the Public, Parent, Student, Tutor and Agency portals.">
+    <AdminShell
+      title="Users"
+      description="Every account across the Public, Parent, Student, Tutor and Agency portals."
+    >
       <div className="panel-portal p-4 md:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
@@ -148,7 +217,7 @@ function AdminUsersPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All roles</SelectItem>
-              {ALL_ROLES.map((r) => (
+              {FILTER_ROLES.map((r) => (
                 <SelectItem key={r} value={r}>
                   {ROLE_LABEL[r]}
                 </SelectItem>
@@ -189,12 +258,12 @@ function AdminUsersPage() {
                     <TableCell className="text-muted-foreground">{user.email ?? "—"}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {(user.user_roles ?? []).length === 0 ? (
+                        {rolesOf(user).length === 0 ? (
                           <Badge variant="outline">{ROLE_LABEL[user.primary_role]}</Badge>
                         ) : (
-                          (user.user_roles ?? []).map((r) => (
-                            <Badge key={r.role} variant="outline">
-                              {ROLE_LABEL[r.role]}
+                          rolesOf(user).map((role) => (
+                            <Badge key={role} variant="outline">
+                              {ROLE_LABEL[role]}
                             </Badge>
                           ))
                         )}
@@ -204,22 +273,54 @@ function AdminUsersPage() {
                       {new Date(user.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
+                      {/* Not a switch any more: suspending an account is
+                          approval-gated, so nothing changes on click and a
+                          toggle would visibly spring back. */}
                       <div className="flex items-center gap-2">
-                        <Switch
-                          checked={user.is_active}
-                          aria-label={user.is_active ? "Active" : "Suspended"}
-                          onCheckedChange={(checked) => suspend.mutate({ id: user.id, isActive: checked })}
-                        />
-                        <span className="text-xs text-muted-foreground">
+                        <span
+                          className={cn(
+                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                            user.is_active
+                              ? "bg-success/12 text-success"
+                              : "bg-destructive/12 text-destructive",
+                          )}
+                        >
                           {user.is_active ? "Active" : "Suspended"}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => setEditing(user)}>
-                        <UserCog className="size-4" />
-                        Edit roles
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={suspend.isPending}
+                          onClick={() =>
+                            suspend.mutate(
+                              { id: user.id, isActive: !user.is_active },
+                              {
+                                onSuccess: () =>
+                                  toast.success(
+                                    user.is_active
+                                      ? "Suspension sent for approval"
+                                      : "Restore sent for approval",
+                                    {
+                                      description:
+                                        "Another admin has to approve it before it takes effect.",
+                                    },
+                                  ),
+                                onError: (error) => toast.error(friendlyAdminError(error)),
+                              },
+                            )
+                          }
+                        >
+                          {user.is_active ? "Suspend" : "Restore"}
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setEditing(user)}>
+                          <UserCog className="size-4" />
+                          Edit roles
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

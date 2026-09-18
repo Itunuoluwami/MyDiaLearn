@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Link } from "@tanstack/react-router";
 import { AlertCircle, Loader2 } from "lucide-react";
 import type { z } from "zod";
 
@@ -91,7 +92,15 @@ export function SignInForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="signin-password">Password</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="signin-password">Password</Label>
+          <Link
+            to="/auth/forgot-password"
+            className="text-xs font-medium text-primary underline underline-offset-2"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <PasswordInput
           id="signin-password"
           autoComplete="current-password"

@@ -35,7 +35,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
+import { adminBeforeLoad } from "@/lib/admin-guard";
+
 export const Route = createFileRoute("/_authenticated/admin/verification")({
+  beforeLoad: adminBeforeLoad(),
   head: () => ({
     meta: [
       { title: "Tutor verification — DiaLearn admin" },

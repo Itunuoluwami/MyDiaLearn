@@ -28,12 +28,34 @@ import { Route as AuthenticatedFamilyRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedFindTutorRouteImport } from './routes/_authenticated/find-tutor'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthAcceptInviteRouteImport } from './routes/auth.accept-invite'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as TutorsIndexRouteImport } from './routes/tutors.index'
 import { Route as TutorsTutorIdRouteImport } from './routes/tutors.$tutorId'
+import { Route as AuthenticatedAdminAdminsRouteImport } from './routes/_authenticated/admin.admins'
+import { Route as AuthenticatedAdminApprovalsRouteImport } from './routes/_authenticated/admin.approvals'
+import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
+import { Route as AuthenticatedAdminBookingsRouteImport } from './routes/_authenticated/admin.bookings'
+import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin.dashboard'
+import { Route as AuthenticatedAdminDisputesRouteImport } from './routes/_authenticated/admin.disputes'
+import { Route as AuthenticatedAdminModerationRouteImport } from './routes/_authenticated/admin.moderation'
+import { Route as AuthenticatedAdminPaymentsRouteImport } from './routes/_authenticated/admin.payments'
+import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin.payouts'
+import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin.reports'
+import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
+import { Route as AuthenticatedAdminVerificationRouteImport } from './routes/_authenticated/admin.verification'
 import { Route as AuthenticatedBookTutorIdRouteImport } from './routes/_authenticated/book.$tutorId'
 import { Route as AuthenticatedChildrenIndexRouteImport } from './routes/_authenticated/children.index'
 import { Route as AuthenticatedChildrenStudentIdRouteImport } from './routes/_authenticated/children.$studentId'
+import { Route as AuthenticatedStudentDashboardRouteImport } from './routes/_authenticated/student.dashboard'
+import { Route as AuthenticatedStudentFindTutorRouteImport } from './routes/_authenticated/student.find-tutor'
+import { Route as AuthenticatedStudentHistoryRouteImport } from './routes/_authenticated/student.history'
+import { Route as AuthenticatedStudentMaterialsRouteImport } from './routes/_authenticated/student.materials'
+import { Route as AuthenticatedStudentMessagesRouteImport } from './routes/_authenticated/student.messages'
+import { Route as AuthenticatedStudentNotificationsRouteImport } from './routes/_authenticated/student.notifications'
 import { Route as AuthenticatedTutorAssignmentsRouteImport } from './routes/_authenticated/tutor.assignments'
 import { Route as AuthenticatedTutorAvailabilityRouteImport } from './routes/_authenticated/tutor.availability'
 import { Route as AuthenticatedTutorClassesRouteImport } from './routes/_authenticated/tutor.classes'
@@ -48,6 +70,8 @@ import { Route as AuthenticatedTutorReviewsRouteImport } from './routes/_authent
 import { Route as AuthenticatedTutorSettingsRouteImport } from './routes/_authenticated/tutor.settings'
 import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authenticated/tutor.students'
 import { Route as AuthenticatedTutorVerificationRouteImport } from './routes/_authenticated/tutor.verification'
+import { Route as AuthenticatedStudentBookTutorIdRouteImport } from './routes/_authenticated/student.book.$tutorId'
+import { Route as AuthenticatedStudentClassroomBookingIdRouteImport } from './routes/_authenticated/student.classroom.$bookingId'
 import { Route as AuthenticatedTutorClassroomBookingIdRouteImport } from './routes/_authenticated/tutor.classroom.$bookingId'
 import { Route as AuthenticatedTutorNotesBookingIdRouteImport } from './routes/_authenticated/tutor.notes.$bookingId'
 import { Route as AuthenticatedTutorStudentsStudentIdRouteImport } from './routes/_authenticated/tutor.students.$studentId'
@@ -147,6 +171,21 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthAcceptInviteRoute = AuthAcceptInviteRouteImport.update({
+  id: '/accept-invite',
+  path: '/accept-invite',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
+} as any)
 const TutorsIndexRoute = TutorsIndexRouteImport.update({
   id: '/tutors/',
   path: '/tutors/',
@@ -157,10 +196,86 @@ const TutorsTutorIdRoute = TutorsTutorIdRouteImport.update({
   path: '/tutors/$tutorId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminAdminsRoute =
+  AuthenticatedAdminAdminsRouteImport.update({
+    id: '/admin/admins',
+    path: '/admin/admins',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminApprovalsRoute =
+  AuthenticatedAdminApprovalsRouteImport.update({
+    id: '/admin/approvals',
+    path: '/admin/approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
+  id: '/admin/audit',
+  path: '/admin/audit',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminBookingsRoute =
+  AuthenticatedAdminBookingsRouteImport.update({
+    id: '/admin/bookings',
+    path: '/admin/bookings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDashboardRoute =
+  AuthenticatedAdminDashboardRouteImport.update({
+    id: '/admin/dashboard',
+    path: '/admin/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDisputesRoute =
+  AuthenticatedAdminDisputesRouteImport.update({
+    id: '/admin/disputes',
+    path: '/admin/disputes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminModerationRoute =
+  AuthenticatedAdminModerationRouteImport.update({
+    id: '/admin/moderation',
+    path: '/admin/moderation',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminPaymentsRoute =
+  AuthenticatedAdminPaymentsRouteImport.update({
+    id: '/admin/payments',
+    path: '/admin/payments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminPayoutsRoute =
+  AuthenticatedAdminPayoutsRouteImport.update({
+    id: '/admin/payouts',
+    path: '/admin/payouts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminReportsRoute =
+  AuthenticatedAdminReportsRouteImport.update({
+    id: '/admin/reports',
+    path: '/admin/reports',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminSecurityRoute =
+  AuthenticatedAdminSecurityRouteImport.update({
+    id: '/admin/security',
+    path: '/admin/security',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/admin/settings',
     path: '/admin/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminVerificationRoute =
+  AuthenticatedAdminVerificationRouteImport.update({
+    id: '/admin/verification',
+    path: '/admin/verification',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBookTutorIdRoute =
@@ -179,6 +294,42 @@ const AuthenticatedChildrenStudentIdRoute =
   AuthenticatedChildrenStudentIdRouteImport.update({
     id: '/children/$studentId',
     path: '/children/$studentId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStudentDashboardRoute =
+  AuthenticatedStudentDashboardRouteImport.update({
+    id: '/student/dashboard',
+    path: '/student/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStudentFindTutorRoute =
+  AuthenticatedStudentFindTutorRouteImport.update({
+    id: '/student/find-tutor',
+    path: '/student/find-tutor',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStudentHistoryRoute =
+  AuthenticatedStudentHistoryRouteImport.update({
+    id: '/student/history',
+    path: '/student/history',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStudentMaterialsRoute =
+  AuthenticatedStudentMaterialsRouteImport.update({
+    id: '/student/materials',
+    path: '/student/materials',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStudentMessagesRoute =
+  AuthenticatedStudentMessagesRouteImport.update({
+    id: '/student/messages',
+    path: '/student/messages',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStudentNotificationsRoute =
+  AuthenticatedStudentNotificationsRouteImport.update({
+    id: '/student/notifications',
+    path: '/student/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedTutorAssignmentsRoute =
@@ -265,6 +416,18 @@ const AuthenticatedTutorVerificationRoute =
     path: '/tutor/verification',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedStudentBookTutorIdRoute =
+  AuthenticatedStudentBookTutorIdRouteImport.update({
+    id: '/student/book/$tutorId',
+    path: '/student/book/$tutorId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStudentClassroomBookingIdRoute =
+  AuthenticatedStudentClassroomBookingIdRouteImport.update({
+    id: '/student/classroom/$bookingId',
+    path: '/student/classroom/$bookingId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTutorClassroomBookingIdRoute =
   AuthenticatedTutorClassroomBookingIdRouteImport.update({
     id: '/tutor/classroom/$bookingId',
@@ -287,7 +450,7 @@ const AuthenticatedTutorStudentsStudentIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/become-a-tutor': typeof BecomeATutorRoute
   '/class-preview': typeof ClassPreviewRoute
   '/contact': typeof ContactRoute
@@ -303,11 +466,33 @@ export interface FileRoutesByFullPath {
   '/find-tutor': typeof AuthenticatedFindTutorRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/auth/accept-invite': typeof AuthAcceptInviteRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors/': typeof TutorsIndexRoute
+  '/admin/admins': typeof AuthenticatedAdminAdminsRoute
+  '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
+  '/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
+  '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
+  '/admin/moderation': typeof AuthenticatedAdminModerationRoute
+  '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
+  '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/reports': typeof AuthenticatedAdminReportsRoute
+  '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/admin/verification': typeof AuthenticatedAdminVerificationRoute
   '/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/student/dashboard': typeof AuthenticatedStudentDashboardRoute
+  '/student/find-tutor': typeof AuthenticatedStudentFindTutorRoute
+  '/student/history': typeof AuthenticatedStudentHistoryRoute
+  '/student/materials': typeof AuthenticatedStudentMaterialsRoute
+  '/student/messages': typeof AuthenticatedStudentMessagesRoute
+  '/student/notifications': typeof AuthenticatedStudentNotificationsRoute
   '/tutor/assignments': typeof AuthenticatedTutorAssignmentsRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/tutor/classes': typeof AuthenticatedTutorClassesRoute
@@ -323,6 +508,8 @@ export interface FileRoutesByFullPath {
   '/tutor/students': typeof AuthenticatedTutorStudentsRouteWithChildren
   '/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/children/': typeof AuthenticatedChildrenIndexRoute
+  '/student/book/$tutorId': typeof AuthenticatedStudentBookTutorIdRoute
+  '/student/classroom/$bookingId': typeof AuthenticatedStudentClassroomBookingIdRoute
   '/tutor/classroom/$bookingId': typeof AuthenticatedTutorClassroomBookingIdRoute
   '/tutor/notes/$bookingId': typeof AuthenticatedTutorNotesBookingIdRoute
   '/tutor/students/$studentId': typeof AuthenticatedTutorStudentsStudentIdRoute
@@ -330,7 +517,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/become-a-tutor': typeof BecomeATutorRoute
   '/class-preview': typeof ClassPreviewRoute
   '/contact': typeof ContactRoute
@@ -346,11 +533,33 @@ export interface FileRoutesByTo {
   '/find-tutor': typeof AuthenticatedFindTutorRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/auth/accept-invite': typeof AuthAcceptInviteRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors': typeof TutorsIndexRoute
+  '/admin/admins': typeof AuthenticatedAdminAdminsRoute
+  '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
+  '/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
+  '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/disputes': typeof AuthenticatedAdminDisputesRoute
+  '/admin/moderation': typeof AuthenticatedAdminModerationRoute
+  '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
+  '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/reports': typeof AuthenticatedAdminReportsRoute
+  '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/admin/verification': typeof AuthenticatedAdminVerificationRoute
   '/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/student/dashboard': typeof AuthenticatedStudentDashboardRoute
+  '/student/find-tutor': typeof AuthenticatedStudentFindTutorRoute
+  '/student/history': typeof AuthenticatedStudentHistoryRoute
+  '/student/materials': typeof AuthenticatedStudentMaterialsRoute
+  '/student/messages': typeof AuthenticatedStudentMessagesRoute
+  '/student/notifications': typeof AuthenticatedStudentNotificationsRoute
   '/tutor/assignments': typeof AuthenticatedTutorAssignmentsRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/tutor/classes': typeof AuthenticatedTutorClassesRoute
@@ -366,6 +575,8 @@ export interface FileRoutesByTo {
   '/tutor/students': typeof AuthenticatedTutorStudentsRouteWithChildren
   '/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/children': typeof AuthenticatedChildrenIndexRoute
+  '/student/book/$tutorId': typeof AuthenticatedStudentBookTutorIdRoute
+  '/student/classroom/$bookingId': typeof AuthenticatedStudentClassroomBookingIdRoute
   '/tutor/classroom/$bookingId': typeof AuthenticatedTutorClassroomBookingIdRoute
   '/tutor/notes/$bookingId': typeof AuthenticatedTutorNotesBookingIdRoute
   '/tutor/students/$studentId': typeof AuthenticatedTutorStudentsStudentIdRoute
@@ -375,7 +586,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/become-a-tutor': typeof BecomeATutorRoute
   '/class-preview': typeof ClassPreviewRoute
   '/contact': typeof ContactRoute
@@ -391,11 +602,33 @@ export interface FileRoutesById {
   '/_authenticated/find-tutor': typeof AuthenticatedFindTutorRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/auth/accept-invite': typeof AuthAcceptInviteRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors/': typeof TutorsIndexRoute
+  '/_authenticated/admin/admins': typeof AuthenticatedAdminAdminsRoute
+  '/_authenticated/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
+  '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
+  '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/_authenticated/admin/disputes': typeof AuthenticatedAdminDisputesRoute
+  '/_authenticated/admin/moderation': typeof AuthenticatedAdminModerationRoute
+  '/_authenticated/admin/payments': typeof AuthenticatedAdminPaymentsRoute
+  '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
+  '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/_authenticated/admin/verification': typeof AuthenticatedAdminVerificationRoute
   '/_authenticated/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/_authenticated/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
+  '/_authenticated/student/dashboard': typeof AuthenticatedStudentDashboardRoute
+  '/_authenticated/student/find-tutor': typeof AuthenticatedStudentFindTutorRoute
+  '/_authenticated/student/history': typeof AuthenticatedStudentHistoryRoute
+  '/_authenticated/student/materials': typeof AuthenticatedStudentMaterialsRoute
+  '/_authenticated/student/messages': typeof AuthenticatedStudentMessagesRoute
+  '/_authenticated/student/notifications': typeof AuthenticatedStudentNotificationsRoute
   '/_authenticated/tutor/assignments': typeof AuthenticatedTutorAssignmentsRoute
   '/_authenticated/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/_authenticated/tutor/classes': typeof AuthenticatedTutorClassesRoute
@@ -411,6 +644,8 @@ export interface FileRoutesById {
   '/_authenticated/tutor/students': typeof AuthenticatedTutorStudentsRouteWithChildren
   '/_authenticated/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/_authenticated/children/': typeof AuthenticatedChildrenIndexRoute
+  '/_authenticated/student/book/$tutorId': typeof AuthenticatedStudentBookTutorIdRoute
+  '/_authenticated/student/classroom/$bookingId': typeof AuthenticatedStudentClassroomBookingIdRoute
   '/_authenticated/tutor/classroom/$bookingId': typeof AuthenticatedTutorClassroomBookingIdRoute
   '/_authenticated/tutor/notes/$bookingId': typeof AuthenticatedTutorNotesBookingIdRoute
   '/_authenticated/tutor/students/$studentId': typeof AuthenticatedTutorStudentsStudentIdRoute
@@ -436,11 +671,33 @@ export interface FileRouteTypes {
     | '/find-tutor'
     | '/notifications'
     | '/settings'
+    | '/auth/accept-invite'
+    | '/auth/forgot-password'
+    | '/auth/reset-password'
     | '/tutors/$tutorId'
     | '/tutors/'
+    | '/admin/admins'
+    | '/admin/approvals'
+    | '/admin/audit'
+    | '/admin/bookings'
+    | '/admin/dashboard'
+    | '/admin/disputes'
+    | '/admin/moderation'
+    | '/admin/payments'
+    | '/admin/payouts'
+    | '/admin/reports'
+    | '/admin/security'
     | '/admin/settings'
+    | '/admin/users'
+    | '/admin/verification'
     | '/book/$tutorId'
     | '/children/$studentId'
+    | '/student/dashboard'
+    | '/student/find-tutor'
+    | '/student/history'
+    | '/student/materials'
+    | '/student/messages'
+    | '/student/notifications'
     | '/tutor/assignments'
     | '/tutor/availability'
     | '/tutor/classes'
@@ -456,6 +713,8 @@ export interface FileRouteTypes {
     | '/tutor/students'
     | '/tutor/verification'
     | '/children/'
+    | '/student/book/$tutorId'
+    | '/student/classroom/$bookingId'
     | '/tutor/classroom/$bookingId'
     | '/tutor/notes/$bookingId'
     | '/tutor/students/$studentId'
@@ -479,11 +738,33 @@ export interface FileRouteTypes {
     | '/find-tutor'
     | '/notifications'
     | '/settings'
+    | '/auth/accept-invite'
+    | '/auth/forgot-password'
+    | '/auth/reset-password'
     | '/tutors/$tutorId'
     | '/tutors'
+    | '/admin/admins'
+    | '/admin/approvals'
+    | '/admin/audit'
+    | '/admin/bookings'
+    | '/admin/dashboard'
+    | '/admin/disputes'
+    | '/admin/moderation'
+    | '/admin/payments'
+    | '/admin/payouts'
+    | '/admin/reports'
+    | '/admin/security'
     | '/admin/settings'
+    | '/admin/users'
+    | '/admin/verification'
     | '/book/$tutorId'
     | '/children/$studentId'
+    | '/student/dashboard'
+    | '/student/find-tutor'
+    | '/student/history'
+    | '/student/materials'
+    | '/student/messages'
+    | '/student/notifications'
     | '/tutor/assignments'
     | '/tutor/availability'
     | '/tutor/classes'
@@ -499,6 +780,8 @@ export interface FileRouteTypes {
     | '/tutor/students'
     | '/tutor/verification'
     | '/children'
+    | '/student/book/$tutorId'
+    | '/student/classroom/$bookingId'
     | '/tutor/classroom/$bookingId'
     | '/tutor/notes/$bookingId'
     | '/tutor/students/$studentId'
@@ -523,11 +806,33 @@ export interface FileRouteTypes {
     | '/_authenticated/find-tutor'
     | '/_authenticated/notifications'
     | '/_authenticated/settings'
+    | '/auth/accept-invite'
+    | '/auth/forgot-password'
+    | '/auth/reset-password'
     | '/tutors/$tutorId'
     | '/tutors/'
+    | '/_authenticated/admin/admins'
+    | '/_authenticated/admin/approvals'
+    | '/_authenticated/admin/audit'
+    | '/_authenticated/admin/bookings'
+    | '/_authenticated/admin/dashboard'
+    | '/_authenticated/admin/disputes'
+    | '/_authenticated/admin/moderation'
+    | '/_authenticated/admin/payments'
+    | '/_authenticated/admin/payouts'
+    | '/_authenticated/admin/reports'
+    | '/_authenticated/admin/security'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/admin/users'
+    | '/_authenticated/admin/verification'
     | '/_authenticated/book/$tutorId'
     | '/_authenticated/children/$studentId'
+    | '/_authenticated/student/dashboard'
+    | '/_authenticated/student/find-tutor'
+    | '/_authenticated/student/history'
+    | '/_authenticated/student/materials'
+    | '/_authenticated/student/messages'
+    | '/_authenticated/student/notifications'
     | '/_authenticated/tutor/assignments'
     | '/_authenticated/tutor/availability'
     | '/_authenticated/tutor/classes'
@@ -543,6 +848,8 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor/students'
     | '/_authenticated/tutor/verification'
     | '/_authenticated/children/'
+    | '/_authenticated/student/book/$tutorId'
+    | '/_authenticated/student/classroom/$bookingId'
     | '/_authenticated/tutor/classroom/$bookingId'
     | '/_authenticated/tutor/notes/$bookingId'
     | '/_authenticated/tutor/students/$studentId'
@@ -552,7 +859,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   BecomeATutorRoute: typeof BecomeATutorRoute
   ClassPreviewRoute: typeof ClassPreviewRoute
   ContactRoute: typeof ContactRoute
@@ -700,6 +1007,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/auth/accept-invite': {
+      id: '/auth/accept-invite'
+      path: '/accept-invite'
+      fullPath: '/auth/accept-invite'
+      preLoaderRoute: typeof AuthAcceptInviteRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/tutors/': {
       id: '/tutors/'
       path: '/tutors'
@@ -714,11 +1042,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TutorsTutorIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/admins': {
+      id: '/_authenticated/admin/admins'
+      path: '/admin/admins'
+      fullPath: '/admin/admins'
+      preLoaderRoute: typeof AuthenticatedAdminAdminsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/approvals': {
+      id: '/_authenticated/admin/approvals'
+      path: '/admin/approvals'
+      fullPath: '/admin/approvals'
+      preLoaderRoute: typeof AuthenticatedAdminApprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/audit': {
+      id: '/_authenticated/admin/audit'
+      path: '/admin/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/bookings': {
+      id: '/_authenticated/admin/bookings'
+      path: '/admin/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AuthenticatedAdminBookingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/dashboard': {
+      id: '/_authenticated/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/disputes': {
+      id: '/_authenticated/admin/disputes'
+      path: '/admin/disputes'
+      fullPath: '/admin/disputes'
+      preLoaderRoute: typeof AuthenticatedAdminDisputesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/moderation': {
+      id: '/_authenticated/admin/moderation'
+      path: '/admin/moderation'
+      fullPath: '/admin/moderation'
+      preLoaderRoute: typeof AuthenticatedAdminModerationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/payments': {
+      id: '/_authenticated/admin/payments'
+      path: '/admin/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AuthenticatedAdminPaymentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/payouts': {
+      id: '/_authenticated/admin/payouts'
+      path: '/admin/payouts'
+      fullPath: '/admin/payouts'
+      preLoaderRoute: typeof AuthenticatedAdminPayoutsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/reports': {
+      id: '/_authenticated/admin/reports'
+      path: '/admin/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AuthenticatedAdminReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/security': {
+      id: '/_authenticated/admin/security'
+      path: '/admin/security'
+      fullPath: '/admin/security'
+      preLoaderRoute: typeof AuthenticatedAdminSecurityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
       path: '/admin/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/verification': {
+      id: '/_authenticated/admin/verification'
+      path: '/admin/verification'
+      fullPath: '/admin/verification'
+      preLoaderRoute: typeof AuthenticatedAdminVerificationRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/book/$tutorId': {
@@ -740,6 +1159,48 @@ declare module '@tanstack/react-router' {
       path: '/children/$studentId'
       fullPath: '/children/$studentId'
       preLoaderRoute: typeof AuthenticatedChildrenStudentIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/student/dashboard': {
+      id: '/_authenticated/student/dashboard'
+      path: '/student/dashboard'
+      fullPath: '/student/dashboard'
+      preLoaderRoute: typeof AuthenticatedStudentDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/student/find-tutor': {
+      id: '/_authenticated/student/find-tutor'
+      path: '/student/find-tutor'
+      fullPath: '/student/find-tutor'
+      preLoaderRoute: typeof AuthenticatedStudentFindTutorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/student/history': {
+      id: '/_authenticated/student/history'
+      path: '/student/history'
+      fullPath: '/student/history'
+      preLoaderRoute: typeof AuthenticatedStudentHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/student/materials': {
+      id: '/_authenticated/student/materials'
+      path: '/student/materials'
+      fullPath: '/student/materials'
+      preLoaderRoute: typeof AuthenticatedStudentMaterialsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/student/messages': {
+      id: '/_authenticated/student/messages'
+      path: '/student/messages'
+      fullPath: '/student/messages'
+      preLoaderRoute: typeof AuthenticatedStudentMessagesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/student/notifications': {
+      id: '/_authenticated/student/notifications'
+      path: '/student/notifications'
+      fullPath: '/student/notifications'
+      preLoaderRoute: typeof AuthenticatedStudentNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/tutor/assignments': {
@@ -840,6 +1301,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTutorVerificationRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/student/book/$tutorId': {
+      id: '/_authenticated/student/book/$tutorId'
+      path: '/student/book/$tutorId'
+      fullPath: '/student/book/$tutorId'
+      preLoaderRoute: typeof AuthenticatedStudentBookTutorIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/student/classroom/$bookingId': {
+      id: '/_authenticated/student/classroom/$bookingId'
+      path: '/student/classroom/$bookingId'
+      fullPath: '/student/classroom/$bookingId'
+      preLoaderRoute: typeof AuthenticatedStudentClassroomBookingIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tutor/classroom/$bookingId': {
       id: '/_authenticated/tutor/classroom/$bookingId'
       path: '/tutor/classroom/$bookingId'
@@ -887,9 +1362,28 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFindTutorRoute: typeof AuthenticatedFindTutorRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminAdminsRoute: typeof AuthenticatedAdminAdminsRoute
+  AuthenticatedAdminApprovalsRoute: typeof AuthenticatedAdminApprovalsRoute
+  AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
+  AuthenticatedAdminBookingsRoute: typeof AuthenticatedAdminBookingsRoute
+  AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedAdminDisputesRoute: typeof AuthenticatedAdminDisputesRoute
+  AuthenticatedAdminModerationRoute: typeof AuthenticatedAdminModerationRoute
+  AuthenticatedAdminPaymentsRoute: typeof AuthenticatedAdminPaymentsRoute
+  AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
+  AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
+  AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
+  AuthenticatedAdminVerificationRoute: typeof AuthenticatedAdminVerificationRoute
   AuthenticatedBookTutorIdRoute: typeof AuthenticatedBookTutorIdRoute
   AuthenticatedChildrenStudentIdRoute: typeof AuthenticatedChildrenStudentIdRoute
+  AuthenticatedStudentDashboardRoute: typeof AuthenticatedStudentDashboardRoute
+  AuthenticatedStudentFindTutorRoute: typeof AuthenticatedStudentFindTutorRoute
+  AuthenticatedStudentHistoryRoute: typeof AuthenticatedStudentHistoryRoute
+  AuthenticatedStudentMaterialsRoute: typeof AuthenticatedStudentMaterialsRoute
+  AuthenticatedStudentMessagesRoute: typeof AuthenticatedStudentMessagesRoute
+  AuthenticatedStudentNotificationsRoute: typeof AuthenticatedStudentNotificationsRoute
   AuthenticatedTutorAssignmentsRoute: typeof AuthenticatedTutorAssignmentsRoute
   AuthenticatedTutorAvailabilityRoute: typeof AuthenticatedTutorAvailabilityRoute
   AuthenticatedTutorClassesRoute: typeof AuthenticatedTutorClassesRoute
@@ -905,6 +1399,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTutorStudentsRoute: typeof AuthenticatedTutorStudentsRouteWithChildren
   AuthenticatedTutorVerificationRoute: typeof AuthenticatedTutorVerificationRoute
   AuthenticatedChildrenIndexRoute: typeof AuthenticatedChildrenIndexRoute
+  AuthenticatedStudentBookTutorIdRoute: typeof AuthenticatedStudentBookTutorIdRoute
+  AuthenticatedStudentClassroomBookingIdRoute: typeof AuthenticatedStudentClassroomBookingIdRoute
   AuthenticatedTutorClassroomBookingIdRoute: typeof AuthenticatedTutorClassroomBookingIdRoute
   AuthenticatedTutorNotesBookingIdRoute: typeof AuthenticatedTutorNotesBookingIdRoute
 }
@@ -917,9 +1413,29 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFindTutorRoute: AuthenticatedFindTutorRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminAdminsRoute: AuthenticatedAdminAdminsRoute,
+  AuthenticatedAdminApprovalsRoute: AuthenticatedAdminApprovalsRoute,
+  AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
+  AuthenticatedAdminBookingsRoute: AuthenticatedAdminBookingsRoute,
+  AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedAdminDisputesRoute: AuthenticatedAdminDisputesRoute,
+  AuthenticatedAdminModerationRoute: AuthenticatedAdminModerationRoute,
+  AuthenticatedAdminPaymentsRoute: AuthenticatedAdminPaymentsRoute,
+  AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
+  AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
+  AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
+  AuthenticatedAdminVerificationRoute: AuthenticatedAdminVerificationRoute,
   AuthenticatedBookTutorIdRoute: AuthenticatedBookTutorIdRoute,
   AuthenticatedChildrenStudentIdRoute: AuthenticatedChildrenStudentIdRoute,
+  AuthenticatedStudentDashboardRoute: AuthenticatedStudentDashboardRoute,
+  AuthenticatedStudentFindTutorRoute: AuthenticatedStudentFindTutorRoute,
+  AuthenticatedStudentHistoryRoute: AuthenticatedStudentHistoryRoute,
+  AuthenticatedStudentMaterialsRoute: AuthenticatedStudentMaterialsRoute,
+  AuthenticatedStudentMessagesRoute: AuthenticatedStudentMessagesRoute,
+  AuthenticatedStudentNotificationsRoute:
+    AuthenticatedStudentNotificationsRoute,
   AuthenticatedTutorAssignmentsRoute: AuthenticatedTutorAssignmentsRoute,
   AuthenticatedTutorAvailabilityRoute: AuthenticatedTutorAvailabilityRoute,
   AuthenticatedTutorClassesRoute: AuthenticatedTutorClassesRoute,
@@ -935,6 +1451,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTutorStudentsRoute: AuthenticatedTutorStudentsRouteWithChildren,
   AuthenticatedTutorVerificationRoute: AuthenticatedTutorVerificationRoute,
   AuthenticatedChildrenIndexRoute: AuthenticatedChildrenIndexRoute,
+  AuthenticatedStudentBookTutorIdRoute: AuthenticatedStudentBookTutorIdRoute,
+  AuthenticatedStudentClassroomBookingIdRoute:
+    AuthenticatedStudentClassroomBookingIdRoute,
   AuthenticatedTutorClassroomBookingIdRoute:
     AuthenticatedTutorClassroomBookingIdRoute,
   AuthenticatedTutorNotesBookingIdRoute: AuthenticatedTutorNotesBookingIdRoute,
@@ -943,11 +1462,25 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthAcceptInviteRoute: typeof AuthAcceptInviteRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthAcceptInviteRoute: AuthAcceptInviteRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   BecomeATutorRoute: BecomeATutorRoute,
   ClassPreviewRoute: ClassPreviewRoute,
   ContactRoute: ContactRoute,

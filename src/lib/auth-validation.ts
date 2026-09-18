@@ -79,7 +79,10 @@ export function passwordStrength(value: string): PasswordStrength {
   if (value.length > 0) score = Math.min(3, Math.max(1, passed - 1));
   if (passed === PASSWORD_RULES.length && value.length >= 12) score = 4;
   const labels = ["Weak", "Weak", "Fair", "Strong", "Very strong"] as const;
-  return { score: Math.min(4, score) as PasswordStrength["score"], label: labels[Math.min(4, score)]! };
+  return {
+    score: Math.min(4, score) as PasswordStrength["score"],
+    label: labels[Math.min(4, score)]!,
+  };
 }
 
 /** Strips spaces, dashes, brackets and dots from a typed phone number. */
@@ -115,11 +118,9 @@ export function makeSignupSchema(countries: CountryOption[], roles: string[]) {
       confirmPassword: z.string().min(1, { message: "Please confirm your password." }),
       countryCode: z.string().min(1, { message: "Please select your country." }),
       phone: z.string().trim().min(1, { message: "Please enter your phone number." }),
-      role: z
-        .string()
-        .refine((value) => allowedRoles.includes(value), {
-          message: "Please choose an account type.",
-        }),
+      role: z.string().refine((value) => allowedRoles.includes(value), {
+        message: "Please choose an account type.",
+      }),
       acceptTerms: z.literal(true, {
         errorMap: () => ({
           message: "Please accept the Terms & Conditions to create your account.",
@@ -192,3 +193,65 @@ export const SIGNIN_SCHEMA = z.object({
   email: emailSchema,
   password: z.string().min(1, { message: "Please enter your password." }),
 });
+
+export const FORGOT_PASSWORD_SCHEMA = z.object({
+  email: emailSchema,
+});
+
+export const RESET_PASSWORD_SCHEMA = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, { message: "Please confirm your new password." }),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmPassword !== values.password) {
+      ctx.addIssue({
+        path: ["confirmPassword"],
+        code: z.ZodIssueCode.custom,
+        message: "Passwords do not match.",
+      });
+    }
+  });
+
+/** The one-time password is 10 hex characters from pgcrypto, shown uppercase. */
+export const INVITE_OTP_SCHEMA = z
+  .string()
+  .trim()
+  .min(1, { message: "Please enter the one-time password from your invitation email." })
+  .transform((value) => value.replace(/[\s-]/g, "").toUpperCase())
+  .refine((value) => /^[0-9A-F]{10}$/.test(value), {
+    message: "That code doesn't look right. It's 10 characters from your invitation email.",
+  });
+
+/** Accepting an admin invitation: prove the emailed code, then set a password. */
+export const ACCEPT_INVITE_SCHEMA = z
+  .object({
+    otp: INVITE_OTP_SCHEMA,
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, { message: "Please confirm your new password." }),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmPassword !== values.password) {
+      ctx.addIssue({
+        path: ["confirmPassword"],
+        code: z.ZodIssueCode.custom,
+        message: "Passwords do not match.",
+      });
+    }
+  });
+
+/** Changing your own password from inside the admin portal. */
+export const CHANGE_PASSWORD_SCHEMA = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, { message: "Please confirm your new password." }),
+  })
+  .superRefine((values, ctx) => {
+    if (values.confirmPassword !== values.password) {
+      ctx.addIssue({
+        path: ["confirmPassword"],
+        code: z.ZodIssueCode.custom,
+        message: "Passwords do not match.",
+      });
+    }
+  });

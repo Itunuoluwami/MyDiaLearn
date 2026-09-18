@@ -17,7 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+import { adminBeforeLoad } from "@/lib/admin-guard";
+
 export const Route = createFileRoute("/_authenticated/admin/reports")({
+  beforeLoad: adminBeforeLoad(),
   head: () => ({
     meta: [
       { title: "Reports — DiaLearn admin" },

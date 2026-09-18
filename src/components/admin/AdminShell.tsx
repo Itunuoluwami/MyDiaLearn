@@ -4,14 +4,18 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
   CalendarClock,
+  CheckSquare,
   CreditCard,
   Flag,
   Gavel,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   MoreHorizontal,
+  ScrollText,
   Settings,
   ShieldCheck,
+  UserCog,
   Users,
   Wallet,
 } from "lucide-react";
@@ -21,6 +25,7 @@ import { toast } from "sonner";
 import { BRAND } from "@/lib/brand";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { clearAdminContextCache } from "@/lib/admin-guard";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -33,10 +38,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-type NavItem = { to: string; label: string; icon: typeof Users };
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof Users;
+  /** Hidden unless the viewer holds this permission. */
+  permission?: string;
+  /** Hidden from everyone but super admins. */
+  superAdminOnly?: boolean;
+};
 
-/** Admin Portal information architecture for this batch (Phase 1). Bookings,
- * payments, reports and moderation land in later phases. */
+/** Admin Portal information architecture. The governance group at the end is
+ * permission-filtered, so a scoped admin never sees a link they cannot open. */
 const NAV: NavItem[] = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/users", label: "Users", icon: Users },
@@ -50,6 +63,12 @@ const NAV: NavItem[] = [
   { to: "/admin/settings", label: "Platform settings", icon: Settings },
 ];
 
+const GOVERNANCE_NAV: NavItem[] = [
+  { to: "/admin/approvals", label: "Approvals", icon: CheckSquare, permission: "admin.approvals" },
+  { to: "/admin/audit", label: "Audit log", icon: ScrollText, permission: "admin.audit" },
+  { to: "/admin/admins", label: "Admins & roles", icon: UserCog, superAdminOnly: true },
+];
+
 function useActivePath() {
   return useRouterState({ select: (state) => state.location.pathname });
 }
@@ -58,8 +77,37 @@ function isActive(pathname: string, to: string) {
   return pathname === to || pathname.startsWith(`${to}/`);
 }
 
+function NavLink({ item, onNavigate }: { item: NavItem; onNavigate?: (() => void) | undefined }) {
+  const pathname = useActivePath();
+  const Icon = item.icon;
+  const active = isActive(pathname, item.to);
+  return (
+    <Link
+      to={item.to}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "focus-ring flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-all duration-200",
+        active
+          ? "bg-primary-soft text-primary-deep shadow-soft"
+          : "text-muted-foreground hover:bg-surface hover:text-foreground",
+      )}
+    >
+      <Icon className="size-4 shrink-0" aria-hidden="true" />
+      <span className="truncate">{item.label}</span>
+    </Link>
+  );
+}
+
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useActivePath();
+  const { hasPermission, isSuperAdmin } = useAuth();
+
+  const governance = GOVERNANCE_NAV.filter((item) => {
+    if (item.superAdminOnly) return isSuperAdmin;
+    return !item.permission || hasPermission(item.permission);
+  });
+
   return (
     <nav aria-label="Admin portal sections" className="flex flex-col gap-0.5">
       {NAV.map((item) => {
@@ -83,6 +131,15 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
           </Link>
         );
       })}
+
+      {governance.length > 0 ? (
+        <>
+          <p className="eyebrow mt-5 px-3 pb-1">Governance</p>
+          {governance.map((item) => (
+            <NavLink key={item.to} item={item} onNavigate={onNavigate} />
+          ))}
+        </>
+      ) : null}
     </nav>
   );
 }
@@ -106,7 +163,7 @@ export function AdminShell({
   actions?: ReactNode;
   children: ReactNode;
 }) {
-  const { profile } = useAuth();
+  const { profile, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -116,6 +173,7 @@ export function AdminShell({
   async function handleSignOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
+    clearAdminContextCache();
     await supabase.auth.signOut();
     toast.success("Signed out");
     navigate({ to: "/auth", replace: true });
@@ -146,7 +204,8 @@ export function AdminShell({
               <img src={BRAND.logoUrl} alt={BRAND.name} className="h-11 w-auto md:h-12" />
             </Link>
             <span className="hidden items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary-deep md:inline-flex">
-              <ShieldCheck className="size-3.5" aria-hidden="true" /> Admin
+              <ShieldCheck className="size-3.5" aria-hidden="true" />
+              {isSuperAdmin ? "Super admin" : "Admin"}
             </span>
           </div>
 
@@ -164,10 +223,19 @@ export function AdminShell({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-60">
                 <DropdownMenuLabel className="space-y-0.5">
-                  <p className="truncate text-sm font-semibold">{profile?.full_name ?? "Account"}</p>
-                  <p className="truncate text-xs font-normal text-muted-foreground">{profile?.email}</p>
+                  <p className="truncate text-sm font-semibold">
+                    {profile?.full_name ?? "Account"}
+                  </p>
+                  <p className="truncate text-xs font-normal text-muted-foreground">
+                    {profile?.email}
+                  </p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/admin/security">
+                    <KeyRound className="size-4" /> Password &amp; security
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/admin/settings">
                     <Settings className="size-4" /> Platform settings
@@ -194,7 +262,9 @@ export function AdminShell({
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               <h1 className="display-section text-2xl md:text-3xl">{title}</h1>
-              {description ? <p className="lead mt-1.5 text-sm md:text-base">{description}</p> : null}
+              {description ? (
+                <p className="lead mt-1.5 text-sm md:text-base">{description}</p>
+              ) : null}
             </div>
             {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
           </div>

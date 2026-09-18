@@ -13,7 +13,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+import { adminBeforeLoad } from "@/lib/admin-guard";
+
 export const Route = createFileRoute("/_authenticated/admin/disputes")({
+  beforeLoad: adminBeforeLoad(),
   head: () => ({
     meta: [
       { title: "Disputes — DiaLearn admin" },

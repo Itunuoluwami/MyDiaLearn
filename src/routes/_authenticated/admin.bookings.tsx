@@ -13,13 +13,27 @@ import {
   type BookingStatus,
 } from "@/lib/admin-data";
 import { BOOKING_STATUS_LABEL, formatMoney } from "@/lib/parent-data";
+import { friendlyAdminError } from "@/lib/admin-governance";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +43,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import { adminBeforeLoad } from "@/lib/admin-guard";
+
 export const Route = createFileRoute("/_authenticated/admin/bookings")({
+  beforeLoad: adminBeforeLoad(),
   head: () => ({
     meta: [
       { title: "Bookings — DiaLearn admin" },
@@ -52,14 +69,23 @@ const STATUS_FILTERS: (BookingStatus | "all")[] = [
 
 /** Overrides that don't touch money — cancellation is a separate flow so the
  * refund calculation can never be skipped by accident. */
-const OVERRIDE_OPTIONS: BookingStatus[] = ["pending", "confirmed", "in_progress", "completed", "no_show", "rejected"];
+const OVERRIDE_OPTIONS: BookingStatus[] = [
+  "pending",
+  "confirmed",
+  "in_progress",
+  "completed",
+  "no_show",
+  "rejected",
+];
 
 function CancelDialog({ booking, onClose }: { booking: AdminBooking; onClose: () => void }) {
   const [reason, setReason] = useState("");
   const [refundPct, setRefundPct] = useState("");
   const cancel = useAdminCancelBooking();
 
-  const studentName = `${booking.students?.first_name ?? ""} ${booking.students?.last_name ?? ""}`.trim() || "Student";
+  const studentName =
+    `${booking.students?.first_name ?? ""} ${booking.students?.last_name ?? ""}`.trim() ||
+    "Student";
   const tutorName = booking.tutors?.profiles?.full_name ?? "Tutor";
 
   return (
@@ -68,8 +94,8 @@ function CancelDialog({ booking, onClose }: { booking: AdminBooking; onClose: ()
         <DialogHeader>
           <DialogTitle>Cancel this booking?</DialogTitle>
           <DialogDescription>
-            {studentName} with {tutorName} · {formatMoney(booking.total_amount, booking.currency)}. Leave the refund
-            % blank to use the booking's cancellation policy.
+            {studentName} with {tutorName} · {formatMoney(booking.total_amount, booking.currency)}.
+            Leave the refund % blank to use the booking's cancellation policy.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 py-2">
@@ -111,21 +137,27 @@ function CancelDialog({ booking, onClose }: { booking: AdminBooking; onClose: ()
                   refundPercentage: refundPct ? Number(refundPct) : null,
                 },
                 {
-                  onSuccess: (result) => {
-                    toast.success(
-                      result?.refund_amount
-                        ? `Cancelled — refunded ${formatMoney(result.refund_amount, result.refund_currency)}`
-                        : "Booking cancelled",
-                    );
+                  // No refund figure to report any more: cancelling with a
+                  // refund is approval-gated, so nothing is calculated or paid
+                  // until a second admin approves it in Approvals.
+                  onSuccess: () => {
+                    toast.success("Cancellation sent for approval", {
+                      description:
+                        "Another admin has to approve it before the booking is cancelled and refunded.",
+                    });
                     onClose();
                   },
-                  onError: (error) => toast.error((error as Error).message),
+                  onError: (error) => toast.error(friendlyAdminError(error)),
                 },
               )
             }
           >
-            {cancel.isPending ? <Loader2 className="size-4 animate-spin" /> : <XCircle className="size-4" />}
-            Cancel & refund
+            {cancel.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <XCircle className="size-4" />
+            )}
+            Send for approval
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -179,7 +211,10 @@ function AdminBookingsPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Select value={status} onValueChange={(value) => setStatus(value as BookingStatus | "all")}>
+          <Select
+            value={status}
+            onValueChange={(value) => setStatus(value as BookingStatus | "all")}
+          >
             <SelectTrigger className="sm:w-52">
               <SelectValue />
             </SelectTrigger>
@@ -222,9 +257,12 @@ function AdminBookingsPage() {
               ) : (
                 (bookings.data ?? []).map((booking) => {
                   const studentName =
-                    `${booking.students?.first_name ?? ""} ${booking.students?.last_name ?? ""}`.trim() || "—";
+                    `${booking.students?.first_name ?? ""} ${booking.students?.last_name ?? ""}`.trim() ||
+                    "—";
                   const tutorName = booking.tutors?.profiles?.full_name ?? "—";
-                  const cancellable = !["cancelled", "completed", "rejected"].includes(booking.status);
+                  const cancellable = !["cancelled", "completed", "rejected"].includes(
+                    booking.status,
+                  );
                   return (
                     <TableRow key={booking.id}>
                       <TableCell className="whitespace-nowrap text-muted-foreground">
@@ -232,7 +270,9 @@ function AdminBookingsPage() {
                       </TableCell>
                       <TableCell className="font-medium">{studentName}</TableCell>
                       <TableCell>{tutorName}</TableCell>
-                      <TableCell className="text-muted-foreground">{booking.subjects?.name ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {booking.subjects?.name ?? "—"}
+                      </TableCell>
                       <TableCell>{formatMoney(booking.total_amount, booking.currency)}</TableCell>
                       <TableCell>
                         <Select
@@ -247,7 +287,9 @@ function AdminBookingsPage() {
                         >
                           <SelectTrigger className="h-8 w-40">
                             <SelectValue>
-                              <Badge variant="outline">{BOOKING_STATUS_LABEL[booking.status]}</Badge>
+                              <Badge variant="outline">
+                                {BOOKING_STATUS_LABEL[booking.status]}
+                              </Badge>
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
@@ -279,7 +321,9 @@ function AdminBookingsPage() {
         </div>
       </div>
 
-      {cancelling ? <CancelDialog booking={cancelling} onClose={() => setCancelling(null)} /> : null}
+      {cancelling ? (
+        <CancelDialog booking={cancelling} onClose={() => setCancelling(null)} />
+      ) : null}
     </AdminShell>
   );
 }

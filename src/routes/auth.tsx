@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useNavigate,
+  useChildMatches,
+  Link,
+  Outlet,
+} from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ArrowLeft, MailCheck } from "lucide-react";
 
@@ -39,13 +45,26 @@ function AuthPage() {
   const navigate = useNavigate();
   const { session, loading: authLoading, refresh, roles } = useAuth();
 
+  /**
+   * `/auth` is both a page and, because of flat file routing, the parent of
+   * `/auth/forgot-password`, `/auth/reset-password` and `/auth/accept-invite`.
+   * Without this the parent's own sign-in UI renders at every one of those
+   * URLs and the child is never reached.
+   */
+  const childMatches = useChildMatches();
+  const isChildRoute = childMatches.length > 0;
+
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
+    // Children own their own page. Accept-invite in particular arrives WITH a
+    // session — the invite link establishes one — so redirecting on a session
+    // here would bounce the invitee out before they can redeem the code.
+    if (isChildRoute) return;
     if (authLoading || !session) return;
     void navigate({ to: portalHome(roles), replace: true });
-  }, [authLoading, session, roles, navigate]);
+  }, [isChildRoute, authLoading, session, roles, navigate]);
 
   async function handleResend() {
     if (!pendingEmail) return;
@@ -56,6 +75,8 @@ function AuthPage() {
     }
     toast.success("A new verification email is on its way");
   }
+
+  if (isChildRoute) return <Outlet />;
 
   return (
     <div className="min-h-dvh bg-background">

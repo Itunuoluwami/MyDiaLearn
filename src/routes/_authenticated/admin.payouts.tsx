@@ -12,7 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+import { adminBeforeLoad } from "@/lib/admin-guard";
+
 export const Route = createFileRoute("/_authenticated/admin/payouts")({
+  beforeLoad: adminBeforeLoad(),
   head: () => ({
     meta: [
       { title: "Payouts — DiaLearn admin" },

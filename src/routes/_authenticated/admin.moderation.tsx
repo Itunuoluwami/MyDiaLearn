@@ -17,7 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { adminBeforeLoad } from "@/lib/admin-guard";
+
 export const Route = createFileRoute("/_authenticated/admin/moderation")({
+  beforeLoad: adminBeforeLoad(),
   head: () => ({
     meta: [
       { title: "Moderation — DiaLearn admin" },

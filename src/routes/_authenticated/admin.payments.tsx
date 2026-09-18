@@ -25,7 +25,10 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
+import { adminBeforeLoad } from "@/lib/admin-guard";
+
 export const Route = createFileRoute("/_authenticated/admin/payments")({
+  beforeLoad: adminBeforeLoad(),
   head: () => ({
     meta: [
       { title: "Payments — DiaLearn admin" },

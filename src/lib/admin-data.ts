@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
+import { governanceRpc } from "@/integrations/supabase/governance-types";
 import type { Database } from "@/integrations/supabase/types";
+import type { AppRole as AuthAppRole } from "@/hooks/use-auth";
 
-export type AppRole = Database["public"]["Enums"]["app_role"];
+/** Re-exported so `super_admin` is included; see the note in use-auth.tsx. */
+export type AppRole = AuthAppRole;
 export type VerificationStatus = Database["public"]["Enums"]["verification_status"];
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -28,7 +31,12 @@ export type AdminSummary = NonNullable<ReturnType<typeof useAdminSummary>["data"
 /* User management (all roles)                                         */
 /* ------------------------------------------------------------------ */
 
-export function useAdminUsers(params?: { search?: string; role?: AppRole | "all"; from?: string; to?: string }) {
+export function useAdminUsers(params?: {
+  search?: string;
+  role?: AppRole | "all";
+  from?: string;
+  to?: string;
+}) {
   const search = params?.search?.trim() ?? "";
   const role = params?.role ?? "all";
 
@@ -37,7 +45,9 @@ export function useAdminUsers(params?: { search?: string; role?: AppRole | "all"
     queryFn: async () => {
       let query = supabase
         .from("profiles")
-        .select("id, full_name, email, primary_role, is_active, onboarding_completed, created_at, user_roles(role)")
+        .select(
+          "id, full_name, email, primary_role, is_active, onboarding_completed, created_at, user_roles(role)",
+        )
         .order("created_at", { ascending: false })
         .limit(200);
 
@@ -45,7 +55,9 @@ export function useAdminUsers(params?: { search?: string; role?: AppRole | "all"
         query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
       }
       if (role !== "all") {
-        query = query.eq("primary_role", role);
+        // types.ts predates super_admin, so the generated column type is
+        // narrower than AppRole. The value is valid at the database.
+        query = query.eq("primary_role", role as Database["public"]["Enums"]["app_role"]);
       }
       if (params?.from) query = query.gte("created_at", params.from);
       if (params?.to) query = query.lte("created_at", params.to);
@@ -59,48 +71,44 @@ export function useAdminUsers(params?: { search?: string; role?: AppRole | "all"
 
 export type AdminUser = NonNullable<ReturnType<typeof useAdminUsers>["data"]>[number];
 
+/** Suspending or restoring an account changes who can reach the platform, so it
+ * goes through the approval queue rather than committing on the first click.
+ * Resolves to a request id — nothing has happened yet when this returns. */
 export function useSuspendUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      const { error } = await supabase.from("profiles").update({ is_active: isActive }).eq("id", id);
-      if (error) throw error;
+      return governanceRpc<string>("admin_request_action", {
+        p_action: "profile.suspend",
+        p_payload: { profile_id: id, is_active: isActive },
+      });
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      void queryClient.invalidateQueries({ queryKey: ["governance-action-requests"] });
     },
   });
 }
 
+/** Ordinary roles are set directly through admin_set_user_roles(); anything
+ * touching admin or super_admin is refused there and must go through the
+ * approval queue instead (see useRequestElevatedRole in admin-governance.ts).
+ *
+ * Note this hook could never have worked before: user_roles was only ever
+ * granted SELECT to authenticated, so the direct insert/delete it used to do
+ * failed with 42501 every time. */
 export function useUpdateUserRoles() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ userId, roles }: { userId: string; roles: AppRole[] }) => {
-      const { data: existing, error: readError } = await supabase
-        .from("user_roles")
-        .select("id, role")
-        .eq("user_id", userId);
-      if (readError) throw readError;
-
-      const currentRoles = new Set((existing ?? []).map((row) => row.role));
-      const nextRoles = new Set(roles);
-
-      const toAdd = [...nextRoles].filter((role) => !currentRoles.has(role));
-      const toRemoveIds = (existing ?? []).filter((row) => !nextRoles.has(row.role)).map((row) => row.id);
-
-      if (toAdd.length > 0) {
-        const { error } = await supabase
-          .from("user_roles")
-          .insert(toAdd.map((role) => ({ user_id: userId, role })));
-        if (error) throw error;
-      }
-      if (toRemoveIds.length > 0) {
-        const { error } = await supabase.from("user_roles").delete().in("id", toRemoveIds);
-        if (error) throw error;
-      }
+      await governanceRpc<void>("admin_set_user_roles", {
+        p_user_id: userId,
+        p_roles: roles,
+      });
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      void queryClient.invalidateQueries({ queryKey: ["governance-admin-accounts"] });
     },
   });
 }
@@ -134,7 +142,9 @@ export function useVerificationQueue(status?: VerificationStatus | "all") {
   });
 }
 
-export type VerificationQueueItem = NonNullable<ReturnType<typeof useVerificationQueue>["data"]>[number];
+export type VerificationQueueItem = NonNullable<
+  ReturnType<typeof useVerificationQueue>["data"]
+>[number];
 
 export function useTutorVerificationDetail(tutorId: string | null) {
   return useQuery({
@@ -154,7 +164,9 @@ export function useTutorVerificationDetail(tutorId: string | null) {
           .eq("tutor_id", tutorId!),
         supabase
           .from("tutor_documents")
-          .select("id, step_id, label, storage_path, mime_type, size_bytes, status, reviewer_notes, created_at")
+          .select(
+            "id, step_id, label, storage_path, mime_type, size_bytes, status, reviewer_notes, created_at",
+          )
           .eq("tutor_id", tutorId!)
           .order("created_at", { ascending: false }),
       ]);
@@ -216,7 +228,11 @@ export function useReviewVerificationStep() {
 export function useReviewTutorDocument() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { documentId: string; status: VerificationStatus; reviewerNotes?: string | null }) => {
+    mutationFn: async (input: {
+      documentId: string;
+      status: VerificationStatus;
+      reviewerNotes?: string | null;
+    }) => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -279,7 +295,10 @@ export function useSetTutorHourlyRate() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ tutorId, hourlyRate }: { tutorId: string; hourlyRate: number }) => {
-      const { error } = await supabase.from("tutors").update({ hourly_rate: hourlyRate }).eq("id", tutorId);
+      const { error } = await supabase
+        .from("tutors")
+        .update({ hourly_rate: hourlyRate })
+        .eq("id", tutorId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -346,7 +365,8 @@ export function useAdminBookings(params?: {
       if (search) {
         const needle = search.toLowerCase();
         rows = rows.filter((row) => {
-          const studentName = `${row.students?.first_name ?? ""} ${row.students?.last_name ?? ""}`.toLowerCase();
+          const studentName =
+            `${row.students?.first_name ?? ""} ${row.students?.last_name ?? ""}`.toLowerCase();
           const tutorName = (row.tutors?.profiles?.full_name ?? "").toLowerCase();
           return studentName.includes(needle) || tutorName.includes(needle);
         });
@@ -381,14 +401,24 @@ export function useAdminUpdateBookingStatus() {
 export function useAdminCancelBooking() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { bookingId: string; reason: string; refundPercentage?: number | null }) => {
-      const { data, error } = await supabase.rpc("admin_cancel_booking", {
-        p_booking_id: input.bookingId,
-        p_reason: input.reason,
-        p_refund_percentage: input.refundPercentage ?? null,
+    mutationFn: async (input: {
+      bookingId: string;
+      reason: string;
+      refundPercentage?: number | null;
+    }) => {
+      // Was a direct admin_cancel_booking() call, which refunded immediately.
+      // That RPC is no longer executable by authenticated — the approval
+      // dispatcher is its only caller now — so this submits a request and
+      // returns its id. The refund figure is no longer known at this point,
+      // because no refund has been calculated yet.
+      return governanceRpc<string>("admin_request_action", {
+        p_action: "booking.cancel_with_refund",
+        p_payload: {
+          booking_id: input.bookingId,
+          reason: input.reason,
+          refund_percentage: input.refundPercentage ?? null,
+        },
       });
-      if (error) throw error;
-      return data?.[0] ?? null;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
@@ -406,7 +436,11 @@ export function useAdminCancelBooking() {
 const ADMIN_PAYMENT_SELECT =
   "id, booking_id, tutor_id, payer_id, amount, currency, status, provider, provider_reference, paid_at, refunded_amount, created_at, bookings(starts_at, students(first_name, last_name), tutors(profiles(full_name)))";
 
-export function useAdminPayments(params?: { status?: PaymentStatus | "all" | "flagged"; from?: string; to?: string }) {
+export function useAdminPayments(params?: {
+  status?: PaymentStatus | "all" | "flagged";
+  from?: string;
+  to?: string;
+}) {
   const status = params?.status ?? "all";
 
   return useQuery({
@@ -433,7 +467,8 @@ export function useAdminPayments(params?: { status?: PaymentStatus | "all" | "fl
         rows = rows.filter(
           (row) =>
             row.status === "failed" ||
-            (["pending", "processing"].includes(row.status) && new Date(row.created_at).getTime() < cutoff),
+            (["pending", "processing"].includes(row.status) &&
+              new Date(row.created_at).getTime() < cutoff),
         );
       }
       return rows;
@@ -462,29 +497,28 @@ export function useAdminRefunds() {
 /** Ad-hoc refund on a payment not tied to a booking cancellation (goodwill,
  * billing correction, etc). Single-table update — admin_cancel_booking()
  * handles the booking+payment combo, this handles payment-only. */
+/** Submits the refund for approval. The clamp against the payment total now
+ * happens in the dispatcher, at execution time, so an amount cannot be made
+ * stale by anything that happens while the request waits. */
 export function useIssueRefund() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ paymentId, amount }: { paymentId: string; amount: number; reason?: string }) => {
-      const { data: existing, error: readError } = await supabase
-        .from("payments")
-        .select("amount")
-        .eq("id", paymentId)
-        .maybeSingle();
-      if (readError) throw readError;
-      if (!existing) throw new Error("Payment not found");
-
-      const refundAmount = Math.min(Math.max(amount, 0), existing.amount);
-      const { error } = await supabase
-        .from("payments")
-        .update({
-          refunded_amount: refundAmount,
-          status: refundAmount >= existing.amount ? "refunded" : "partially_refunded",
-        })
-        .eq("id", paymentId);
-      if (error) throw error;
+    mutationFn: async ({
+      paymentId,
+      amount,
+      reason,
+    }: {
+      paymentId: string;
+      amount: number;
+      reason?: string;
+    }) => {
+      return governanceRpc<string>("admin_request_action", {
+        p_action: "payment.refund",
+        p_payload: { payment_id: paymentId, amount, reason: reason ?? null },
+      });
     },
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["governance-action-requests"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-payments"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-refunds"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-summary"] });
@@ -521,26 +555,31 @@ export function useAdminPayouts(params?: { status?: PayoutStatus | "all" }) {
 
 export type AdminPayout = NonNullable<ReturnType<typeof useAdminPayouts>["data"]>[number];
 
+/** Settling a payout moves money out, so it needs a second approver. */
 export function useSettlePayout() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("payouts")
-        .update({ status: "paid", settled_at: new Date().toISOString() })
-        .eq("id", id);
-      if (error) throw error;
+      return governanceRpc<string>("admin_request_action", {
+        p_action: "payout.settle",
+        p_payload: { payout_id: id },
+      });
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-payouts"] }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-payouts"] });
+      void queryClient.invalidateQueries({ queryKey: ["governance-action-requests"] });
+    },
   });
 }
 
+/** Rejecting moves no money, so it stays single-step — but it still needs an
+ * RPC, because authenticated has no UPDATE privilege on payouts (and never
+ * did, which is why the direct write this replaced always failed). */
 export function useRejectPayout() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("payouts").update({ status: "rejected" }).eq("id", id);
-      if (error) throw error;
+      await governanceRpc<void>("admin_reject_payout", { p_payout_id: id, p_notes: null });
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-payouts"] }),
   });
@@ -604,10 +643,13 @@ export function useModerationReviews(params?: { onlyPublished?: boolean }) {
     queryFn: async () => {
       let query = supabase
         .from("ratings")
-        .select("id, score, comment, is_published, created_at, tutor_id, tutors(profiles(full_name)), profiles!rater_id(full_name)")
+        .select(
+          "id, score, comment, is_published, created_at, tutor_id, tutors(profiles(full_name)), profiles!rater_id(full_name)",
+        )
         .order("created_at", { ascending: false })
         .limit(200);
-      if (params?.onlyPublished !== undefined) query = query.eq("is_published", params.onlyPublished);
+      if (params?.onlyPublished !== undefined)
+        query = query.eq("is_published", params.onlyPublished);
       const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
@@ -621,7 +663,10 @@ export function useSetReviewPublished() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, isPublished }: { id: string; isPublished: boolean }) => {
-      const { error } = await supabase.from("ratings").update({ is_published: isPublished }).eq("id", id);
+      const { error } = await supabase
+        .from("ratings")
+        .update({ is_published: isPublished })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-moderation-reviews"] }),
@@ -636,7 +681,9 @@ export function useModerationMessages(search?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("messages")
-        .select("id, body, sender_id, is_hidden, created_at, conversation_id, profiles!sender_id(full_name)")
+        .select(
+          "id, body, sender_id, is_hidden, created_at, conversation_id, profiles!sender_id(full_name)",
+        )
         .ilike("body", `%${needle}%`)
         .order("created_at", { ascending: false })
         .limit(100);
@@ -646,19 +693,30 @@ export function useModerationMessages(search?: string) {
   });
 }
 
-export type ModerationMessage = NonNullable<ReturnType<typeof useModerationMessages>["data"]>[number];
+export type ModerationMessage = NonNullable<
+  ReturnType<typeof useModerationMessages>["data"]
+>[number];
 
 export function useSetMessageHidden() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, isHidden, reason }: { id: string; isHidden: boolean; reason?: string }) => {
+    mutationFn: async ({
+      id,
+      isHidden,
+      reason,
+    }: {
+      id: string;
+      isHidden: boolean;
+      reason?: string;
+    }) => {
       const { error } = await supabase
         .from("messages")
-        .update({ is_hidden: isHidden, hidden_reason: isHidden ? reason ?? null : null })
+        .update({ is_hidden: isHidden, hidden_reason: isHidden ? (reason ?? null) : null })
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-moderation-messages"] }),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["admin-moderation-messages"] }),
   });
 }
 
@@ -671,7 +729,10 @@ export function useAdminReportSummary(from: string, to: string) {
     queryKey: ["admin-report-summary", from, to],
     enabled: Boolean(from && to),
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("admin_report_summary", { p_from: from, p_to: to });
+      const { data, error } = await supabase.rpc("admin_report_summary", {
+        p_from: from,
+        p_to: to,
+      });
       if (error) throw error;
       return data?.[0] ?? null;
     },
@@ -690,4 +751,5 @@ export const ROLE_LABEL: Record<AppRole, string> = {
   tutor: "Tutor",
   agency: "Agency",
   admin: "Admin",
+  super_admin: "Super admin",
 };

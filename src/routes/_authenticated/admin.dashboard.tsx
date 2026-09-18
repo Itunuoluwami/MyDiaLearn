@@ -23,7 +23,10 @@ import { useAdminSummary } from "@/lib/admin-data";
 import { formatMoney } from "@/lib/parent-data";
 import { cn } from "@/lib/utils";
 
+import { adminBeforeLoad } from "@/lib/admin-guard";
+
 export const Route = createFileRoute("/_authenticated/admin/dashboard")({
+  beforeLoad: adminBeforeLoad(),
   head: () => ({
     meta: [
       { title: "Admin dashboard — DiaLearn" },
