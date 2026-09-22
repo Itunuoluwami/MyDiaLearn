@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, FileText, Loader2, Save, ShieldAlert, ShieldCheck, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  FileText,
+  Loader2,
+  Save,
+  ShieldAlert,
+  ShieldCheck,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -22,7 +30,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,7 +58,8 @@ export const Route = createFileRoute("/_authenticated/admin/verification")({
       { title: "Tutor verification — DiaLearn admin" },
       {
         name: "description",
-        content: "Review tutor qualifications and identity documents before they go live in search.",
+        content:
+          "Review tutor qualifications and identity documents before they go live in search.",
       },
     ],
   }),
@@ -59,7 +74,17 @@ const QUEUE_FILTERS: { value: VerificationStatus | "all"; label: string }[] = [
   { value: "all", label: "All submitted" },
 ];
 
-function DocumentRow({ document }: { document: { id: string; label: string; storage_path: string; status: VerificationStatus; mime_type: string | null } }) {
+function DocumentRow({
+  document,
+}: {
+  document: {
+    id: string;
+    label: string;
+    storage_path: string;
+    status: VerificationStatus;
+    mime_type: string | null;
+  };
+}) {
   const getUrl = useDocumentUrl();
   const review = useReviewTutorDocument();
 
@@ -73,7 +98,9 @@ function DocumentRow({ document }: { document: { id: string; label: string; stor
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Badge className={cn(VERIFICATION_TONE[document.status])}>{VERIFICATION_LABEL[document.status]}</Badge>
+        <Badge className={cn(VERIFICATION_TONE[document.status])}>
+          {VERIFICATION_LABEL[document.status]}
+        </Badge>
         <Button
           variant="outline"
           size="sm"
@@ -128,7 +155,10 @@ function HourlyRateEditor({ tutor }: { tutor: VerificationQueueItem }) {
 
   return (
     <div className="rounded-md border border-border bg-surface/50 p-3">
-      <Label htmlFor="tutor-hourly-rate" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <Label
+        htmlFor="tutor-hourly-rate"
+        className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+      >
         Hourly rate ({tutor.currency ?? "USD"}) — set by DiaLearn, tutors can't edit this
       </Label>
       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -141,14 +171,27 @@ function HourlyRateEditor({ tutor }: { tutor: VerificationQueueItem }) {
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
         />
-        <Button size="sm" variant="outline" disabled={!dirty || setRate.isPending} onClick={handleSave}>
-          {setRate.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={!dirty || setRate.isPending}
+          onClick={handleSave}
+        >
+          {setRate.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Save className="size-4" />
+          )}
           Save rate
         </Button>
         {tutor.hourly_rate !== null ? (
-          <span className="text-xs text-muted-foreground">Currently {formatMoney(tutor.hourly_rate, tutor.currency ?? "USD")}/hr</span>
+          <span className="text-xs text-muted-foreground">
+            Currently {formatMoney(tutor.hourly_rate, tutor.currency ?? "USD")}/hr
+          </span>
         ) : (
-          <span className="text-xs text-warning">Not set yet — this tutor can't be booked until it is.</span>
+          <span className="text-xs text-warning">
+            Not set yet — this tutor can't be booked until it is.
+          </span>
         )}
       </div>
     </div>
@@ -161,7 +204,11 @@ function QueueDetail({ tutor }: { tutor: VerificationQueueItem }) {
   const reject = useRejectTutor();
   const [rejectOpen, setRejectOpen] = useState(false);
 
-  const profile = tutor.profiles as { full_name: string | null; email: string | null; avatar_url: string | null } | null;
+  const profile = tutor.profiles as {
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  } | null;
 
   return (
     <div className="panel-portal p-4 md:p-6">
@@ -169,7 +216,9 @@ function QueueDetail({ tutor }: { tutor: VerificationQueueItem }) {
         <div>
           <h2 className="text-base font-semibold">{profile?.full_name ?? "Tutor"}</h2>
           <p className="text-sm text-muted-foreground">{profile?.email}</p>
-          {tutor.headline ? <p className="mt-1 text-sm text-muted-foreground">{tutor.headline}</p> : null}
+          {tutor.headline ? (
+            <p className="mt-1 text-sm text-muted-foreground">{tutor.headline}</p>
+          ) : null}
         </div>
         <Badge className={cn(VERIFICATION_TONE[tutor.verification_status])}>
           {VERIFICATION_LABEL[tutor.verification_status]}
@@ -187,15 +236,24 @@ function QueueDetail({ tutor }: { tutor: VerificationQueueItem }) {
             const progress = (detail.data?.progress ?? []).find((p) => p.step_id === step.id);
             const status = progress?.status ?? "unverified";
             return (
-              <div key={step.id} className="flex items-center justify-between rounded-md border border-border p-3">
+              <div
+                key={step.id}
+                className="flex items-center justify-between rounded-md border border-border p-3"
+              >
                 <div>
                   <p className="text-sm font-medium">
                     {step.name}
-                    {step.is_required ? <span className="ml-1 text-xs text-destructive">*</span> : null}
+                    {step.is_required ? (
+                      <span className="ml-1 text-xs text-destructive">*</span>
+                    ) : null}
                   </p>
-                  {step.description ? <p className="text-xs text-muted-foreground">{step.description}</p> : null}
+                  {step.description ? (
+                    <p className="text-xs text-muted-foreground">{step.description}</p>
+                  ) : null}
                 </div>
-                <Badge className={cn(VERIFICATION_TONE[status])}>{VERIFICATION_LABEL[status]}</Badge>
+                <Badge className={cn(VERIFICATION_TONE[status])}>
+                  {VERIFICATION_LABEL[status]}
+                </Badge>
               </div>
             );
           })}
@@ -219,7 +277,11 @@ function QueueDetail({ tutor }: { tutor: VerificationQueueItem }) {
 
       <div className="mt-6 flex flex-wrap justify-end gap-2 border-t border-border pt-4">
         <AlertDialog open={rejectOpen} onOpenChange={setRejectOpen}>
-          <Button variant="outline" className="text-destructive" onClick={() => setRejectOpen(true)}>
+          <Button
+            variant="outline"
+            className="text-destructive"
+            onClick={() => setRejectOpen(true)}
+          >
             <XCircle className="size-4" />
             Reject
           </Button>
@@ -227,8 +289,8 @@ function QueueDetail({ tutor }: { tutor: VerificationQueueItem }) {
             <AlertDialogHeader>
               <AlertDialogTitle>Reject this tutor's verification?</AlertDialogTitle>
               <AlertDialogDescription>
-                {profile?.full_name ?? "This tutor"} will stay hidden from search until they resubmit and are
-                re-reviewed.
+                {profile?.full_name ?? "This tutor"} will stay hidden from search until they
+                resubmit and are re-reviewed.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -258,7 +320,11 @@ function QueueDetail({ tutor }: { tutor: VerificationQueueItem }) {
             })
           }
         >
-          {approve.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+          {approve.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <CheckCircle2 className="size-4" />
+          )}
           Approve & list
         </Button>
       </div>
@@ -272,7 +338,8 @@ function AdminVerificationPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const queue = useVerificationQueue(filter);
-  const selected = (queue.data ?? []).find((item) => item.id === selectedId) ?? (queue.data ?? [])[0] ?? null;
+  const selected =
+    (queue.data ?? []).find((item) => item.id === selectedId) ?? (queue.data ?? [])[0] ?? null;
 
   if (loading) {
     return (
@@ -305,7 +372,10 @@ function AdminVerificationPage() {
     >
       <div className="grid gap-5 lg:grid-cols-[20rem_1fr]">
         <div className="panel-portal p-4">
-          <Select value={filter} onValueChange={(value) => setFilter(value as VerificationStatus | "all")}>
+          <Select
+            value={filter}
+            onValueChange={(value) => setFilter(value as VerificationStatus | "all")}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -325,7 +395,10 @@ function AdminVerificationPage() {
               <p className="text-sm text-muted-foreground">Nothing in this queue.</p>
             ) : (
               (queue.data ?? []).map((item) => {
-                const profile = item.profiles as { full_name: string | null; email: string | null } | null;
+                const profile = item.profiles as {
+                  full_name: string | null;
+                  email: string | null;
+                } | null;
                 const active = selected?.id === item.id;
                 return (
                   <button
@@ -339,7 +412,9 @@ function AdminVerificationPage() {
                   >
                     <span className="font-medium">{profile?.full_name ?? "Tutor"}</span>
                     <span className="text-xs text-muted-foreground">{profile?.email}</span>
-                    <Badge className={cn("mt-1 w-fit", VERIFICATION_TONE[item.verification_status])}>
+                    <Badge
+                      className={cn("mt-1 w-fit", VERIFICATION_TONE[item.verification_status])}
+                    >
                       {VERIFICATION_LABEL[item.verification_status]}
                     </Badge>
                   </button>
@@ -354,7 +429,9 @@ function AdminVerificationPage() {
         ) : (
           <div className="panel-portal flex flex-col items-center justify-center gap-2 p-10 text-center">
             <ShieldCheck className="size-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Select a tutor from the queue to review.</p>
+            <p className="text-sm text-muted-foreground">
+              Select a tutor from the queue to review.
+            </p>
           </div>
         )}
       </div>

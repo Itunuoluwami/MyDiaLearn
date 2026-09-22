@@ -68,9 +68,10 @@ export function PayNowButton({
         <AlertDialogHeader>
           <AlertDialogTitle>Complete payment</AlertDialogTitle>
           <AlertDialogDescription>
-            {formatMoney(amount, currency)} for this lesson. DiaLearn doesn't have a live payment gateway
-            connected in this build, so confirming here simulates a successful charge and immediately marks
-            the lesson as paid — it moves to confirmed once your tutor also accepts.
+            {formatMoney(amount, currency)} for this lesson. DiaLearn doesn't have a live payment
+            gateway connected in this build, so confirming here simulates a successful charge and
+            immediately marks the lesson as paid — it moves to confirmed once your tutor also
+            accepts.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

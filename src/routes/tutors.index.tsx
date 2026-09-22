@@ -53,16 +53,16 @@ function numeric(value: unknown): number | undefined {
 
 export const Route = createFileRoute("/tutors/")({
   validateSearch: (search: Record<string, unknown>): TutorSearchSchema => ({
-    q: text(search['q']),
-    subject: text(search['subject']),
-    curriculum: text(search['curriculum']),
-    country: text(search['country']),
-    level: text(search['level']),
-    language: text(search['language']),
-    minRating: numeric(search['minRating']),
-    maxPrice: numeric(search['maxPrice']),
-    sort: text(search['sort']),
-    page: numeric(search['page']),
+    q: text(search["q"]),
+    subject: text(search["subject"]),
+    curriculum: text(search["curriculum"]),
+    country: text(search["country"]),
+    level: text(search["level"]),
+    language: text(search["language"]),
+    minRating: numeric(search["minRating"]),
+    maxPrice: numeric(search["maxPrice"]),
+    sort: text(search["sort"]),
+    page: numeric(search["page"]),
   }),
 
   head: () => ({
@@ -76,7 +76,8 @@ export const Route = createFileRoute("/tutors/")({
       { property: "og:title", content: "Find a verified tutor — DiaLearn" },
       {
         property: "og:description",
-        content: "Filter verified African tutors by subject, curriculum, country, rating and price.",
+        content:
+          "Filter verified African tutors by subject, curriculum, country, rating and price.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -299,7 +300,11 @@ function ActiveFilterChips({
   }
   const subject = subjects.find((item) => item.id === search.subject);
   if (subject) {
-    chips.push({ key: "subject", label: subject.name, onRemove: () => update({ subject: undefined }) });
+    chips.push({
+      key: "subject",
+      label: subject.name,
+      onRemove: () => update({ subject: undefined }),
+    });
   }
   const curriculum = curricula.find((item) => item.id === search.curriculum);
   if (curriculum) {
@@ -370,7 +375,6 @@ function ActiveFilterChips({
 }
 
 function TutorSearchPage() {
-
   const search = Route.useSearch();
   const navigate = useNavigate();
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -442,7 +446,9 @@ function TutorSearchPage() {
           <div className="min-w-0">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
               <p className="min-w-0 text-sm text-muted-foreground">
-                {isLoading ? "Searching tutors…" : `${total} ${total === 1 ? "tutor" : "tutors"} found`}
+                {isLoading
+                  ? "Searching tutors…"
+                  : `${total} ${total === 1 ? "tutor" : "tutors"} found`}
               </p>
               <div className="flex shrink-0 items-center gap-2">
                 <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
@@ -498,14 +504,16 @@ function TutorSearchPage() {
               />
             )}
 
-
             {pageCount > 1 ? (
               <div className="mt-6 flex items-center justify-between gap-3">
                 <Button
                   variant="outline"
                   disabled={page <= 1}
                   onClick={() =>
-                    void navigate({ to: "/tutors", search: (prev) => ({ ...prev, page: page - 1 }) })
+                    void navigate({
+                      to: "/tutors",
+                      search: (prev) => ({ ...prev, page: page - 1 }),
+                    })
                   }
                 >
                   Previous
@@ -517,7 +525,10 @@ function TutorSearchPage() {
                   variant="outline"
                   disabled={page >= pageCount}
                   onClick={() =>
-                    void navigate({ to: "/tutors", search: (prev) => ({ ...prev, page: page + 1 }) })
+                    void navigate({
+                      to: "/tutors",
+                      search: (prev) => ({ ...prev, page: page + 1 }),
+                    })
                   }
                 >
                   Next

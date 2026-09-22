@@ -167,7 +167,10 @@ function ClassroomPage() {
                       live ? "bg-destructive text-destructive-foreground" : "bg-card/20 text-card",
                     )}
                   >
-                    <Circle className={cn("size-2 fill-current", live && "animate-pulse")} aria-hidden="true" />
+                    <Circle
+                      className={cn("size-2 fill-current", live && "animate-pulse")}
+                      aria-hidden="true"
+                    />
                     {live ? "Live" : "Standby"}
                   </span>
                   <span className="rounded-full bg-card/20 px-2.5 py-1 text-xs font-semibold tabular-nums text-card">
@@ -302,8 +305,8 @@ function ClassroomPage() {
               </dl>
               <p className="mt-4 flex items-start gap-2 rounded-xl bg-surface/70 p-3 text-xs text-muted-foreground">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-                Only you and the family on this booking can open this room. Attendance and timings are
-                recorded against the lesson.
+                Only you and the family on this booking can open this room. Attendance and timings
+                are recorded against the lesson.
               </p>
             </SectionCard>
           </div>
@@ -335,10 +338,15 @@ function ClassroomPage() {
                       </span>
                       <p className="mt-3 text-sm font-semibold">Shared whiteboard</p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Collaborative drawing arrives with live video. Share files from your library in
-                        the meantime.
+                        Collaborative drawing arrives with live video. Share files from your library
+                        in the meantime.
                       </p>
-                      <Button asChild variant="outline" size="sm" className="mt-4 min-h-11 sm:min-h-10">
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="mt-4 min-h-11 sm:min-h-10"
+                      >
                         <Link to="/tutor/resources">Open materials</Link>
                       </Button>
                     </div>

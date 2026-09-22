@@ -76,9 +76,7 @@ function StudentProgressPage() {
     (row) => row.status === "completed" || row.status === "no_show",
   );
   const attendance =
-    attendedKnown.length === 0
-      ? null
-      : Math.round((completed.length / attendedKnown.length) * 100);
+    attendedKnown.length === 0 ? null : Math.round((completed.length / attendedKnown.length) * 100);
   const upcoming = rows.filter(
     (row) =>
       new Date(row.ends_at).getTime() > Date.now() &&
@@ -154,7 +152,9 @@ function StudentProgressPage() {
               label="Upcoming"
               value={upcoming.length}
               hint={
-                student?.next_class_at ? `Next ${formatRelative(student.next_class_at)}` : "Nothing booked"
+                student?.next_class_at
+                  ? `Next ${formatRelative(student.next_class_at)}`
+                  : "Nothing booked"
               }
               icon={CalendarCheck}
             />

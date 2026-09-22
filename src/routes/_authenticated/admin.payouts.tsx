@@ -5,12 +5,30 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/use-auth";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { useAdminPayouts, useRejectPayout, useSettlePayout, type PayoutStatus } from "@/lib/admin-data";
+import {
+  useAdminPayouts,
+  useRejectPayout,
+  useSettlePayout,
+  type PayoutStatus,
+} from "@/lib/admin-data";
 import { formatMoney } from "@/lib/parent-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { adminBeforeLoad } from "@/lib/admin-guard";
 
@@ -25,7 +43,14 @@ export const Route = createFileRoute("/_authenticated/admin/payouts")({
   component: AdminPayoutsPage,
 });
 
-const STATUS_FILTERS: (PayoutStatus | "all")[] = ["all", "requested", "processing", "paid", "rejected", "cancelled"];
+const STATUS_FILTERS: (PayoutStatus | "all")[] = [
+  "all",
+  "requested",
+  "processing",
+  "paid",
+  "rejected",
+  "cancelled",
+];
 
 const STATUS_LABEL: Record<PayoutStatus, string> = {
   requested: "Requested",
@@ -122,10 +147,14 @@ function AdminPayoutsPage() {
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {new Date(payout.requested_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="font-medium">{payout.tutors?.profiles?.full_name ?? "—"}</TableCell>
+                    <TableCell className="font-medium">
+                      {payout.tutors?.profiles?.full_name ?? "—"}
+                    </TableCell>
                     <TableCell>{formatMoney(payout.amount, payout.currency)}</TableCell>
                     <TableCell>
-                      <Badge className={STATUS_TONE[payout.status]}>{STATUS_LABEL[payout.status]}</Badge>
+                      <Badge className={STATUS_TONE[payout.status]}>
+                        {STATUS_LABEL[payout.status]}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {payout.settled_at ? new Date(payout.settled_at).toLocaleDateString() : "—"}
@@ -158,7 +187,11 @@ function AdminPayoutsPage() {
                               })
                             }
                           >
-                            {settle.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+                            {settle.isPending ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="size-4" />
+                            )}
                             Mark paid
                           </Button>
                         </div>

@@ -214,5 +214,4 @@ export function TutorStrip({ sort = "top_rated", limit = 8 }: { sort?: string; l
           ))}
     </ScrollRow>
   );
-
 }

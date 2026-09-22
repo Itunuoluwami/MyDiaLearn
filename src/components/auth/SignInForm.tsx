@@ -80,11 +80,18 @@ export function SignInForm({
           disabled={isSubmitting}
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? "signin-email-error" : undefined}
-          className={cn("h-11 transition-colors duration-200", errors.email && "border-destructive")}
+          className={cn(
+            "h-11 transition-colors duration-200",
+            errors.email && "border-destructive",
+          )}
           {...register("email")}
         />
         {errors.email ? (
-          <p id="signin-email-error" role="alert" className="flex items-start gap-1.5 text-xs text-destructive">
+          <p
+            id="signin-email-error"
+            role="alert"
+            className="flex items-start gap-1.5 text-xs text-destructive"
+          >
             <AlertCircle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
             <span>{errors.email.message}</span>
           </p>
@@ -122,7 +129,12 @@ export function SignInForm({
         ) : null}
       </div>
 
-      <Button type="submit" variant="cta" className="min-h-12 w-full text-base" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        variant="cta"
+        className="min-h-12 w-full text-base"
+        disabled={isSubmitting}
+      >
         {isSubmitting ? (
           <>
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />

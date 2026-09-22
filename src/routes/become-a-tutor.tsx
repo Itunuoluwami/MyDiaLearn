@@ -85,7 +85,6 @@ function BecomeTutorPage() {
         </div>
       </section>
 
-
       <section className="container-site section-y">
         <h2 className="display-section">Why teach with DiaLearn</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -133,8 +132,8 @@ function BecomeTutorPage() {
           </ol>
           {!isLoading && tutorSteps.length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">
-              Verification steps are being finalised. Create an account and we will guide you through
-              them.
+              Verification steps are being finalised. Create an account and we will guide you
+              through them.
             </p>
           ) : null}
         </div>

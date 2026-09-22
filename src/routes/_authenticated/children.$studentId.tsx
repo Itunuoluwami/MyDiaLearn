@@ -134,7 +134,11 @@ function ChildProfilePage() {
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <KpiCard label="Completed lessons" value={totalCompleted} icon={GraduationCap} />
-          <KpiCard label="Learning hours" value={formatHoursFromMinutes(totalMinutes)} icon={Timer} />
+          <KpiCard
+            label="Learning hours"
+            value={formatHoursFromMinutes(totalMinutes)}
+            icon={Timer}
+          />
           <KpiCard label="Classes attended" value={attended} icon={CalendarDays} />
           <KpiCard label="Missed classes" value={missed} icon={ClipboardList} />
         </div>
@@ -334,13 +338,18 @@ function ChildProfilePage() {
               ) : (
                 <ul className="space-y-3">
                   {notes.map(({ booking, session }) => (
-                    <li key={session.id} className="rounded-xl border border-border bg-surface/50 p-3">
+                    <li
+                      key={session.id}
+                      className="rounded-xl border border-border bg-surface/50 p-3"
+                    >
                       <p className="text-sm font-semibold">
                         {booking.subjects?.name ?? "Lesson"} ·{" "}
                         {formatDayInZone(booking.starts_at, timezone)}
                       </p>
                       {session.tutor_notes ? (
-                        <p className="mt-1.5 text-sm text-muted-foreground">{session.tutor_notes}</p>
+                        <p className="mt-1.5 text-sm text-muted-foreground">
+                          {session.tutor_notes}
+                        </p>
                       ) : null}
                       {session.homework ? (
                         <p className="mt-1.5 text-sm">
@@ -363,7 +372,9 @@ function ChildProfilePage() {
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </dt>
       <dd className="mt-1 text-sm">{value}</dd>
     </div>
   );

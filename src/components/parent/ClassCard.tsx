@@ -69,15 +69,15 @@ export function ClassCard({
             ) : null}
           </p>
           {child ? (
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              For {childName(child)}
-            </p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">For {childName(child)}</p>
           ) : null}
         </div>
       </div>
 
       <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-border pt-3">
-        <MetaItem icon={CalendarDays}>{formatDayInZone(booking.starts_at, viewerTimezone)}</MetaItem>
+        <MetaItem icon={CalendarDays}>
+          {formatDayInZone(booking.starts_at, viewerTimezone)}
+        </MetaItem>
         <MetaItem icon={Clock}>
           {formatTimeInZone(booking.starts_at, viewerTimezone)}–
           {formatTimeInZone(booking.ends_at, viewerTimezone)} · {booking.duration_minutes} min

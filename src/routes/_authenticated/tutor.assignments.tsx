@@ -230,7 +230,9 @@ function TutorAssignmentsPage() {
                     type="datetime-local"
                     className="min-h-11"
                     value={form.dueAt}
-                    onChange={(event) => setForm((prev) => ({ ...prev, dueAt: event.target.value }))}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, dueAt: event.target.value }))
+                    }
                   />
                 </div>
               </div>
@@ -356,7 +358,9 @@ function TutorAssignmentsPage() {
                 </div>
 
                 {row.instructions ? (
-                  <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">{row.instructions}</p>
+                  <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">
+                    {row.instructions}
+                  </p>
                 ) : null}
 
                 {row.submission_text ? (

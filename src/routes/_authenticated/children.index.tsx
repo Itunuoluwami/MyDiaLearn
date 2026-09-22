@@ -24,7 +24,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   childInitials,
   childName,
@@ -130,7 +136,18 @@ function ChildrenPage() {
   });
 
   const updatePermission = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Partial<Pick<Database["public"]["Tables"]["students"]["Update"], "can_self_login" | "can_book_lessons" | "can_message_tutors">> }) => {
+    mutationFn: async ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: Partial<
+        Pick<
+          Database["public"]["Tables"]["students"]["Update"],
+          "can_self_login" | "can_book_lessons" | "can_message_tutors"
+        >
+      >;
+    }) => {
       const { error } = await supabase.from("students").update(patch).eq("id", id);
       if (error) throw error;
     },
@@ -205,7 +222,9 @@ function ChildrenPage() {
               </div>
 
               {child.learning_goals ? (
-                <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{child.learning_goals}</p>
+                <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
+                  {child.learning_goals}
+                </p>
               ) : null}
 
               <div className="mt-4 space-y-2.5 border-t border-border pt-3">
@@ -394,7 +413,12 @@ function ChildrenPage() {
               />
             </div>
             <DialogFooter className="sm:col-span-2">
-              <Button type="submit" variant="cta" className="min-h-11" disabled={saveChild.isPending}>
+              <Button
+                type="submit"
+                variant="cta"
+                className="min-h-11"
+                disabled={saveChild.isPending}
+              >
                 {saveChild.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
                 {editing ? "Save changes" : "Save child"}
               </Button>

@@ -5,12 +5,23 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/use-auth";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { useAdminDisputes, useResolveDispute, type AdminDispute, type DisputeStatus } from "@/lib/admin-data";
+import {
+  useAdminDisputes,
+  useResolveDispute,
+  type AdminDispute,
+  type DisputeStatus,
+} from "@/lib/admin-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 import { adminBeforeLoad } from "@/lib/admin-guard";
@@ -20,13 +31,22 @@ export const Route = createFileRoute("/_authenticated/admin/disputes")({
   head: () => ({
     meta: [
       { title: "Disputes — DiaLearn admin" },
-      { name: "description", content: "Review and resolve disputes raised between platform users." },
+      {
+        name: "description",
+        content: "Review and resolve disputes raised between platform users.",
+      },
     ],
   }),
   component: AdminDisputesPage,
 });
 
-const STATUS_FILTERS: (DisputeStatus | "all")[] = ["open", "investigating", "resolved", "dismissed", "all"];
+const STATUS_FILTERS: (DisputeStatus | "all")[] = [
+  "open",
+  "investigating",
+  "resolved",
+  "dismissed",
+  "all",
+];
 
 const STATUS_LABEL: Record<DisputeStatus, string> = {
   open: "Open",
@@ -105,7 +125,10 @@ function DisputeCard({ dispute }: { dispute: AdminDispute }) {
               onClick={() =>
                 resolve.mutate(
                   { disputeId: dispute.id, status: "dismissed", notes },
-                  { onSuccess: () => toast.success("Dispute dismissed"), onError: (error) => toast.error((error as Error).message) },
+                  {
+                    onSuccess: () => toast.success("Dispute dismissed"),
+                    onError: (error) => toast.error((error as Error).message),
+                  },
                 )
               }
             >
@@ -118,11 +141,18 @@ function DisputeCard({ dispute }: { dispute: AdminDispute }) {
               onClick={() =>
                 resolve.mutate(
                   { disputeId: dispute.id, status: "resolved", notes },
-                  { onSuccess: () => toast.success("Dispute resolved"), onError: (error) => toast.error((error as Error).message) },
+                  {
+                    onSuccess: () => toast.success("Dispute resolved"),
+                    onError: (error) => toast.error((error as Error).message),
+                  },
                 )
               }
             >
-              {resolve.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+              {resolve.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="size-4" />
+              )}
               Mark resolved
             </Button>
           </div>
@@ -190,7 +220,9 @@ function AdminDisputesPage() {
           ) : (disputes.data ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">No disputes in this view.</p>
           ) : (
-            (disputes.data ?? []).map((dispute) => <DisputeCard key={dispute.id} dispute={dispute} />)
+            (disputes.data ?? []).map((dispute) => (
+              <DisputeCard key={dispute.id} dispute={dispute} />
+            ))
           )}
         </div>
       </div>

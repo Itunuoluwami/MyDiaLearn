@@ -23,7 +23,10 @@ export const Route = createFileRoute("/_authenticated/student/messages")({
   head: () => ({
     meta: [
       { title: "Messages — DiaLearn Student Portal" },
-      { name: "description", content: "Send and receive messages with your tutors securely on DiaLearn." },
+      {
+        name: "description",
+        content: "Send and receive messages with your tutors securely on DiaLearn.",
+      },
     ],
   }),
   component: StudentMessagesPage,
@@ -60,7 +63,9 @@ function StudentMessagesPage() {
         <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card py-20 text-center max-w-md mx-auto">
           <span className="text-5xl">🔒</span>
           <p className="text-xl font-extrabold text-foreground">Messaging not enabled</p>
-          <p className="text-sm text-muted-foreground">Ask your parent to enable messaging in your account settings.</p>
+          <p className="text-sm text-muted-foreground">
+            Ask your parent to enable messaging in your account settings.
+          </p>
         </div>
       </StudentShell>
     );
@@ -92,7 +97,9 @@ function StudentMessagesPage() {
         <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card py-20 text-center max-w-md mx-auto">
           <span className="text-5xl">💬</span>
           <p className="text-xl font-extrabold text-foreground">No conversations yet</p>
-          <p className="text-sm text-muted-foreground">After your first class, you can message your tutor here.</p>
+          <p className="text-sm text-muted-foreground">
+            After your first class, you can message your tutor here.
+          </p>
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
@@ -116,7 +123,14 @@ function StudentMessagesPage() {
                       )}
                     >
                       <Avatar className="size-10 shrink-0">
-                        <AvatarFallback className={cn("text-sm font-extrabold", selected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
+                        <AvatarFallback
+                          className={cn(
+                            "text-sm font-extrabold",
+                            selected
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-primary/10 text-primary",
+                          )}
+                        >
                           {initials}
                         </AvatarFallback>
                       </Avatar>
@@ -198,7 +212,12 @@ function StudentMessagesPage() {
                       )}
                     >
                       <p className="whitespace-pre-wrap break-words">{message.body}</p>
-                      <p className={cn("mt-1 text-[0.65rem]", mine ? "text-primary-foreground/60" : "text-muted-foreground")}>
+                      <p
+                        className={cn(
+                          "mt-1 text-[0.65rem]",
+                          mine ? "text-primary-foreground/60" : "text-muted-foreground",
+                        )}
+                      >
                         {formatRelative(message.created_at)}
                       </p>
                     </div>
@@ -210,9 +229,14 @@ function StudentMessagesPage() {
             {/* Input */}
             <form
               className="flex gap-3 border-t border-border bg-card/80 p-4"
-              onSubmit={(e) => { e.preventDefault(); void handleSend(); }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                void handleSend();
+              }}
             >
-              <label className="sr-only" htmlFor="student-message-input">Message</label>
+              <label className="sr-only" htmlFor="student-message-input">
+                Message
+              </label>
               <Input
                 id="student-message-input"
                 className="min-h-11 flex-1 rounded-2xl"

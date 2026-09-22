@@ -71,7 +71,12 @@ function ForgotPasswordPage() {
                   to reset your password. It'll expire soon, so use it right away.
                 </p>
                 <div className="mt-8 w-full max-w-sm space-y-6">
-                  <Button type="button" variant="cta" className="min-h-12 w-full" onClick={handleResend}>
+                  <Button
+                    type="button"
+                    variant="cta"
+                    className="min-h-12 w-full"
+                    onClick={handleResend}
+                  >
                     Resend link
                   </Button>
                   <div className="flex flex-col items-center gap-3 text-sm">

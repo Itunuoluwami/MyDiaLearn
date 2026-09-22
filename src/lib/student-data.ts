@@ -55,25 +55,31 @@ export function useStudentRecord() {
   });
 }
 
-export function useStudentBookings(params?: { from?: string; to?: string; statuses?: BookingStatus[] }) {
+export function useStudentBookings(params?: {
+  from?: string;
+  to?: string;
+  statuses?: BookingStatus[];
+}) {
   const { data: student } = useStudentRecord();
-  
+
   return useQuery({
     queryKey: ["student-bookings", student?.id, params?.from, params?.to, params?.statuses],
     enabled: Boolean(student?.id),
     queryFn: async () => {
       let query = supabase
         .from("bookings")
-        .select("id, student_id, tutor_id, subject_id, starts_at, ends_at, duration_minutes, status, total_amount, currency, tutor_accepted_at, tutors(id, profiles(full_name, avatar_url)), subjects(name), class_sessions(id, meeting_url, status, tutor_notes, homework), payments(status)")
+        .select(
+          "id, student_id, tutor_id, subject_id, starts_at, ends_at, duration_minutes, status, total_amount, currency, tutor_accepted_at, tutors(id, profiles(full_name, avatar_url)), subjects(name), class_sessions(id, meeting_url, status, tutor_notes, homework), payments(status)",
+        )
         .eq("student_id", student!.id)
         .order("starts_at", { ascending: false });
-        
+
       if (params?.from) query = query.gte("starts_at", params.from);
       if (params?.to) query = query.lte("starts_at", params.to);
       if (params?.statuses && params.statuses.length > 0) {
         query = query.in("status", params.statuses);
       }
-      
+
       const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
@@ -83,7 +89,7 @@ export function useStudentBookings(params?: { from?: string; to?: string; status
 
 export function useStudentAssignments(status?: AssignmentStatus) {
   const { data: student } = useStudentRecord();
-  
+
   return useQuery({
     queryKey: ["student-assignments", student?.id, status],
     enabled: Boolean(student?.id),
@@ -93,9 +99,9 @@ export function useStudentAssignments(status?: AssignmentStatus) {
         .select("*, tutors(id, profiles(full_name, avatar_url)), subjects(name)")
         .eq("student_id", student!.id)
         .order("due_at", { ascending: true });
-        
+
       if (status) query = query.eq("status", status);
-      
+
       const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
@@ -105,7 +111,7 @@ export function useStudentAssignments(status?: AssignmentStatus) {
 
 export function useStudentMaterials() {
   const { data: student } = useStudentRecord();
-  
+
   return useQuery({
     queryKey: ["student-materials", student?.id],
     enabled: Boolean(student?.id),
@@ -115,7 +121,7 @@ export function useStudentMaterials() {
         .select("*, tutors(id, profiles(full_name))")
         .or(`student_id.eq.${student!.id},is_shared.eq.true`)
         .order("created_at", { ascending: false });
-        
+
       if (error) throw error;
       return data ?? [];
     },
@@ -125,7 +131,7 @@ export function useStudentMaterials() {
 export function useSubmitAssignment() {
   const queryClient = useQueryClient();
   const { data: student } = useStudentRecord();
-  
+
   return useMutation({
     mutationFn: async ({ id, text, path }: { id: string; text?: string; path?: string }) => {
       if (!student) throw new Error("Not a student");
@@ -135,11 +141,11 @@ export function useSubmitAssignment() {
           status: "submitted",
           submission_text: text || null,
           submission_path: path || null,
-          submitted_at: new Date().toISOString()
+          submitted_at: new Date().toISOString(),
         })
         .eq("id", id)
         .eq("student_id", student.id);
-        
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -168,25 +174,33 @@ export function useStudentNotifications() {
 export function useSubmitReview() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  
+
   return useMutation({
-    mutationFn: async ({ bookingId, tutorId, score, comment }: { bookingId: string, tutorId: string, score: number, comment?: string }) => {
+    mutationFn: async ({
+      bookingId,
+      tutorId,
+      score,
+      comment,
+    }: {
+      bookingId: string;
+      tutorId: string;
+      score: number;
+      comment?: string;
+    }) => {
       if (!user) throw new Error("Not signed in");
-      const { error } = await supabase
-        .from("ratings")
-        .insert({
-          booking_id: bookingId,
-          tutor_id: tutorId,
-          rater_id: user.id,
-          score,
-          comment: comment || null
-        });
-        
+      const { error } = await supabase.from("ratings").insert({
+        booking_id: bookingId,
+        tutor_id: tutorId,
+        rater_id: user.id,
+        score,
+        comment: comment || null,
+      });
+
       if (error) throw error;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["student-bookings"] });
-    }
+    },
   });
 }
 
@@ -194,7 +208,8 @@ export function formatTimeInZone(iso: string | null | undefined, tz: string | nu
   if (!iso) return "—";
   try {
     return new Intl.DateTimeFormat(undefined, {
-      hour: "numeric", minute: "2-digit",
+      hour: "numeric",
+      minute: "2-digit",
       timeZone: tz || undefined,
     }).format(new Date(iso));
   } catch {

@@ -19,7 +19,8 @@ export const Route = createFileRoute("/for-agencies")({
       { property: "og:title", content: "DiaLearn for tutor agencies" },
       {
         property: "og:description",
-        content: "Manage a verified roster of tutors, agency commission terms and reporting in one place.",
+        content:
+          "Manage a verified roster of tutors, agency commission terms and reporting in one place.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -82,7 +83,6 @@ function ForAgenciesPage() {
           </div>
         </div>
       </section>
-
 
       <section className="container-site section-y">
         <h2 className="display-section">What an agency gets</h2>

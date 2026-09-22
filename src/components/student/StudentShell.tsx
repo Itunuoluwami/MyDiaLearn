@@ -49,7 +49,6 @@ const MOBILE_PRIMARY = [
   "/student/messages",
 ];
 
-
 function useActivePath() {
   return useRouterState({ select: (state) => state.location.pathname });
 }
@@ -165,7 +164,11 @@ export function StudentShell({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="min-h-11 gap-2 px-2 hover:bg-primary/5" aria-label="Account menu">
+                <Button
+                  variant="ghost"
+                  className="min-h-11 gap-2 px-2 hover:bg-primary/5"
+                  aria-label="Account menu"
+                >
                   <span className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-sm">
                     {firstName ? firstName.charAt(0).toUpperCase() : "?"}
                   </span>
@@ -176,11 +179,20 @@ export function StudentShell({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 rounded-xl p-2">
                 <DropdownMenuLabel className="space-y-0.5 px-2 py-1.5">
-                  <p className="truncate text-sm font-bold">{student ? `${student.first_name} ${student.last_name || ""}` : (profile?.full_name ?? "Account")}</p>
-                  <p className="truncate text-xs font-medium text-muted-foreground">{profile?.email}</p>
+                  <p className="truncate text-sm font-bold">
+                    {student
+                      ? `${student.first_name} ${student.last_name || ""}`
+                      : (profile?.full_name ?? "Account")}
+                  </p>
+                  <p className="truncate text-xs font-medium text-muted-foreground">
+                    {profile?.email}
+                  </p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => void handleSignOut()} className="rounded-lg font-medium text-destructive focus:bg-destructive/10 focus:text-destructive">
+                <DropdownMenuItem
+                  onSelect={() => void handleSignOut()}
+                  className="rounded-lg font-medium text-destructive focus:bg-destructive/10 focus:text-destructive"
+                >
                   <LogOut className="size-4 mr-2" /> Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -199,8 +211,12 @@ export function StudentShell({
         <main className="min-w-0 flex-1">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
-              <h1 className="text-3xl font-extrabold tracking-tight text-primary-deep md:text-4xl">{title}</h1>
-              {description ? <p className="mt-2 text-base font-medium text-muted-foreground">{description}</p> : null}
+              <h1 className="text-3xl font-extrabold tracking-tight text-primary-deep md:text-4xl">
+                {title}
+              </h1>
+              {description ? (
+                <p className="mt-2 text-base font-medium text-muted-foreground">{description}</p>
+              ) : null}
             </div>
             {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
           </div>
@@ -226,7 +242,12 @@ export function StudentShell({
                   active ? "text-primary" : "text-muted-foreground hover:text-primary/70",
                 )}
               >
-                <div className={cn("flex items-center justify-center rounded-full p-1.5 transition-colors", active && "bg-primary/10")}>
+                <div
+                  className={cn(
+                    "flex items-center justify-center rounded-full p-1.5 transition-colors",
+                    active && "bg-primary/10",
+                  )}
+                >
                   <Icon className="size-5" aria-hidden="true" />
                 </div>
                 <span className="truncate">{item.label}</span>
@@ -246,7 +267,9 @@ export function StudentShell({
               </button>
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-3xl p-6">
-              <SheetTitle className="mb-4 text-lg font-extrabold text-primary-deep">Menu</SheetTitle>
+              <SheetTitle className="mb-4 text-lg font-extrabold text-primary-deep">
+                Menu
+              </SheetTitle>
               <NavList onNavigate={() => setMoreOpen(false)} />
             </SheetContent>
           </Sheet>

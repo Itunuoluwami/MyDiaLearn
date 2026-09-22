@@ -162,7 +162,12 @@ function TutorProfilePage() {
       title="Teaching profile"
       description="This is what families read before they book you."
       actions={
-        <Button variant="cta" className="min-h-11 sm:min-h-10" disabled={update.isPending} onClick={() => void handleSave()}>
+        <Button
+          variant="cta"
+          className="min-h-11 sm:min-h-10"
+          disabled={update.isPending}
+          onClick={() => void handleSave()}
+        >
           <Save className="size-4" /> Save changes
         </Button>
       }
@@ -197,8 +202,12 @@ function TutorProfilePage() {
             <div className="flex flex-col gap-2">
               <Label>Profile Photo</Label>
               <div className="flex items-center gap-4">
-                <div className="size-16 rounded-full bg-muted flex items-center justify-center border border-dashed border-border text-muted-foreground"><User className="size-6"/></div>
-                <Button variant="outline" size="sm">Upload photo</Button>
+                <div className="size-16 rounded-full bg-muted flex items-center justify-center border border-dashed border-border text-muted-foreground">
+                  <User className="size-6" />
+                </div>
+                <Button variant="outline" size="sm">
+                  Upload photo
+                </Button>
               </div>
               <p className="text-xs text-muted-foreground">Clear, well-lit photo of your face.</p>
             </div>
@@ -221,7 +230,9 @@ function TutorProfilePage() {
                 maxLength={2000}
                 placeholder="Share your background, the learners you work best with, and the results you help them reach."
                 value={form.biography}
-                onChange={(event) => setForm((prev) => ({ ...prev, biography: event.target.value }))}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, biography: event.target.value }))
+                }
               />
               <p className="text-xs text-muted-foreground">{form.biography.length}/2000</p>
             </div>
@@ -233,7 +244,9 @@ function TutorProfilePage() {
                 maxLength={1200}
                 placeholder="How you run a lesson: diagnostics, pacing, homework, feedback to parents."
                 value={form.methodology}
-                onChange={(event) => setForm((prev) => ({ ...prev, methodology: event.target.value }))}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, methodology: event.target.value }))
+                }
               />
             </div>
             <div className="space-y-1.5">
@@ -244,7 +257,9 @@ function TutorProfilePage() {
                 maxLength={800}
                 placeholder="Schools, tutoring centres, exam boards or online platforms you have taught with."
                 value={form.teaching_context}
-                onChange={(event) => setForm((prev) => ({ ...prev, teaching_context: event.target.value }))}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, teaching_context: event.target.value }))
+                }
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -267,7 +282,11 @@ function TutorProfilePage() {
                   className="min-h-11 bg-muted"
                   readOnly
                   disabled
-                  value={record.hourly_rate === null ? "Not yet set" : formatMoney(record.hourly_rate, record.currency)}
+                  value={
+                    record.hourly_rate === null
+                      ? "Not yet set"
+                      : formatMoney(record.hourly_rate, record.currency)
+                  }
                 />
                 <p className="text-xs text-muted-foreground">
                   {record.hourly_rate === null
@@ -285,7 +304,9 @@ function TutorProfilePage() {
                 maxLength={500}
                 placeholder="https://"
                 value={form.intro_video_url}
-                onChange={(event) => setForm((prev) => ({ ...prev, intro_video_url: event.target.value }))}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, intro_video_url: event.target.value }))
+                }
               />
             </div>
           </div>

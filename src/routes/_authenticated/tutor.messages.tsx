@@ -150,7 +150,8 @@ function TutorMessagesPage() {
                 </p>
               </div>
               <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:inline-flex">
-                <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" /> On-platform only
+                <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" /> On-platform
+                only
               </span>
             </div>
 

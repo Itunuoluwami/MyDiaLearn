@@ -85,7 +85,15 @@ function StatCard({
   );
 }
 
-function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+function Section({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="mt-6 first:mt-0">
       <h2 className="text-sm font-semibold text-foreground">{title}</h2>
@@ -129,37 +137,101 @@ function AdminDashboardPage() {
       title="Admin dashboard"
       description="Platform-wide figures across every portal — refreshed live from the database, trailing 30 days where noted."
     >
-      <Section title="Growth" description="New signups and marketplace liquidity in the last 30 days.">
-        <StatCard icon={UserPlus} label="New students" value={num(s?.new_students)} hint="Last 30 days" />
-        <StatCard icon={UserPlus} label="New parents" value={num(s?.new_parents)} hint="Last 30 days" />
-        <StatCard icon={GraduationCap} label="New tutors" value={num(s?.new_tutors)} hint="Last 30 days" />
+      <Section
+        title="Growth"
+        description="New signups and marketplace liquidity in the last 30 days."
+      >
+        <StatCard
+          icon={UserPlus}
+          label="New students"
+          value={num(s?.new_students)}
+          hint="Last 30 days"
+        />
+        <StatCard
+          icon={UserPlus}
+          label="New parents"
+          value={num(s?.new_parents)}
+          hint="Last 30 days"
+        />
+        <StatCard
+          icon={GraduationCap}
+          label="New tutors"
+          value={num(s?.new_tutors)}
+          hint="Last 30 days"
+        />
         <StatCard
           icon={Percent}
           label="Tutor activation rate"
           value={pct(s?.tutor_activation_rate)}
           hint="Verified & listed / all tutors"
         />
-        <StatCard icon={Activity} label="Monthly active users" value={num(s?.mau)} hint="Last 30 days" />
-        <StatCard icon={CalendarClock} label="Booking demand" value={num(s?.booking_demand)} hint="Bookings, last 30 days" />
+        <StatCard
+          icon={Activity}
+          label="Monthly active users"
+          value={num(s?.mau)}
+          hint="Last 30 days"
+        />
+        <StatCard
+          icon={CalendarClock}
+          label="Booking demand"
+          value={num(s?.booking_demand)}
+          hint="Bookings, last 30 days"
+        />
       </Section>
 
-      <Section title="Marketplace" description="Revenue and engagement across all completed and in-flight bookings.">
-        <StatCard icon={Wallet} label="GMV" value={formatMoney(s?.gmv, s?.gmv_currency)} tone="success" />
+      <Section
+        title="Marketplace"
+        description="Revenue and engagement across all completed and in-flight bookings."
+      >
+        <StatCard
+          icon={Wallet}
+          label="GMV"
+          value={formatMoney(s?.gmv, s?.gmv_currency)}
+          tone="success"
+        />
         <StatCard
           icon={BadgePercent}
           label="Commission revenue"
           value={formatMoney(s?.commission_revenue, s?.gmv_currency)}
           tone="success"
         />
-        <StatCard icon={TrendingUp} label="Avg transaction value" value={formatMoney(s?.avg_transaction_value, s?.gmv_currency)} />
-        <StatCard icon={Users} label="Classes per student" value={s?.classes_per_student != null ? String(s.classes_per_student) : "—"} />
-        <StatCard icon={Repeat} label="Repeat booking rate" value={pct(s?.repeat_booking_rate)} hint="Students with 2+ completed classes" />
+        <StatCard
+          icon={TrendingUp}
+          label="Avg transaction value"
+          value={formatMoney(s?.avg_transaction_value, s?.gmv_currency)}
+        />
+        <StatCard
+          icon={Users}
+          label="Classes per student"
+          value={s?.classes_per_student != null ? String(s.classes_per_student) : "—"}
+        />
+        <StatCard
+          icon={Repeat}
+          label="Repeat booking rate"
+          value={pct(s?.repeat_booking_rate)}
+          hint="Students with 2+ completed classes"
+        />
       </Section>
 
       <Section title="Quality & trust" description="Signals that matter for marketplace health.">
-        <StatCard icon={Star} label="Avg tutor rating" value={s?.avg_tutor_rating != null ? String(s.avg_tutor_rating) : "—"} tone="warning" />
-        <StatCard icon={TrendingDown} label="Cancellation rate" value={pct(s?.cancellation_rate)} tone="destructive" />
-        <StatCard icon={XCircle} label="No-show rate" value={pct(s?.no_show_rate)} tone="destructive" />
+        <StatCard
+          icon={Star}
+          label="Avg tutor rating"
+          value={s?.avg_tutor_rating != null ? String(s.avg_tutor_rating) : "—"}
+          tone="warning"
+        />
+        <StatCard
+          icon={TrendingDown}
+          label="Cancellation rate"
+          value={pct(s?.cancellation_rate)}
+          tone="destructive"
+        />
+        <StatCard
+          icon={XCircle}
+          label="No-show rate"
+          value={pct(s?.no_show_rate)}
+          tone="destructive"
+        />
         <StatCard
           icon={AlertTriangle}
           label="Dispute rate"

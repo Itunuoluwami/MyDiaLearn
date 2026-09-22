@@ -198,7 +198,9 @@ function HomePage() {
               </span>
               <span className="min-w-0">
                 <span className="block text-sm font-semibold">Curriculum-matched</span>
-                <span className="block text-xs text-muted-foreground">British, IB, WAEC & more</span>
+                <span className="block text-xs text-muted-foreground">
+                  British, IB, WAEC & more
+                </span>
               </span>
             </div>
           </div>
@@ -301,8 +303,8 @@ function HomePage() {
               <p className="eyebrow">How it works</p>
               <h2 className="display-section mt-2">Search, book, learn.</h2>
               <p className="lead mt-3 max-w-md">
-                Three simple steps take your child from first search to a live lesson with a
-                tutor who knows their curriculum.
+                Three simple steps take your child from first search to a live lesson with a tutor
+                who knows their curriculum.
               </p>
 
               <div className="group relative mt-8 overflow-hidden rounded-2xl shadow-lift">
@@ -356,7 +358,6 @@ function HomePage() {
           </div>
         </div>
       </section>
-
 
       {/* Explore by subject */}
       <section className="container-site section-y">
@@ -434,7 +435,6 @@ function HomePage() {
         </section>
       ) : null}
 
-
       {/* Featured tutors */}
       <section className="container-site section-y">
         <SectionHeading
@@ -490,9 +490,7 @@ function HomePage() {
         <div className="card-elevated grid gap-0 overflow-hidden md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div className="flex flex-col items-start justify-center gap-4 p-6 md:p-10">
             <h2 className="display-section">Ready to find the right tutor?</h2>
-            <p className="lead max-w-xl">
-              Start with a single lesson. No packages, no pressure.
-            </p>
+            <p className="lead max-w-xl">Start with a single lesson. No packages, no pressure.</p>
             <div className="flex w-full flex-col gap-3 sm:flex-row">
               <Button asChild variant="cta" size="lg">
                 <Link to="/tutors">
@@ -516,7 +514,6 @@ function HomePage() {
           </div>
         </div>
       </section>
-
     </PublicShell>
   );
 }

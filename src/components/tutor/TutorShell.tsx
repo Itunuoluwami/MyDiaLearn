@@ -59,13 +59,7 @@ const NAV: NavItem[] = [
   { to: "/tutor/settings", label: "Settings", icon: Settings },
 ];
 
-const MOBILE_PRIMARY = [
-  "/tutor/dashboard",
-  "/tutor/classes",
-  "/tutor/students",
-  "/tutor/earnings",
-];
-
+const MOBILE_PRIMARY = ["/tutor/dashboard", "/tutor/classes", "/tutor/students", "/tutor/earnings"];
 
 function useActivePath() {
   return useRouterState({ select: (state) => state.location.pathname });
@@ -241,8 +235,12 @@ export function TutorShell({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-60">
                 <DropdownMenuLabel className="space-y-0.5">
-                  <p className="truncate text-sm font-semibold">{profile?.full_name ?? "Account"}</p>
-                  <p className="truncate text-xs font-normal text-muted-foreground">{profile?.email}</p>
+                  <p className="truncate text-sm font-semibold">
+                    {profile?.full_name ?? "Account"}
+                  </p>
+                  <p className="truncate text-xs font-normal text-muted-foreground">
+                    {profile?.email}
+                  </p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
@@ -281,7 +279,9 @@ export function TutorShell({
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               <h1 className="display-section text-2xl md:text-3xl">{title}</h1>
-              {description ? <p className="lead mt-1.5 text-sm md:text-base">{description}</p> : null}
+              {description ? (
+                <p className="lead mt-1.5 text-sm md:text-base">{description}</p>
+              ) : null}
             </div>
             {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
           </div>

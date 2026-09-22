@@ -12,7 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -190,15 +196,27 @@ function SettingsPage() {
                 </Select>
               </div>
               <div className="sm:col-span-2">
-                <Button type="submit" variant="cta" className="min-h-12 w-full sm:w-auto" disabled={save.isPending}>
-                  {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                <Button
+                  type="submit"
+                  variant="cta"
+                  className="min-h-12 w-full sm:w-auto"
+                  disabled={save.isPending}
+                >
+                  {save.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Save className="size-4" />
+                  )}
                   Save changes
                 </Button>
               </div>
             </form>
           </SectionCard>
 
-          <SectionCard title="Security" description="Password resets are sent to your email address.">
+          <SectionCard
+            title="Security"
+            description="Password resets are sent to your email address."
+          >
             <Button
               variant="outline"
               className="min-h-12"

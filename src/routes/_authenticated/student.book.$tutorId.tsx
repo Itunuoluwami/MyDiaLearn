@@ -2,7 +2,16 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CalendarDays, CheckCircle2, Clock, Globe2, Loader2, Lock, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  Globe2,
+  Loader2,
+  Lock,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 
 import { StudentShell } from "@/components/student/StudentShell";
 import { Button } from "@/components/ui/button";
@@ -29,7 +38,10 @@ export const Route = createFileRoute("/_authenticated/student/book/$tutorId")({
   head: () => ({
     meta: [
       { title: "Book a class — DiaLearn Student Portal" },
-      { name: "description", content: "Pick a subject, lesson length and time to book a class with your tutor." },
+      {
+        name: "description",
+        content: "Pick a subject, lesson length and time to book a class with your tutor.",
+      },
     ],
   }),
   component: StudentBookPage,
@@ -61,7 +73,8 @@ function StudentBookPage() {
   const uniqueSubjects = useMemo(() => {
     const map = new Map<string, { id: string; name: string }>();
     for (const row of tutorSubjects.data ?? []) {
-      if (row.subject_id) map.set(row.subject_id, { id: row.subject_id, name: row.subjects?.name ?? "Subject" });
+      if (row.subject_id)
+        map.set(row.subject_id, { id: row.subject_id, name: row.subjects?.name ?? "Subject" });
     }
     return [...map.values()];
   }, [tutorSubjects.data]);
@@ -125,10 +138,12 @@ function StudentBookPage() {
       <StudentShell title="🔒 Booking not available">
         <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border border-border bg-card py-16 text-center">
           <Lock className="size-12 text-muted-foreground" />
-          <p className="text-xl font-extrabold text-foreground">Ask your parent to book this class</p>
+          <p className="text-xl font-extrabold text-foreground">
+            Ask your parent to book this class
+          </p>
           <p className="text-sm text-muted-foreground">
-            Your account isn't set up to book lessons directly yet. A parent can turn this on for you, or book{" "}
-            {tutorInfo?.full_name ?? "this tutor"} for you.
+            Your account isn't set up to book lessons directly yet. A parent can turn this on for
+            you, or book {tutorInfo?.full_name ?? "this tutor"} for you.
           </p>
           <Button asChild className="min-h-11 rounded-xl font-bold">
             <Link to="/student/find-tutor">Back to Find a Tutor</Link>
@@ -144,7 +159,9 @@ function StudentBookPage() {
       description="Times are shown in your timezone. Pick a time that works for you!"
       actions={
         <Button asChild variant="outline" className="min-h-10 rounded-xl font-bold">
-          <Link to="/tutors/$tutorId" params={{ tutorId }}>View full profile</Link>
+          <Link to="/tutors/$tutorId" params={{ tutorId }}>
+            View full profile
+          </Link>
         </Button>
       }
     >
@@ -183,7 +200,10 @@ function StudentBookPage() {
                   <button
                     key={option}
                     type="button"
-                    onClick={() => { setDuration(option); setSlotStart(undefined); }}
+                    onClick={() => {
+                      setDuration(option);
+                      setSlotStart(undefined);
+                    }}
                     className={cn(
                       "focus-ring min-h-11 rounded-full border-2 px-4 text-sm font-bold transition-all",
                       effectiveDuration === option
@@ -207,8 +227,15 @@ function StudentBookPage() {
               </div>
             ) : slots.isError ? (
               <div className="flex flex-col items-center gap-2 py-6 text-center">
-                <p className="text-sm font-semibold text-muted-foreground">Couldn't load availability.</p>
-                <Button variant="outline" size="sm" className="min-h-9 rounded-xl" onClick={() => void slots.refetch()}>
+                <p className="text-sm font-semibold text-muted-foreground">
+                  Couldn't load availability.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-9 rounded-xl"
+                  onClick={() => void slots.refetch()}
+                >
                   Try again
                 </Button>
               </div>
@@ -266,14 +293,20 @@ function StudentBookPage() {
           <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-center gap-3">
               {tutorInfo?.avatar_url ? (
-                <img src={tutorInfo.avatar_url} alt={tutorInfo.full_name ?? "Tutor"} className="size-12 rounded-2xl object-cover" />
+                <img
+                  src={tutorInfo.avatar_url}
+                  alt={tutorInfo.full_name ?? "Tutor"}
+                  className="size-12 rounded-2xl object-cover"
+                />
               ) : (
                 <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-lg font-extrabold text-primary">
                   {(tutorInfo?.full_name ?? "T").charAt(0)}
                 </span>
               )}
               <div className="min-w-0">
-                <p className="truncate text-sm font-extrabold text-foreground">{tutorInfo?.full_name ?? "Tutor"}</p>
+                <p className="truncate text-sm font-extrabold text-foreground">
+                  {tutorInfo?.full_name ?? "Tutor"}
+                </p>
                 <p className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Sparkles className="size-3 text-secondary" /> Verified tutor
                 </p>
@@ -281,7 +314,10 @@ function StudentBookPage() {
             </div>
 
             <dl className="space-y-2 border-t border-border pt-3 text-sm">
-              <Row label="Lesson length" value={effectiveDuration ? `${effectiveDuration} min` : "—"} />
+              <Row
+                label="Lesson length"
+                value={effectiveDuration ? `${effectiveDuration} min` : "—"}
+              />
               <Row
                 label="Start"
                 value={
@@ -291,14 +327,21 @@ function StudentBookPage() {
                 }
               />
               {quote.data ? (
-                <Row label="Lesson price" value={formatMoney(quote.data.lesson_amount, quote.data.currency)} />
+                <Row
+                  label="Lesson price"
+                  value={formatMoney(quote.data.lesson_amount, quote.data.currency)}
+                />
               ) : null}
             </dl>
 
             <div className="flex items-baseline justify-between border-t border-border pt-3">
               <span className="text-sm font-bold">Total</span>
               <span className="text-xl font-extrabold text-primary-deep">
-                {quote.data ? formatMoney(quote.data.total_amount, quote.data.currency) : quote.isLoading ? "…" : "—"}
+                {quote.data
+                  ? formatMoney(quote.data.total_amount, quote.data.currency)
+                  : quote.isLoading
+                    ? "…"
+                    : "—"}
               </span>
             </div>
 
@@ -307,21 +350,30 @@ function StudentBookPage() {
               disabled={!canSubmit}
               onClick={() => createBooking.mutate()}
             >
-              {createBooking.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+              {createBooking.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="size-4" />
+              )}
               Request this class
             </Button>
 
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
-              <ShieldCheck className="mt-0.5 size-3.5 shrink-0" /> Pricing is set by DiaLearn and applied automatically.
+              <ShieldCheck className="mt-0.5 size-3.5 shrink-0" /> Pricing is set by DiaLearn and
+              applied automatically.
             </p>
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
-              <Lock className="mt-0.5 size-3.5 shrink-0" /> You'll pay on the next screen — the class is confirmed once payment clears and your tutor accepts.
+              <Lock className="mt-0.5 size-3.5 shrink-0" /> You'll pay on the next screen — the
+              class is confirmed once payment clears and your tutor accepts.
             </p>
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
               <Globe2 className="mt-0.5 size-3.5 shrink-0" /> Booked in {timezone}.
             </p>
             {selectedSlot ? (
-              <Badge variant="secondary" className="w-full justify-center rounded-full text-xs font-bold">
+              <Badge
+                variant="secondary"
+                className="w-full justify-center rounded-full text-xs font-bold"
+              >
                 <CalendarDays className="size-3.5" /> Slot held while you review
               </Badge>
             ) : null}

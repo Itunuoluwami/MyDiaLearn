@@ -12,7 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   useCountryFacets,
   useCurriculumFacets,
@@ -26,8 +32,8 @@ type FindTutorSearch = { child?: string; subject?: string };
 export const Route = createFileRoute("/_authenticated/find-tutor")({
   validateSearch: (search: Record<string, unknown>): FindTutorSearch => {
     const next: FindTutorSearch = {};
-    if (typeof search['child'] === "string") next.child = search['child'];
-    if (typeof search['subject'] === "string") next.subject = search['subject'];
+    if (typeof search["child"] === "string") next.child = search["child"];
+    if (typeof search["subject"] === "string") next.subject = search["subject"];
     return next;
   },
   head: () => ({
@@ -95,13 +101,19 @@ function FindTutorPage() {
     limit: 24,
   });
 
-  const total = results.data?.[0]?.total_count ? Number(results.data[0].total_count) : results.data?.length ?? 0;
+  const total = results.data?.[0]?.total_count
+    ? Number(results.data[0].total_count)
+    : (results.data?.length ?? 0);
 
   const activeFilters = useMemo(() => {
     const chips: { key: string; label: string; clear: () => void }[] = [];
     if (subject) {
       const found = (subjects.data ?? []).find((item) => item.id === subject);
-      chips.push({ key: "subject", label: found?.name ?? "Subject", clear: () => setSubject(undefined) });
+      chips.push({
+        key: "subject",
+        label: found?.name ?? "Subject",
+        clear: () => setSubject(undefined),
+      });
     }
     if (curriculum) {
       const found = (curricula.data ?? []).find((item) => item.id === curriculum);
@@ -123,9 +135,24 @@ function FindTutorPage() {
     if (minRating > 0)
       chips.push({ key: "rating", label: `${minRating}+ rating`, clear: () => setMinRating(0) });
     if (maxPrice)
-      chips.push({ key: "price", label: `Up to ${maxPrice}/hr`, clear: () => setMaxPrice(undefined) });
+      chips.push({
+        key: "price",
+        label: `Up to ${maxPrice}/hr`,
+        clear: () => setMaxPrice(undefined),
+      });
     return chips;
-  }, [subject, curriculum, level, country, language, minRating, maxPrice, subjects.data, curricula.data, levels.data]);
+  }, [
+    subject,
+    curriculum,
+    level,
+    country,
+    language,
+    minRating,
+    maxPrice,
+    subjects.data,
+    curricula.data,
+    levels.data,
+  ]);
 
   function clearAll() {
     setSubject(undefined);
@@ -324,7 +351,11 @@ function FindTutorPage() {
             <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl p-4">
               <SheetTitle>Filter tutors</SheetTitle>
               <div className="mt-4">{filterPanel}</div>
-              <Button variant="cta" className="mt-5 min-h-12 w-full" onClick={() => setDrawerOpen(false)}>
+              <Button
+                variant="cta"
+                className="mt-5 min-h-12 w-full"
+                onClick={() => setDrawerOpen(false)}
+              >
                 Show {total} tutors
               </Button>
             </SheetContent>
@@ -364,7 +395,9 @@ function FindTutorPage() {
 
           <div>
             <p className="mb-3 text-sm text-muted-foreground" aria-live="polite">
-              {results.isLoading ? "Searching tutors…" : `${total} tutor${total === 1 ? "" : "s"} found`}
+              {results.isLoading
+                ? "Searching tutors…"
+                : `${total} tutor${total === 1 ? "" : "s"} found`}
             </p>
 
             {results.isLoading ? (
@@ -388,11 +421,7 @@ function FindTutorPage() {
             ) : (
               <div className="grid gap-4 xl:grid-cols-2">
                 {(results.data ?? []).map((tutor) => (
-                  <ParentTutorCard
-                    key={tutor.id}
-                    tutor={tutor}
-                    childId={childId ?? undefined}
-                  />
+                  <ParentTutorCard key={tutor.id} tutor={tutor} childId={childId ?? undefined} />
                 ))}
               </div>
             )}
@@ -401,7 +430,10 @@ function FindTutorPage() {
 
         <p className="text-xs text-muted-foreground">
           Looking for the public profiles instead?{" "}
-          <Link to="/tutors" className="font-semibold text-primary underline-offset-4 hover:underline">
+          <Link
+            to="/tutors"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
             Browse the marketplace
           </Link>
           .

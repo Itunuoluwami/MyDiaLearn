@@ -31,7 +31,8 @@ export function BookingStatusBadge({
   status: BookingStatus;
   startingSoon?: boolean;
 }) {
-  const label = startingSoon && status === "confirmed" ? "Starting soon" : BOOKING_STATUS_LABEL[status];
+  const label =
+    startingSoon && status === "confirmed" ? "Starting soon" : BOOKING_STATUS_LABEL[status];
   return (
     <span
       className={cn(
@@ -95,7 +96,9 @@ export function KpiCard({
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
         <span
           className={cn(
             "flex size-8 shrink-0 items-center justify-center rounded-lg",
@@ -138,9 +141,7 @@ export function SectionCard({
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <h2 className="display-section text-lg md:text-xl">{title}</h2>
-          {description ? (
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-          ) : null}
+          {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
         </div>
         {action}
       </div>
@@ -151,7 +152,13 @@ export function SectionCard({
 
 /* ---------------- loading + error + empty ---------------- */
 
-export function CardSkeletonList({ rows = 3, height = "h-24" }: { rows?: number; height?: string }) {
+export function CardSkeletonList({
+  rows = 3,
+  height = "h-24",
+}: {
+  rows?: number;
+  height?: string;
+}) {
   return (
     <div className="space-y-3" aria-hidden="true">
       {Array.from({ length: rows }).map((_, index) => (
@@ -171,13 +178,7 @@ export function KpiSkeletonGrid({ count = 4 }: { count?: number }) {
   );
 }
 
-export function LoadError({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry?: () => void;
-}) {
+export function LoadError({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <div
       role="alert"

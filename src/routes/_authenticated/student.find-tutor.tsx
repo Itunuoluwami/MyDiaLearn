@@ -1,12 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Filter,
-  Search,
-  SlidersHorizontal,
-  Star,
-  X,
-} from "lucide-react";
+import { Filter, Search, SlidersHorizontal, Star, X } from "lucide-react";
 
 import { StudentShell } from "@/components/student/StudentShell";
 import { Button } from "@/components/ui/button";
@@ -15,7 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   useCountryFacets,
   useCurriculumFacets,
@@ -30,7 +30,10 @@ export const Route = createFileRoute("/_authenticated/student/find-tutor")({
   head: () => ({
     meta: [
       { title: "Find a Tutor — DiaLearn Student Portal" },
-      { name: "description", content: "Search verified tutors to help you learn. Ask a parent to book one for you." },
+      {
+        name: "description",
+        content: "Search verified tutors to help you learn. Ask a parent to book one for you.",
+      },
     ],
   }),
   component: StudentFindTutorPage,
@@ -49,7 +52,9 @@ function StudentFindTutorPage() {
 
   const [term, setTerm] = useState("");
   const [subject, setSubject] = useState<string | undefined>(undefined);
-  const [curriculum, setCurriculum] = useState<string | undefined>(student?.curriculum_id ?? undefined);
+  const [curriculum, setCurriculum] = useState<string | undefined>(
+    student?.curriculum_id ?? undefined,
+  );
   const [level, setLevel] = useState<string | undefined>(student?.education_level_id ?? undefined);
   const [country, setCountry] = useState<string | undefined>(undefined);
   const [language, setLanguage] = useState<string>("");
@@ -78,20 +83,27 @@ function StudentFindTutorPage() {
 
   const total = results.data?.[0]?.total_count
     ? Number(results.data[0].total_count)
-    : results.data?.length ?? 0;
+    : (results.data?.length ?? 0);
 
   const activeFilters = useMemo(() => {
     const chips: { key: string; label: string; clear: () => void }[] = [];
     if (subject) {
       const found = (subjects.data ?? []).find((item) => item.id === subject);
-      chips.push({ key: "subject", label: found?.name ?? "Subject", clear: () => setSubject(undefined) });
+      chips.push({
+        key: "subject",
+        label: found?.name ?? "Subject",
+        clear: () => setSubject(undefined),
+      });
     }
     if (curriculum) {
       const found = (curricula.data ?? []).find((item) => item.id === curriculum);
       chips.push({
         key: "curriculum",
         label: found?.name ?? "Curriculum",
-        clear: () => { setCurriculum(undefined); setLevel(undefined); },
+        clear: () => {
+          setCurriculum(undefined);
+          setLevel(undefined);
+        },
       });
     }
     if (level) {
@@ -100,10 +112,27 @@ function StudentFindTutorPage() {
     }
     if (country) chips.push({ key: "country", label: country, clear: () => setCountry(undefined) });
     if (language) chips.push({ key: "language", label: language, clear: () => setLanguage("") });
-    if (minRating > 0) chips.push({ key: "rating", label: `${minRating}+ stars`, clear: () => setMinRating(0) });
-    if (maxPrice) chips.push({ key: "price", label: `Up to ${maxPrice}/hr`, clear: () => setMaxPrice(undefined) });
+    if (minRating > 0)
+      chips.push({ key: "rating", label: `${minRating}+ stars`, clear: () => setMinRating(0) });
+    if (maxPrice)
+      chips.push({
+        key: "price",
+        label: `Up to ${maxPrice}/hr`,
+        clear: () => setMaxPrice(undefined),
+      });
     return chips;
-  }, [subject, curriculum, level, country, language, minRating, maxPrice, subjects.data, curricula.data, levels.data]);
+  }, [
+    subject,
+    curriculum,
+    level,
+    country,
+    language,
+    minRating,
+    maxPrice,
+    subjects.data,
+    curricula.data,
+    levels.data,
+  ]);
 
   function clearAll() {
     setSubject(undefined);
@@ -125,7 +154,9 @@ function StudentFindTutorPage() {
           </SelectTrigger>
           <SelectContent>
             {(subjects.data ?? []).map((item) => (
-              <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+              <SelectItem key={item.id} value={item.id}>
+                {item.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -133,13 +164,21 @@ function StudentFindTutorPage() {
 
       <div className="space-y-2">
         <Label htmlFor="sf-curriculum">Curriculum</Label>
-        <Select value={curriculum ?? ""} onValueChange={(v) => { setCurriculum(v || undefined); setLevel(undefined); }}>
+        <Select
+          value={curriculum ?? ""}
+          onValueChange={(v) => {
+            setCurriculum(v || undefined);
+            setLevel(undefined);
+          }}
+        >
           <SelectTrigger id="sf-curriculum" className="min-h-11 rounded-xl">
             <SelectValue placeholder="Any curriculum" />
           </SelectTrigger>
           <SelectContent>
             {(curricula.data ?? []).map((item) => (
-              <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+              <SelectItem key={item.id} value={item.id}>
+                {item.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -147,13 +186,19 @@ function StudentFindTutorPage() {
 
       <div className="space-y-2">
         <Label htmlFor="sf-level">Level / Grade</Label>
-        <Select value={level ?? ""} onValueChange={(v) => setLevel(v || undefined)} disabled={(levels.data ?? []).length === 0}>
+        <Select
+          value={level ?? ""}
+          onValueChange={(v) => setLevel(v || undefined)}
+          disabled={(levels.data ?? []).length === 0}
+        >
           <SelectTrigger id="sf-level" className="min-h-11 rounded-xl">
             <SelectValue placeholder="Any level" />
           </SelectTrigger>
           <SelectContent>
             {(levels.data ?? []).map((item) => (
-              <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+              <SelectItem key={item.id} value={item.id}>
+                {item.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -187,8 +232,17 @@ function StudentFindTutorPage() {
       </div>
 
       <div className="space-y-3">
-        <Label htmlFor="sf-rating">Minimum Rating: {minRating > 0 ? `${minRating} ⭐` : "Any"}</Label>
-        <Slider id="sf-rating" min={0} max={5} step={0.5} value={[minRating]} onValueChange={(v) => setMinRating(v[0] ?? 0)} />
+        <Label htmlFor="sf-rating">
+          Minimum Rating: {minRating > 0 ? `${minRating} ⭐` : "Any"}
+        </Label>
+        <Slider
+          id="sf-rating"
+          min={0}
+          max={5}
+          step={0.5}
+          value={[minRating]}
+          onValueChange={(v) => setMinRating(v[0] ?? 0)}
+        />
       </div>
 
       <Button variant="outline" className="min-h-11 w-full rounded-xl" onClick={clearAll}>
@@ -207,8 +261,8 @@ function StudentFindTutorPage() {
         {!student?.can_book_lessons && (
           <div className="rounded-2xl border border-secondary/40 bg-secondary/10 p-4">
             <p className="text-sm font-bold text-secondary-foreground">
-              💡 Found a tutor you like? Ask your parent to book them for you.
-              A booking request will be sent for their approval.
+              💡 Found a tutor you like? Ask your parent to book them for you. A booking request
+              will be sent for their approval.
             </p>
           </div>
         )}
@@ -216,7 +270,10 @@ function StudentFindTutorPage() {
         {/* Search bar + sort + filter toggle */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Search
+              className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
             <Input
               className="min-h-12 rounded-2xl pl-10 text-base"
               placeholder="Search by name or subject…"
@@ -232,7 +289,9 @@ function StudentFindTutorPage() {
             </SelectTrigger>
             <SelectContent>
               {SORTS.map((item) => (
-                <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -241,14 +300,20 @@ function StudentFindTutorPage() {
               <Button variant="outline" className="min-h-12 rounded-2xl gap-2">
                 <Filter className="size-4" /> Filters
                 {activeFilters.length > 0 && (
-                  <Badge variant="secondary" className="rounded-full">{activeFilters.length}</Badge>
+                  <Badge variant="secondary" className="rounded-full">
+                    {activeFilters.length}
+                  </Badge>
                 )}
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-3xl p-5">
               <SheetTitle className="text-lg font-extrabold">Filter Tutors</SheetTitle>
               <div className="mt-5">{filterPanel}</div>
-              <Button variant="cta" className="mt-5 min-h-12 w-full rounded-2xl font-bold" onClick={() => setDrawerOpen(false)}>
+              <Button
+                variant="cta"
+                className="mt-5 min-h-12 w-full rounded-2xl font-bold"
+                onClick={() => setDrawerOpen(false)}
+              >
                 Show {total} tutor{total === 1 ? "" : "s"}
               </Button>
             </SheetContent>
@@ -348,7 +413,11 @@ function TutorCard({ tutor, canBook }: { tutor: TutorData; canBook: boolean }) {
     <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-start gap-3">
         {tutor.avatar_url ? (
-          <img src={tutor.avatar_url} alt={tutor.full_name ?? "Tutor"} className="size-14 rounded-2xl object-cover" />
+          <img
+            src={tutor.avatar_url}
+            alt={tutor.full_name ?? "Tutor"}
+            className="size-14 rounded-2xl object-cover"
+          />
         ) : (
           <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-extrabold text-primary">
             {(tutor.full_name ?? "T").charAt(0).toUpperCase()}
@@ -363,7 +432,10 @@ function TutorCard({ tutor, canBook }: { tutor: TutorData; canBook: boolean }) {
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
                 key={i}
-                className={cn("size-3.5", i < stars ? "fill-secondary text-secondary" : "text-muted")}
+                className={cn(
+                  "size-3.5",
+                  i < stars ? "fill-secondary text-secondary" : "text-muted",
+                )}
               />
             ))}
             {Number(tutor.review_count ?? 0) > 0 && (
@@ -376,7 +448,10 @@ function TutorCard({ tutor, canBook }: { tutor: TutorData; canBook: boolean }) {
       {(tutor.subjects ?? []).length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {(tutor.subjects ?? []).slice(0, 4).map((s) => (
-            <span key={s} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
+            <span
+              key={s}
+              className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary"
+            >
               {s}
             </span>
           ))}
@@ -387,13 +462,26 @@ function TutorCard({ tutor, canBook }: { tutor: TutorData; canBook: boolean }) {
         <div>
           <p className="text-lg font-extrabold text-primary-deep">
             {tutor.hourly_rate
-              ? new Intl.NumberFormat(undefined, { style: "currency", currency: tutor.currency ?? "USD", maximumFractionDigits: 0 }).format(Number(tutor.hourly_rate))
+              ? new Intl.NumberFormat(undefined, {
+                  style: "currency",
+                  currency: tutor.currency ?? "USD",
+                  maximumFractionDigits: 0,
+                }).format(Number(tutor.hourly_rate))
               : "—"}
             <span className="text-xs font-semibold text-muted-foreground"> / hr</span>
           </p>
-          {tutor.country_code && <p className="text-xs text-muted-foreground">📍 {tutor.country_code}</p>}
+          {tutor.country_code && (
+            <p className="text-xs text-muted-foreground">📍 {tutor.country_code}</p>
+          )}
         </div>
-        <Button asChild size="sm" className={cn("min-h-10 rounded-xl font-bold", canBook ? "bg-accent hover:bg-accent/90 text-white" : "")}>
+        <Button
+          asChild
+          size="sm"
+          className={cn(
+            "min-h-10 rounded-xl font-bold",
+            canBook ? "bg-accent hover:bg-accent/90 text-white" : "",
+          )}
+        >
           {canBook ? (
             <Link to="/student/book/$tutorId" params={{ tutorId: tutor.id }}>
               Book Now
@@ -414,7 +502,9 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
     <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card py-16 text-center">
       <span className="text-5xl">😕</span>
       <p className="font-bold text-foreground">Couldn't load tutors</p>
-      <Button variant="outline" className="min-h-11 rounded-xl" onClick={onRetry}>Try again</Button>
+      <Button variant="outline" className="min-h-11 rounded-xl" onClick={onRetry}>
+        Try again
+      </Button>
     </div>
   );
 }

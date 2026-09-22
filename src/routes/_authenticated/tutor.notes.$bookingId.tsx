@@ -153,7 +153,12 @@ function LessonNotesPage() {
               ))}
 
               <div className="flex flex-wrap gap-2 pt-1">
-                <Button type="submit" variant="cta" className="min-h-11 sm:min-h-10" disabled={save.isPending}>
+                <Button
+                  type="submit"
+                  variant="cta"
+                  className="min-h-11 sm:min-h-10"
+                  disabled={save.isPending}
+                >
                   {save.isPending ? "Saving…" : "Save notes"}
                 </Button>
                 <Button asChild variant="outline" className="min-h-11 sm:min-h-10">

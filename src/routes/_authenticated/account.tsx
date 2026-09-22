@@ -13,7 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({
@@ -36,7 +42,6 @@ function AccountPage() {
   useRedirectToPortalHome();
   const { profile, permissions, refresh, user } = useAuth();
   const queryClient = useQueryClient();
-
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -116,7 +121,11 @@ function AccountPage() {
           >
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="full-name">Full name</Label>
-              <Input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <Input
+                id="full-name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

@@ -24,7 +24,11 @@ export const Route = createFileRoute("/_authenticated/admin/reports")({
   head: () => ({
     meta: [
       { title: "Reports — DiaLearn admin" },
-      { name: "description", content: "Growth, revenue, engagement and quality figures for a chosen date range, exportable as CSV." },
+      {
+        name: "description",
+        content:
+          "Growth, revenue, engagement and quality figures for a chosen date range, exportable as CSV.",
+      },
     ],
   }),
   component: AdminReportsPage,
@@ -74,7 +78,9 @@ function AdminReportsPage() {
           <ShieldAlert className="size-5 text-warning" />
           <div>
             <h2 className="text-base font-semibold">Admin access required</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Your account type doesn't include reporting permissions.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your account type doesn't include reporting permissions.
+            </p>
           </div>
         </div>
       </AdminShell>
@@ -161,11 +167,23 @@ function AdminReportsPage() {
         <div className="flex flex-wrap items-end gap-3">
           <div className="space-y-2">
             <Label htmlFor="report-from">From</Label>
-            <Input id="report-from" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} max={toDate} />
+            <Input
+              id="report-from"
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              max={toDate}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="report-to">To</Label>
-            <Input id="report-to" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} min={fromDate} />
+            <Input
+              id="report-to"
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              min={fromDate}
+            />
           </div>
         </div>
 
@@ -183,9 +201,18 @@ function AdminReportsPage() {
               <StatTile label="Cancelled" value={String(s.cancelled_count ?? 0)} />
               <StatTile label="No-shows" value={String(s.no_show_count ?? 0)} />
               <StatTile label="GMV" value={formatMoney(s.gmv, s.gmv_currency)} />
-              <StatTile label="Commission revenue" value={formatMoney(s.commission_revenue, s.gmv_currency)} />
-              <StatTile label="Avg transaction" value={formatMoney(s.avg_transaction_value, s.gmv_currency)} />
-              <StatTile label="Avg tutor rating" value={s.avg_tutor_rating != null ? String(s.avg_tutor_rating) : "—"} />
+              <StatTile
+                label="Commission revenue"
+                value={formatMoney(s.commission_revenue, s.gmv_currency)}
+              />
+              <StatTile
+                label="Avg transaction"
+                value={formatMoney(s.avg_transaction_value, s.gmv_currency)}
+              />
+              <StatTile
+                label="Avg tutor rating"
+                value={s.avg_tutor_rating != null ? String(s.avg_tutor_rating) : "—"}
+              />
             </div>
 
             <div className="mt-6 flex flex-wrap gap-2">

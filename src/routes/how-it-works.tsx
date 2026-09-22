@@ -107,8 +107,8 @@ function HowItWorksPage() {
             <ShieldCheck className="size-6 text-primary" />
             <h2 className="mt-3 text-lg">Every tutor is verified first</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Identity, qualifications and a live teaching check are completed before a tutor appears
-              in search.
+              Identity, qualifications and a live teaching check are completed before a tutor
+              appears in search.
             </p>
             <Button asChild variant="subtle" className="mt-4">
               <Link to="/trust-and-safety">See our checks</Link>
@@ -124,7 +124,9 @@ function HowItWorksPage() {
             {FAQ.map((item) => (
               <AccordionItem key={item.q} value={item.q}>
                 <AccordionTrigger className="text-left text-base">{item.q}</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">{item.a}</AccordionContent>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  {item.a}
+                </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>

@@ -26,8 +26,11 @@ function StudentClassroomPage() {
   const session = booking?.class_sessions?.[0];
   const meetingUrl = session?.meeting_url;
 
-  const tutorName = (booking as typeof booking & { tutors?: { profiles?: { full_name?: string } | null } | null })?.tutors?.profiles?.full_name ?? "Your Tutor";
-  const subjectName = (booking as typeof booking & { subjects?: { name: string } | null })?.subjects?.name ?? "Class";
+  const tutorName =
+    (booking as typeof booking & { tutors?: { profiles?: { full_name?: string } | null } | null })
+      ?.tutors?.profiles?.full_name ?? "Your Tutor";
+  const subjectName =
+    (booking as typeof booking & { subjects?: { name: string } | null })?.subjects?.name ?? "Class";
 
   if (!booking && !bookings.isLoading) {
     return (
@@ -35,7 +38,9 @@ function StudentClassroomPage() {
         <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card py-20 text-center">
           <span className="text-6xl">🚫</span>
           <p className="text-xl font-extrabold text-foreground">Class not found</p>
-          <p className="text-sm text-muted-foreground">This class may not exist or hasn't started yet.</p>
+          <p className="text-sm text-muted-foreground">
+            This class may not exist or hasn't started yet.
+          </p>
           <Button asChild variant="outline" className="min-h-11 rounded-xl">
             <Link to="/student/dashboard">Back to Dashboard</Link>
           </Button>
@@ -54,7 +59,9 @@ function StudentClassroomPage() {
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-widest opacity-75">Live Now</p>
-            <p className="font-extrabold">{subjectName} with {tutorName}</p>
+            <p className="font-extrabold">
+              {subjectName} with {tutorName}
+            </p>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <span className="relative flex size-3">
@@ -66,9 +73,11 @@ function StudentClassroomPage() {
         </div>
 
         {/* Video Area */}
-        <div className={cn(
-          "relative overflow-hidden rounded-3xl border-2 border-primary/30 bg-gradient-to-br from-primary-deep via-primary to-secondary aspect-video w-full shadow-xl",
-        )}>
+        <div
+          className={cn(
+            "relative overflow-hidden rounded-3xl border-2 border-primary/30 bg-gradient-to-br from-primary-deep via-primary to-secondary aspect-video w-full shadow-xl",
+          )}
+        >
           {meetingUrl ? (
             <iframe
               src={meetingUrl}
@@ -94,21 +103,9 @@ function StudentClassroomPage() {
 
         {/* Controls */}
         <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-border bg-card p-4">
-          <ControlBtn
-            icon={Video}
-            label="Camera"
-            active
-          />
-          <ControlBtn
-            icon={PhoneCall}
-            label="Microphone"
-            active
-          />
-          <ControlBtn
-            icon={Wifi}
-            label="Connection"
-            active
-          />
+          <ControlBtn icon={Video} label="Camera" active />
+          <ControlBtn icon={PhoneCall} label="Microphone" active />
+          <ControlBtn icon={Wifi} label="Connection" active />
           <Button
             asChild
             variant="outline"
@@ -132,7 +129,15 @@ function StudentClassroomPage() {
   );
 }
 
-function ControlBtn({ icon: Icon, label, active }: { icon: React.ElementType; label: string; active?: boolean }) {
+function ControlBtn({
+  icon: Icon,
+  label,
+  active,
+}: {
+  icon: React.ElementType;
+  label: string;
+  active?: boolean;
+}) {
   return (
     <div className="flex flex-col items-center gap-1">
       <button

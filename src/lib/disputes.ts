@@ -31,7 +31,11 @@ export const DISPUTE_CATEGORY_OPTIONS: DisputeCategory[] = [
  */
 export function useRaiseDispute() {
   return useMutation({
-    mutationFn: async (input: { bookingId: string; category: DisputeCategory; description: string }) => {
+    mutationFn: async (input: {
+      bookingId: string;
+      category: DisputeCategory;
+      description: string;
+    }) => {
       const { data, error } = await supabase.rpc("raise_dispute", {
         p_booking_id: input.bookingId,
         p_category: input.category,

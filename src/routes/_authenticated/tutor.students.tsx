@@ -2,7 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarDays, GraduationCap, Users } from "lucide-react";
 
 import { TutorShell } from "@/components/tutor/TutorShell";
-import { CardSkeletonList, EmptyPanel, LoadError, MetaItem, SectionCard } from "@/components/parent/ui";
+import {
+  CardSkeletonList,
+  EmptyPanel,
+  LoadError,
+  MetaItem,
+  SectionCard,
+} from "@/components/parent/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -69,16 +75,21 @@ function TutorStudentsPage() {
                 >
                   <div className="flex items-start gap-3">
                     <Avatar className="size-11 shrink-0">
-                      {student.avatar_url ? <AvatarImage src={student.avatar_url} alt="" loading="lazy" /> : null}
+                      {student.avatar_url ? (
+                        <AvatarImage src={student.avatar_url} alt="" loading="lazy" />
+                      ) : null}
                       <AvatarFallback className="bg-primary-soft text-sm font-semibold text-primary-deep">
                         {(student.first_name ?? "?").charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-sm font-semibold md:text-base">{student.first_name}</h3>
+                      <h3 className="truncate text-sm font-semibold md:text-base">
+                        {student.first_name}
+                      </h3>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {[student.education_level_name, student.curriculum_name].filter(Boolean).join(" · ") ||
-                          "Level not set"}
+                        {[student.education_level_name, student.curriculum_name]
+                          .filter(Boolean)
+                          .join(" · ") || "Level not set"}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
                         <MetaItem icon={GraduationCap}>

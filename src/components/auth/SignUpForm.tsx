@@ -40,7 +40,11 @@ const ROLE_META: Record<string, { label: string; description: string; icon: Luci
     description: "Manage your children's lessons and payments",
     icon: Users,
   },
-  student: { label: "Student", description: "Learn one-to-one with a vetted tutor", icon: BookOpen },
+  student: {
+    label: "Student",
+    description: "Learn one-to-one with a vetted tutor",
+    icon: BookOpen,
+  },
   tutor: { label: "Tutor", description: "Teach students in the diaspora", icon: GraduationCap },
   agency: { label: "Tutoring agency", description: "Manage a roster of tutors", icon: Building2 },
 };
@@ -76,7 +80,9 @@ export function SignUpForm({
 }) {
   const { data: settings } = usePublicSettings();
   const runServerValidation = useServerFn(validateSignup);
-  const [formError, setFormError] = useState<{ message: string; showSignIn?: boolean } | null>(null);
+  const [formError, setFormError] = useState<{ message: string; showSignIn?: boolean } | null>(
+    null,
+  );
   const [step, setStep] = useState<1 | 2>(1);
 
   const countries = useMemo(
@@ -165,7 +171,8 @@ export function SignUpForm({
       }
       const first = FIELD_ORDER.find((field) => field in check.fieldErrors);
       if (first) setFocus(first);
-      else setFormError({ message: "We couldn't create your account right now. Please try again." });
+      else
+        setFormError({ message: "We couldn't create your account right now. Please try again." });
       return;
     }
 
@@ -189,7 +196,11 @@ export function SignUpForm({
 
     if (error) {
       const raw = (error.message || "").toLowerCase();
-      if (raw.includes("already registered") || raw.includes("already been registered") || raw.includes("exists")) {
+      if (
+        raw.includes("already registered") ||
+        raw.includes("already been registered") ||
+        raw.includes("exists")
+      ) {
         setFormError({
           message: "An account with this email already exists. Try signing in instead.",
           showSignIn: true,
@@ -237,398 +248,400 @@ export function SignUpForm({
       ) : null}
 
       {step === 1 ? (
-      <>
-      {/* Step 1 — account type */}
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-foreground">
-          Step 1 of 2 — I'm signing up as
-        </legend>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {roles.map((option) => {
-            const meta = ROLE_META[option] ?? {
-              label: option,
-              description: "DiaLearn account",
-              icon: Users,
-            };
-            const Icon = meta.icon;
-            const active = role === option;
-            return (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={active}
-                onClick={() =>
-                  setValue("role", option, { shouldValidate: true, shouldTouch: true })
-                }
-                className={cn(
-                  "flex min-h-11 items-start gap-3 rounded-xl border p-3 text-left transition-all duration-200",
-                  active
-                    ? "border-primary bg-primary-soft/50 shadow-soft"
-                    : "border-border bg-card hover:border-primary/40 hover:bg-muted/40",
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-200",
-                    active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  <Icon className="size-4" aria-hidden="true" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-foreground">{meta.label}</span>
-                  <span className="block text-xs leading-snug text-muted-foreground">
-                    {meta.description}
-                  </span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <FieldError id="role-error" message={errors.role?.message} />
-      </fieldset>
+        <>
+          {/* Step 1 — account type */}
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium text-foreground">
+              Step 1 of 2 — I'm signing up as
+            </legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {roles.map((option) => {
+                const meta = ROLE_META[option] ?? {
+                  label: option,
+                  description: "DiaLearn account",
+                  icon: Users,
+                };
+                const Icon = meta.icon;
+                const active = role === option;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() =>
+                      setValue("role", option, { shouldValidate: true, shouldTouch: true })
+                    }
+                    className={cn(
+                      "flex min-h-11 items-start gap-3 rounded-xl border p-3 text-left transition-all duration-200",
+                      active
+                        ? "border-primary bg-primary-soft/50 shadow-soft"
+                        : "border-border bg-card hover:border-primary/40 hover:bg-muted/40",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-200",
+                        active
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      <Icon className="size-4" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-foreground">
+                        {meta.label}
+                      </span>
+                      <span className="block text-xs leading-snug text-muted-foreground">
+                        {meta.description}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <FieldError id="role-error" message={errors.role?.message} />
+          </fieldset>
 
-      <Button
-        type="button"
-        variant="cta"
-        className="min-h-12 w-full text-base"
-        onClick={async () => {
-          const valid = await form.trigger("role");
-          if (valid) setStep(2);
-        }}
-      >
-        Continue
-      </Button>
-
-      <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
-        <button
-          type="button"
-          onClick={onSwitchToSignIn}
-          className="font-semibold text-primary underline"
-        >
-          Sign in
-        </button>
-      </p>
-      </>
-      ) : (
-      <>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-foreground">
-          Step 2 of 2 — your details
-        </p>
-        <button
-          type="button"
-          onClick={() => setStep(1)}
-          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary underline"
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          {ROLE_META[role]?.label ?? role}
-        </button>
-      </div>
-
-      {/* Names */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="firstName">First name</Label>
-          <div className="relative">
-            <Input
-              id="firstName"
-              autoComplete="given-name"
-              disabled={isSubmitting}
-              aria-invalid={!!errors.firstName}
-              aria-describedby={errors.firstName ? "firstName-error" : undefined}
-              className={cn(
-                "h-11 transition-colors duration-200",
-                errors.firstName && "border-destructive",
-                showValid("firstName") && "border-success/60 pr-9",
-              )}
-              {...register("firstName")}
-            />
-            {showValid("firstName") ? (
-              <Check
-                className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-success"
-                aria-hidden="true"
-              />
-            ) : null}
-          </div>
-          <FieldError id="firstName-error" message={errors.firstName?.message} />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="lastName">Last name</Label>
-          <div className="relative">
-            <Input
-              id="lastName"
-              autoComplete="family-name"
-              disabled={isSubmitting}
-              aria-invalid={!!errors.lastName}
-              aria-describedby={errors.lastName ? "lastName-error" : undefined}
-              className={cn(
-                "h-11 transition-colors duration-200",
-                errors.lastName && "border-destructive",
-                showValid("lastName") && "border-success/60 pr-9",
-              )}
-              {...register("lastName")}
-            />
-            {showValid("lastName") ? (
-              <Check
-                className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-success"
-                aria-hidden="true"
-              />
-            ) : null}
-          </div>
-          <FieldError id="lastName-error" message={errors.lastName?.message} />
-        </div>
-      </div>
-
-      {/* Email */}
-      <div className="space-y-1.5">
-        <Label htmlFor="signup-email">Email address</Label>
-        <Input
-          id="signup-email"
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          disabled={isSubmitting}
-          aria-invalid={!!errors.email}
-          aria-describedby={errors.email ? "email-error" : "email-hint"}
-          className={cn(
-            "h-11 transition-colors duration-200",
-            errors.email && "border-destructive",
-            showValid("email") && "border-success/60",
-          )}
-          {...register("email")}
-        />
-        {errors.email ? (
-          <FieldError id="email-error" message={errors.email.message} />
-        ) : (
-          <p id="email-hint" className="text-xs text-muted-foreground">
-            We'll send a verification link to this address.
-          </p>
-        )}
-      </div>
-
-      {/* Phone with country selector */}
-      <div className="space-y-1.5">
-        <Label htmlFor="phone">Phone number</Label>
-        <div className="flex gap-2">
-          <select
-            aria-label="Country and dialling code"
-            disabled={isSubmitting}
-            className={cn(
-              "h-11 w-[8.5rem] shrink-0 rounded-md border border-input bg-background px-2 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
-              errors.countryCode && "border-destructive",
-            )}
-            {...register("countryCode")}
+          <Button
+            type="button"
+            variant="cta"
+            className="min-h-12 w-full text-base"
+            onClick={async () => {
+              const valid = await form.trigger("role");
+              if (valid) setStep(2);
+            }}
           >
-            <option value="">Country</option>
-            {countries.map((country) => (
-              <option key={country.code} value={country.code}>
-                {country.flag} {country.dial_code}
-              </option>
-            ))}
-          </select>
-          <Input
-            id="phone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder={selectedCountry ? "8012345678" : "Select a country first"}
-            disabled={isSubmitting}
-            aria-invalid={!!errors.phone}
-            aria-describedby={errors.phone ? "phone-error" : "phone-hint"}
-            className={cn(
-              "h-11 flex-1 transition-colors duration-200",
-              errors.phone && "border-destructive",
-              showValid("phone") && "border-success/60",
-            )}
-            {...register("phone", {
-              onBlur: (event: React.FocusEvent<HTMLInputElement>) =>
-                setValue("phone", normalizePhoneDigits(event.target.value), {
-                  shouldValidate: true,
-                }),
-            })}
-          />
-        </div>
-        {errors.phone || errors.countryCode ? (
-          <FieldError
-            id="phone-error"
-            message={errors.countryCode?.message ?? errors.phone?.message}
-          />
-        ) : (
-          <p id="phone-hint" className="text-xs text-muted-foreground">
-            {selectedCountry
-              ? `Enter your number without the ${selectedCountry.dial_code} code.`
-              : "Choose your country, then enter your local number."}
+            Continue
+          </Button>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={onSwitchToSignIn}
+              className="font-semibold text-primary underline"
+            >
+              Sign in
+            </button>
           </p>
-        )}
-      </div>
-
-      {/* Password */}
-      <div className="space-y-2">
-        <Label htmlFor="signup-password">Password</Label>
-        <PasswordInput
-          id="signup-password"
-          autoComplete="new-password"
-          disabled={isSubmitting}
-          aria-invalid={!!errors.password}
-          aria-describedby="password-requirements"
-          className={cn(
-            "transition-colors duration-200",
-            errors.password && "border-destructive",
-            showValid("password") && "border-success/60",
-          )}
-          {...register("password")}
-        />
-
-        {/* Strength */}
-        <div className="flex items-center gap-3">
-          <div className="flex flex-1 gap-1.5" aria-hidden="true">
-            {[1, 2, 3, 4].map((step) => (
-              <span
-                key={step}
-                className={cn(
-                  "h-1.5 flex-1 rounded-full transition-all duration-300",
-                  strength.score >= step
-                    ? strength.score >= 4
-                      ? "bg-success"
-                      : strength.score === 3
-                        ? "bg-primary"
-                        : "bg-secondary"
-                    : "bg-muted",
-                )}
-              />
-            ))}
+        </>
+      ) : (
+        <>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-foreground">Step 2 of 2 — your details</p>
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary underline"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+              {ROLE_META[role]?.label ?? role}
+            </button>
           </div>
-          <span className="w-20 text-right text-xs text-muted-foreground" aria-live="polite">
-            {password ? strength.label : ""}
-          </span>
-        </div>
 
-        <ul id="password-requirements" className="grid gap-1 sm:grid-cols-2">
-          {PASSWORD_RULES.map((rule) => {
-            const met = rule.test(password ?? "");
-            return (
-              <li
-                key={rule.key}
-                className={cn(
-                  "flex items-center gap-1.5 text-xs transition-colors duration-200",
-                  met ? "text-success" : "text-muted-foreground",
-                )}
-              >
-                <span
+          {/* Names */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="firstName">First name</Label>
+              <div className="relative">
+                <Input
+                  id="firstName"
+                  autoComplete="given-name"
+                  disabled={isSubmitting}
+                  aria-invalid={!!errors.firstName}
+                  aria-describedby={errors.firstName ? "firstName-error" : undefined}
                   className={cn(
-                    "flex size-4 items-center justify-center rounded-full border transition-colors duration-200",
-                    met ? "border-success bg-success/10" : "border-border",
+                    "h-11 transition-colors duration-200",
+                    errors.firstName && "border-destructive",
+                    showValid("firstName") && "border-success/60 pr-9",
                   )}
-                  aria-hidden="true"
-                >
-                  {met ? <Check className="size-3" /> : null}
-                </span>
-                <span>
-                  {rule.label}
-                  <span className="sr-only">{met ? " — met" : " — not met yet"}</span>
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-        <FieldError id="password-error" message={errors.password?.message} />
-      </div>
+                  {...register("firstName")}
+                />
+                {showValid("firstName") ? (
+                  <Check
+                    className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-success"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </div>
+              <FieldError id="firstName-error" message={errors.firstName?.message} />
+            </div>
 
-      {/* Confirm password */}
-      <div className="space-y-1.5">
-        <Label htmlFor="confirmPassword">Confirm password</Label>
-        <PasswordInput
-          id="confirmPassword"
-          autoComplete="new-password"
-          disabled={isSubmitting}
-          aria-invalid={!!errors.confirmPassword}
-          aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
-          className={cn(
-            "transition-colors duration-200",
-            errors.confirmPassword && "border-destructive",
-            !errors.confirmPassword && !!confirmPassword && confirmPassword === password
-              ? "border-success/60"
-              : undefined,
-          )}
-          {...register("confirmPassword", {
-            onChange: () => {
-              if (formState.submitCount > 0 || touchedFields.confirmPassword) {
-                void form.trigger("confirmPassword");
-              }
-            },
-          })}
-        />
-        {errors.confirmPassword ? (
-          <FieldError id="confirmPassword-error" message={errors.confirmPassword.message} />
-        ) : confirmPassword && confirmPassword === password ? (
-          <p className="flex items-center gap-1.5 text-xs text-success">
-            <Check className="size-3.5" aria-hidden="true" /> Passwords match
-          </p>
-        ) : null}
-      </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="lastName">Last name</Label>
+              <div className="relative">
+                <Input
+                  id="lastName"
+                  autoComplete="family-name"
+                  disabled={isSubmitting}
+                  aria-invalid={!!errors.lastName}
+                  aria-describedby={errors.lastName ? "lastName-error" : undefined}
+                  className={cn(
+                    "h-11 transition-colors duration-200",
+                    errors.lastName && "border-destructive",
+                    showValid("lastName") && "border-success/60 pr-9",
+                  )}
+                  {...register("lastName")}
+                />
+                {showValid("lastName") ? (
+                  <Check
+                    className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-success"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </div>
+              <FieldError id="lastName-error" message={errors.lastName?.message} />
+            </div>
+          </div>
 
-      {/* Terms */}
-      <div className="space-y-1.5">
-        <div className="flex items-start gap-3">
-          <Checkbox
-            id="acceptTerms"
-            checked={watch("acceptTerms")}
+          {/* Email */}
+          <div className="space-y-1.5">
+            <Label htmlFor="signup-email">Email address</Label>
+            <Input
+              id="signup-email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              disabled={isSubmitting}
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? "email-error" : "email-hint"}
+              className={cn(
+                "h-11 transition-colors duration-200",
+                errors.email && "border-destructive",
+                showValid("email") && "border-success/60",
+              )}
+              {...register("email")}
+            />
+            {errors.email ? (
+              <FieldError id="email-error" message={errors.email.message} />
+            ) : (
+              <p id="email-hint" className="text-xs text-muted-foreground">
+                We'll send a verification link to this address.
+              </p>
+            )}
+          </div>
+
+          {/* Phone with country selector */}
+          <div className="space-y-1.5">
+            <Label htmlFor="phone">Phone number</Label>
+            <div className="flex gap-2">
+              <select
+                aria-label="Country and dialling code"
+                disabled={isSubmitting}
+                className={cn(
+                  "h-11 w-[8.5rem] shrink-0 rounded-md border border-input bg-background px-2 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
+                  errors.countryCode && "border-destructive",
+                )}
+                {...register("countryCode")}
+              >
+                <option value="">Country</option>
+                {countries.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.flag} {country.dial_code}
+                  </option>
+                ))}
+              </select>
+              <Input
+                id="phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder={selectedCountry ? "8012345678" : "Select a country first"}
+                disabled={isSubmitting}
+                aria-invalid={!!errors.phone}
+                aria-describedby={errors.phone ? "phone-error" : "phone-hint"}
+                className={cn(
+                  "h-11 flex-1 transition-colors duration-200",
+                  errors.phone && "border-destructive",
+                  showValid("phone") && "border-success/60",
+                )}
+                {...register("phone", {
+                  onBlur: (event: React.FocusEvent<HTMLInputElement>) =>
+                    setValue("phone", normalizePhoneDigits(event.target.value), {
+                      shouldValidate: true,
+                    }),
+                })}
+              />
+            </div>
+            {errors.phone || errors.countryCode ? (
+              <FieldError
+                id="phone-error"
+                message={errors.countryCode?.message ?? errors.phone?.message}
+              />
+            ) : (
+              <p id="phone-hint" className="text-xs text-muted-foreground">
+                {selectedCountry
+                  ? `Enter your number without the ${selectedCountry.dial_code} code.`
+                  : "Choose your country, then enter your local number."}
+              </p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div className="space-y-2">
+            <Label htmlFor="signup-password">Password</Label>
+            <PasswordInput
+              id="signup-password"
+              autoComplete="new-password"
+              disabled={isSubmitting}
+              aria-invalid={!!errors.password}
+              aria-describedby="password-requirements"
+              className={cn(
+                "transition-colors duration-200",
+                errors.password && "border-destructive",
+                showValid("password") && "border-success/60",
+              )}
+              {...register("password")}
+            />
+
+            {/* Strength */}
+            <div className="flex items-center gap-3">
+              <div className="flex flex-1 gap-1.5" aria-hidden="true">
+                {[1, 2, 3, 4].map((step) => (
+                  <span
+                    key={step}
+                    className={cn(
+                      "h-1.5 flex-1 rounded-full transition-all duration-300",
+                      strength.score >= step
+                        ? strength.score >= 4
+                          ? "bg-success"
+                          : strength.score === 3
+                            ? "bg-primary"
+                            : "bg-secondary"
+                        : "bg-muted",
+                    )}
+                  />
+                ))}
+              </div>
+              <span className="w-20 text-right text-xs text-muted-foreground" aria-live="polite">
+                {password ? strength.label : ""}
+              </span>
+            </div>
+
+            <ul id="password-requirements" className="grid gap-1 sm:grid-cols-2">
+              {PASSWORD_RULES.map((rule) => {
+                const met = rule.test(password ?? "");
+                return (
+                  <li
+                    key={rule.key}
+                    className={cn(
+                      "flex items-center gap-1.5 text-xs transition-colors duration-200",
+                      met ? "text-success" : "text-muted-foreground",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex size-4 items-center justify-center rounded-full border transition-colors duration-200",
+                        met ? "border-success bg-success/10" : "border-border",
+                      )}
+                      aria-hidden="true"
+                    >
+                      {met ? <Check className="size-3" /> : null}
+                    </span>
+                    <span>
+                      {rule.label}
+                      <span className="sr-only">{met ? " — met" : " — not met yet"}</span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            <FieldError id="password-error" message={errors.password?.message} />
+          </div>
+
+          {/* Confirm password */}
+          <div className="space-y-1.5">
+            <Label htmlFor="confirmPassword">Confirm password</Label>
+            <PasswordInput
+              id="confirmPassword"
+              autoComplete="new-password"
+              disabled={isSubmitting}
+              aria-invalid={!!errors.confirmPassword}
+              aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
+              className={cn(
+                "transition-colors duration-200",
+                errors.confirmPassword && "border-destructive",
+                !errors.confirmPassword && !!confirmPassword && confirmPassword === password
+                  ? "border-success/60"
+                  : undefined,
+              )}
+              {...register("confirmPassword", {
+                onChange: () => {
+                  if (formState.submitCount > 0 || touchedFields.confirmPassword) {
+                    void form.trigger("confirmPassword");
+                  }
+                },
+              })}
+            />
+            {errors.confirmPassword ? (
+              <FieldError id="confirmPassword-error" message={errors.confirmPassword.message} />
+            ) : confirmPassword && confirmPassword === password ? (
+              <p className="flex items-center gap-1.5 text-xs text-success">
+                <Check className="size-3.5" aria-hidden="true" /> Passwords match
+              </p>
+            ) : null}
+          </div>
+
+          {/* Terms */}
+          <div className="space-y-1.5">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="acceptTerms"
+                checked={watch("acceptTerms")}
+                disabled={isSubmitting}
+                aria-invalid={!!errors.acceptTerms}
+                aria-describedby={errors.acceptTerms ? "acceptTerms-error" : undefined}
+                onCheckedChange={(checked) =>
+                  setValue("acceptTerms", checked === true, {
+                    shouldValidate: formState.submitCount > 0,
+                    shouldTouch: true,
+                  })
+                }
+                className="mt-0.5"
+              />
+              <Label htmlFor="acceptTerms" className="text-sm font-normal leading-relaxed">
+                I agree to the{" "}
+                <a href="/trust-and-safety" className="font-medium text-primary underline">
+                  Terms &amp; Conditions
+                </a>{" "}
+                and{" "}
+                <a href="/trust-and-safety" className="font-medium text-primary underline">
+                  Privacy Policy
+                </a>
+                .
+              </Label>
+            </div>
+            <FieldError id="acceptTerms-error" message={errors.acceptTerms?.message} />
+          </div>
+
+          <Button
+            type="submit"
+            variant="cta"
+            className="min-h-12 w-full text-base"
             disabled={isSubmitting}
-            aria-invalid={!!errors.acceptTerms}
-            aria-describedby={errors.acceptTerms ? "acceptTerms-error" : undefined}
-            onCheckedChange={(checked) =>
-              setValue("acceptTerms", checked === true, {
-                shouldValidate: formState.submitCount > 0,
-                shouldTouch: true,
-              })
-            }
-            className="mt-0.5"
-          />
-          <Label htmlFor="acceptTerms" className="text-sm font-normal leading-relaxed">
-            I agree to the{" "}
-            <a href="/trust-and-safety" className="font-medium text-primary underline">
-              Terms &amp; Conditions
-            </a>{" "}
-            and{" "}
-            <a href="/trust-and-safety" className="font-medium text-primary underline">
-              Privacy Policy
-            </a>
-            .
-          </Label>
-        </div>
-        <FieldError id="acceptTerms-error" message={errors.acceptTerms?.message} />
-      </div>
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                Creating your account...
+              </>
+            ) : (
+              "Create account"
+            )}
+          </Button>
 
-      <Button
-        type="submit"
-        variant="cta"
-        className="min-h-12 w-full text-base"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            Creating your account...
-          </>
-        ) : (
-          "Create account"
-        )}
-      </Button>
-
-      <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
-        <button
-          type="button"
-          onClick={onSwitchToSignIn}
-          className="font-semibold text-primary underline"
-        >
-          Sign in
-        </button>
-      </p>
-      </>
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={onSwitchToSignIn}
+              className="font-semibold text-primary underline"
+            >
+              Sign in
+            </button>
+          </p>
+        </>
       )}
     </form>
   );

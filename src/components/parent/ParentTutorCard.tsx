@@ -44,7 +44,9 @@ export function ParentTutorCard({
           ) : null}
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
             {rating ? (
-              <MetaItem icon={Star}>{`${rating.toFixed(1)} (${Number(tutor.rating_count)})`}</MetaItem>
+              <MetaItem
+                icon={Star}
+              >{`${rating.toFixed(1)} (${Number(tutor.rating_count)})`}</MetaItem>
             ) : (
               <span className="text-xs text-muted-foreground">New on DiaLearn</span>
             )}

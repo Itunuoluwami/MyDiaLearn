@@ -24,7 +24,10 @@ export const Route = createFileRoute("/_authenticated/admin/moderation")({
   head: () => ({
     meta: [
       { title: "Moderation — DiaLearn admin" },
-      { name: "description", content: "Moderate reviews and messages; suspend accounts from Users." },
+      {
+        name: "description",
+        content: "Moderate reviews and messages; suspend accounts from Users.",
+      },
     ],
   }),
   component: AdminModerationPage,
@@ -36,7 +39,9 @@ function ReviewsTab() {
 
   return (
     <div className="panel-portal mt-4 p-4 md:p-6">
-      <p className="text-sm text-muted-foreground">Every review, newest first. Unpublish anything that shouldn't be shown publicly.</p>
+      <p className="text-sm text-muted-foreground">
+        Every review, newest first. Unpublish anything that shouldn't be shown publicly.
+      </p>
       <ul className="mt-4 space-y-3">
         {reviews.isLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
@@ -49,11 +54,19 @@ function ReviewsTab() {
                 <div>
                   <p className="flex items-center gap-1 text-sm font-medium">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={i < review.score ? "size-3.5 fill-warning text-warning" : "size-3.5 text-muted"} />
+                      <Star
+                        key={i}
+                        className={
+                          i < review.score
+                            ? "size-3.5 fill-warning text-warning"
+                            : "size-3.5 text-muted"
+                        }
+                      />
                     ))}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {review.profiles?.full_name ?? "Anonymous"} → {review.tutors?.profiles?.full_name ?? "Tutor"} ·{" "}
+                    {review.profiles?.full_name ?? "Anonymous"} →{" "}
+                    {review.tutors?.profiles?.full_name ?? "Tutor"} ·{" "}
                     {new Date(review.created_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -68,7 +81,9 @@ function ReviewsTab() {
                       )
                     }
                   />
-                  <span className="text-xs text-muted-foreground">{review.is_published ? "Published" : "Hidden"}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {review.is_published ? "Published" : "Hidden"}
+                  </span>
                 </div>
               </div>
               {review.comment ? <p className="mt-2 text-sm">{review.comment}</p> : null}
@@ -98,18 +113,24 @@ function MessagesTab() {
       </div>
       <ul className="mt-4 space-y-2">
         {search.trim().length <= 1 ? (
-          <p className="text-sm text-muted-foreground">Search for a word or phrase to find messages to moderate.</p>
+          <p className="text-sm text-muted-foreground">
+            Search for a word or phrase to find messages to moderate.
+          </p>
         ) : messages.isLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (messages.data ?? []).length === 0 ? (
           <p className="text-sm text-muted-foreground">No messages match.</p>
         ) : (
           (messages.data ?? []).map((message) => (
-            <li key={message.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3">
+            <li
+              key={message.id}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3"
+            >
               <div className="min-w-0">
                 <p className="truncate text-sm">{message.body}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  {message.profiles?.full_name ?? "Unknown"} · {new Date(message.created_at).toLocaleString()}
+                  {message.profiles?.full_name ?? "Unknown"} ·{" "}
+                  {new Date(message.created_at).toLocaleString()}
                 </p>
               </div>
               <div className="flex items-center gap-2">

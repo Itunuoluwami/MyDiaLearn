@@ -49,7 +49,8 @@ export const Route = createFileRoute("/_authenticated/tutor/dashboard")({
       { property: "og:title", content: "Tutor dashboard — DiaLearn" },
       {
         property: "og:description",
-        content: "Teach with confidence: classes, requests, students and verification in one calm view.",
+        content:
+          "Teach with confidence: classes, requests, students and verification in one calm view.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -78,7 +79,10 @@ function TutorDashboardPage() {
   const firstName = (profile?.full_name ?? "").split(" ")[0];
 
   const requests = useMemo(
-    () => (bookings.data ?? []).filter((row) => row.status === "pending" && new Date(row.ends_at) > new Date()),
+    () =>
+      (bookings.data ?? []).filter(
+        (row) => row.status === "pending" && new Date(row.ends_at) > new Date(),
+      ),
     [bookings.data],
   );
 
@@ -179,7 +183,9 @@ function TutorDashboardPage() {
               variant="primary"
               label="Classes today"
               value={Number(s?.classes_today ?? 0)}
-              hint={upcoming[0] ? `Next: ${upcoming[0].subject_name ?? "lesson"}` : "Nothing scheduled"}
+              hint={
+                upcoming[0] ? `Next: ${upcoming[0].subject_name ?? "lesson"}` : "Nothing scheduled"
+              }
               icon={CalendarCheck2}
             />
             <KpiCard
@@ -269,7 +275,10 @@ function TutorDashboardPage() {
               label="Biography families can trust"
             />
             <ReadyItem done={tutor.data?.hourly_rate !== null} label="Hourly rate set" />
-            <ReadyItem done={Boolean(s?.profile_complete)} label="Subjects and availability added" />
+            <ReadyItem
+              done={Boolean(s?.profile_complete)}
+              label="Subjects and availability added"
+            />
             <ReadyItem
               done={tutor.data?.verification_status === "verified"}
               label="Verified by the DiaLearn team"

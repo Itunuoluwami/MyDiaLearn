@@ -165,7 +165,10 @@ function TutorReviewsPage() {
         ) : (
           <div className="space-y-3">
             {(reviews.data ?? []).map((review) => (
-              <article key={review.id} className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+              <article
+                key={review.id}
+                className="rounded-2xl border border-border bg-card p-4 shadow-soft"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{review.reviewer_name}</p>

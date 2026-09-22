@@ -76,7 +76,10 @@ function TutorAvailabilityPage() {
   const weeklyHours = useMemo(() => {
     const minutes = rows
       .filter((row) => row.is_active)
-      .reduce((total, row) => total + Math.max(toMinutes(row.end_time) - toMinutes(row.start_time), 0), 0);
+      .reduce(
+        (total, row) => total + Math.max(toMinutes(row.end_time) - toMinutes(row.start_time), 0),
+        0,
+      );
     return (minutes / 60).toFixed(1);
   }, [rows]);
 
@@ -197,7 +200,9 @@ function TutorAvailabilityPage() {
                           <span className="flex items-center gap-2">
                             <Switch
                               checked={row.is_active}
-                              aria-label={row.is_active ? "Pause this window" : "Activate this window"}
+                              aria-label={
+                                row.is_active ? "Pause this window" : "Activate this window"
+                              }
                               onCheckedChange={(checked) =>
                                 void updateWindow.mutateAsync({ id: row.id, isActive: checked })
                               }

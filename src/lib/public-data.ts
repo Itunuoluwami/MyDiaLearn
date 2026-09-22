@@ -146,7 +146,6 @@ export interface TutorSearchParams {
   offset?: number | undefined;
 }
 
-
 export function useTutorSearch(params: TutorSearchParams) {
   return useQuery({
     queryKey: ["public-tutor-search", params],
@@ -156,20 +155,19 @@ export function useTutorSearch(params: TutorSearchParams) {
         p_limit: params.limit ?? 24,
         p_offset: params.offset ?? 0,
       };
-      if (params.q?.trim()) args['p_q'] = params.q.trim();
-      if (params.subject) args['p_subject'] = params.subject;
-      if (params.curriculum) args['p_curriculum'] = params.curriculum;
-      if (params.country) args['p_country'] = params.country;
-      if (params.level) args['p_level'] = params.level;
-      if (params.language) args['p_language'] = params.language;
-      if (params.minRating != null) args['p_min_rating'] = params.minRating;
-      if (params.maxPrice != null) args['p_max_price'] = params.maxPrice;
+      if (params.q?.trim()) args["p_q"] = params.q.trim();
+      if (params.subject) args["p_subject"] = params.subject;
+      if (params.curriculum) args["p_curriculum"] = params.curriculum;
+      if (params.country) args["p_country"] = params.country;
+      if (params.level) args["p_level"] = params.level;
+      if (params.language) args["p_language"] = params.language;
+      if (params.minRating != null) args["p_min_rating"] = params.minRating;
+      if (params.maxPrice != null) args["p_max_price"] = params.maxPrice;
 
       const { data, error } = await supabase.rpc(
         "public_tutor_search",
         args as unknown as Parameters<typeof supabase.rpc<"public_tutor_search">>[1],
       );
-
 
       if (error) throw error;
       return data ?? [];
@@ -177,9 +175,7 @@ export function useTutorSearch(params: TutorSearchParams) {
   });
 }
 
-export type PublicTutor = NonNullable<
-  Awaited<ReturnType<typeof useTutorSearch>>["data"]
->[number];
+export type PublicTutor = NonNullable<Awaited<ReturnType<typeof useTutorSearch>>["data"]>[number];
 
 export function useTutorDetail(tutorId: string) {
   return useQuery({
@@ -263,7 +259,10 @@ export function useVerificationSteps() {
 
 /* ---------------- Formatting ---------------- */
 
-export function formatMoney(amount: number | null | undefined, currency: string | null | undefined) {
+export function formatMoney(
+  amount: number | null | undefined,
+  currency: string | null | undefined,
+) {
   if (amount === null || amount === undefined) return "Rate on request";
   try {
     return new Intl.NumberFormat(undefined, {
@@ -276,10 +275,7 @@ export function formatMoney(amount: number | null | undefined, currency: string 
   }
 }
 
-export function countryLabel(
-  code: string | null | undefined,
-  labels: Record<string, string>,
-) {
+export function countryLabel(code: string | null | undefined, labels: Record<string, string>) {
   if (!code) return "Location on request";
   return labels[code] ?? code;
 }

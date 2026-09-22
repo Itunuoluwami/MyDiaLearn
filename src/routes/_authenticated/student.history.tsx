@@ -14,12 +14,7 @@ import { toast } from "sonner";
 import { StudentShell } from "@/components/student/StudentShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { PayNowButton } from "@/components/shared/PayNowButton";
 import { ReportIssueDialog } from "@/components/shared/ReportIssueDialog";
@@ -40,7 +35,10 @@ export const Route = createFileRoute("/_authenticated/student/history")({
   head: () => ({
     meta: [
       { title: "My Classes & Progress — DiaLearn Student Portal" },
-      { name: "description", content: "View your class history, tutor notes and track your learning progress." },
+      {
+        name: "description",
+        content: "View your class history, tutor notes and track your learning progress.",
+      },
     ],
   }),
   component: StudentHistoryPage,
@@ -59,8 +57,9 @@ function StudentHistoryPage() {
 
   const upcoming = useMemo(
     () =>
-      (bookings.data ?? [])
-        .filter((b) => new Date(b.ends_at) > new Date() && ["confirmed", "in_progress"].includes(b.status)),
+      (bookings.data ?? []).filter(
+        (b) => new Date(b.ends_at) > new Date() && ["confirmed", "in_progress"].includes(b.status),
+      ),
     [bookings.data],
   );
 
@@ -78,8 +77,9 @@ function StudentHistoryPage() {
 
   const past = useMemo(
     () =>
-      (bookings.data ?? [])
-        .filter((b) => b.status === "completed" || new Date(b.ends_at) < new Date()),
+      (bookings.data ?? []).filter(
+        (b) => b.status === "completed" || new Date(b.ends_at) < new Date(),
+      ),
     [bookings.data],
   );
 
@@ -126,12 +126,21 @@ function StudentHistoryPage() {
             </h2>
             <div className="space-y-3">
               {awaitingPayment.map((booking) => {
-                const tutor = (booking as typeof booking & { tutors?: { profiles?: { full_name?: string } | null } | null }).tutors;
+                const tutor = (
+                  booking as typeof booking & {
+                    tutors?: { profiles?: { full_name?: string } | null } | null;
+                  }
+                ).tutors;
                 const tutorName = tutor?.profiles?.full_name ?? "Your Tutor";
-                const subject = (booking as typeof booking & { subjects?: { name: string } | null }).subjects?.name ?? "Lesson";
+                const subject =
+                  (booking as typeof booking & { subjects?: { name: string } | null }).subjects
+                    ?.name ?? "Lesson";
 
                 return (
-                  <div key={booking.id} className="flex flex-wrap items-center gap-4 rounded-2xl border border-accent/30 bg-accent/5 p-4">
+                  <div
+                    key={booking.id}
+                    className="flex flex-wrap items-center gap-4 rounded-2xl border border-accent/30 bg-accent/5 p-4"
+                  >
                     <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-accent text-white text-xl">
                       💳
                     </div>
@@ -143,7 +152,11 @@ function StudentHistoryPage() {
                         {formatTimeInZone(booking.starts_at, tz)} · {booking.duration_minutes} min
                       </p>
                     </div>
-                    <PayNowButton bookingId={booking.id} amount={booking.total_amount} currency={booking.currency} />
+                    <PayNowButton
+                      bookingId={booking.id}
+                      amount={booking.total_amount}
+                      currency={booking.currency}
+                    />
                   </div>
                 );
               })}
@@ -159,13 +172,22 @@ function StudentHistoryPage() {
             </h2>
             <div className="space-y-3">
               {upcoming.map((booking) => {
-                const tutor = (booking as typeof booking & { tutors?: { profiles?: { full_name?: string } | null } | null }).tutors;
+                const tutor = (
+                  booking as typeof booking & {
+                    tutors?: { profiles?: { full_name?: string } | null } | null;
+                  }
+                ).tutors;
                 const tutorName = tutor?.profiles?.full_name ?? "Your Tutor";
-                const subject = (booking as typeof booking & { subjects?: { name: string } | null }).subjects?.name ?? "Lesson";
+                const subject =
+                  (booking as typeof booking & { subjects?: { name: string } | null }).subjects
+                    ?.name ?? "Lesson";
                 const joinable = isJoinable(booking);
 
                 return (
-                  <div key={booking.id} className="flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                  <div
+                    key={booking.id}
+                    className="flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-4"
+                  >
                     <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white text-xl">
                       📘
                     </div>
@@ -178,7 +200,11 @@ function StudentHistoryPage() {
                       </p>
                     </div>
                     {joinable && (
-                      <Button asChild size="sm" className="min-h-10 rounded-xl bg-accent font-bold text-white">
+                      <Button
+                        asChild
+                        size="sm"
+                        className="min-h-10 rounded-xl bg-accent font-bold text-white"
+                      >
                         <Link to="/student/classroom/$bookingId" params={{ bookingId: booking.id }}>
                           <PlayCircle className="size-4 mr-1" /> Join
                         </Link>
@@ -206,28 +232,41 @@ function StudentHistoryPage() {
             <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card py-16 text-center">
               <span className="text-5xl">📅</span>
               <p className="font-bold text-foreground">No classes yet</p>
-              <p className="text-sm text-muted-foreground">Your completed classes will appear here.</p>
+              <p className="text-sm text-muted-foreground">
+                Your completed classes will appear here.
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
               {past.map((booking) => {
-                const tutor = (booking as typeof booking & { tutors?: { profiles?: { full_name?: string } | null } | null }).tutors;
+                const tutor = (
+                  booking as typeof booking & {
+                    tutors?: { profiles?: { full_name?: string } | null } | null;
+                  }
+                ).tutors;
                 const tutorName = tutor?.profiles?.full_name ?? "Your Tutor";
-                const subject = (booking as typeof booking & { subjects?: { name: string } | null }).subjects?.name ?? "Lesson";
+                const subject =
+                  (booking as typeof booking & { subjects?: { name: string } | null }).subjects
+                    ?.name ?? "Lesson";
                 const session = booking.class_sessions?.[0];
                 const completed = booking.status === "completed";
 
                 return (
-                  <div key={booking.id} className={cn(
-                    "rounded-2xl border p-5 transition-shadow hover:shadow-sm",
-                    completed ? "border-border bg-card" : "border-muted bg-muted/30",
-                  )}>
+                  <div
+                    key={booking.id}
+                    className={cn(
+                      "rounded-2xl border p-5 transition-shadow hover:shadow-sm",
+                      completed ? "border-border bg-card" : "border-muted bg-muted/30",
+                    )}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3">
-                        <div className={cn(
-                          "flex size-11 shrink-0 items-center justify-center rounded-2xl text-xl",
-                          completed ? "bg-success/10" : "bg-muted",
-                        )}>
+                        <div
+                          className={cn(
+                            "flex size-11 shrink-0 items-center justify-center rounded-2xl text-xl",
+                            completed ? "bg-success/10" : "bg-muted",
+                          )}
+                        >
                           {completed ? "✅" : "📅"}
                         </div>
                         <div>
@@ -235,17 +274,24 @@ function StudentHistoryPage() {
                           <p className="text-sm text-muted-foreground">with {tutorName}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground">
                             {new Date(booking.starts_at).toLocaleDateString(undefined, {
-                              weekday: "short", day: "numeric", month: "short", year: "numeric",
+                              weekday: "short",
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
                             })}
                             {" · "}
                             {booking.duration_minutes} min
                           </p>
                         </div>
                       </div>
-                      <Badge className={cn(
-                        "shrink-0 rounded-full text-xs font-bold",
-                        completed ? "bg-success/10 text-success" : "bg-muted text-muted-foreground",
-                      )}>
+                      <Badge
+                        className={cn(
+                          "shrink-0 rounded-full text-xs font-bold",
+                          completed
+                            ? "bg-success/10 text-success"
+                            : "bg-muted text-muted-foreground",
+                        )}
+                      >
                         {completed ? "Completed" : booking.status}
                       </Badge>
                     </div>
@@ -253,14 +299,20 @@ function StudentHistoryPage() {
                     {/* Tutor Notes */}
                     {session?.tutor_notes && (
                       <div className="mt-4 rounded-xl border border-primary/15 bg-primary/5 p-3">
-                        <p className="mb-1 text-xs font-extrabold uppercase tracking-wide text-primary">Tutor's Notes</p>
-                        <p className="text-sm text-foreground leading-relaxed">{session.tutor_notes}</p>
+                        <p className="mb-1 text-xs font-extrabold uppercase tracking-wide text-primary">
+                          Tutor's Notes
+                        </p>
+                        <p className="text-sm text-foreground leading-relaxed">
+                          {session.tutor_notes}
+                        </p>
                       </div>
                     )}
 
                     {session?.homework && (
                       <div className="mt-2 rounded-xl border border-secondary/20 bg-secondary/8 p-3">
-                        <p className="text-xs font-extrabold text-secondary-foreground">📌 Homework: {session.homework}</p>
+                        <p className="text-xs font-extrabold text-secondary-foreground">
+                          📌 Homework: {session.homework}
+                        </p>
                       </div>
                     )}
 
@@ -273,13 +325,18 @@ function StudentHistoryPage() {
                           className="min-h-9 rounded-xl border-secondary/40 font-bold text-secondary-foreground hover:bg-secondary/10"
                           onClick={() => setRatingBookingId(booking.id)}
                         >
-                          <Star className="size-4 mr-1 fill-secondary text-secondary" /> Rate this class
+                          <Star className="size-4 mr-1 fill-secondary text-secondary" /> Rate this
+                          class
                         </Button>
                       )}
                       <ReportIssueDialog
                         bookingId={booking.id}
                         trigger={
-                          <Button size="sm" variant="ghost" className="min-h-9 rounded-xl text-muted-foreground">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="min-h-9 rounded-xl text-muted-foreground"
+                          >
                             Report an issue
                           </Button>
                         }
@@ -294,7 +351,10 @@ function StudentHistoryPage() {
       </div>
 
       {/* Rating Dialog */}
-      <Dialog open={Boolean(ratingBookingId)} onOpenChange={(open) => !open && setRatingBookingId(null)}>
+      <Dialog
+        open={Boolean(ratingBookingId)}
+        onOpenChange={(open) => !open && setRatingBookingId(null)}
+      >
         <DialogContent className="rounded-3xl p-6 sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-extrabold">Rate your class ⭐</DialogTitle>

@@ -88,9 +88,7 @@ export function SiteSearch({
                     <Link
                       to="/tutors"
                       search={
-                        item.kind === "subject"
-                          ? { subject: item.id }
-                          : { curriculum: item.id }
+                        item.kind === "subject" ? { subject: item.id } : { curriculum: item.id }
                       }
                       onClick={() => setOpen(false)}
                       className="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors hover:bg-muted"

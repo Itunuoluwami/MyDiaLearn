@@ -16,7 +16,8 @@ export const Route = createFileRoute("/about")({
       { property: "og:title", content: "About DiaLearn — by Sahara Hub Limited" },
       {
         property: "og:description",
-        content: "Why Sahara Hub Limited built DiaLearn for diaspora families and African teachers.",
+        content:
+          "Why Sahara Hub Limited built DiaLearn for diaspora families and African teachers.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -50,15 +51,14 @@ function AboutPage() {
             Built for families who left, and teachers who stayed.
           </h1>
           <p className="lead mt-4 max-w-2xl">
-            {BRAND.name} exists because diaspora parents keep asking the same question: who can teach
-            my child the curriculum they sit, and still speak to them about home?
+            {BRAND.name} exists because diaspora parents keep asking the same question: who can
+            teach my child the curriculum they sit, and still speak to them about home?
           </p>
         </div>
       </section>
 
       <section className="container-site section-y grid gap-8 lg:grid-cols-[minmax(20rem,1fr)_minmax(20rem,1fr)]">
         <div className="w-full min-w-0">
-
           <h2 className="display-section">Our story</h2>
           <div className="mt-4 space-y-4 text-sm text-muted-foreground">
             <p>
@@ -68,8 +68,8 @@ function AboutPage() {
               across the continent were under-booked.
             </p>
             <p>
-              DiaLearn puts the two sides in the same place, with the structure a marketplace needs —
-              verification, secure payments, clear cancellation terms and a parent who stays in
+              DiaLearn puts the two sides in the same place, with the structure a marketplace needs
+              — verification, secure payments, clear cancellation terms and a parent who stays in
               control.
             </p>
             <p>

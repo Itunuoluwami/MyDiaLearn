@@ -28,7 +28,12 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { to: "/account", label: "My account", icon: UserIcon },
   { to: "/family", label: "Family & students", icon: Users, permission: "students.manage" },
-  { to: "/admin/settings", label: "Platform settings", icon: Settings, permission: "admin.settings" },
+  {
+    to: "/admin/settings",
+    label: "Platform settings",
+    icon: Settings,
+    permission: "admin.settings",
+  },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
@@ -45,29 +50,30 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
         ];
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
-
   return (
     <nav className="flex flex-col gap-1">
-      {items.filter((item) => !item.permission || hasPermission(item.permission)).map((item) => {
-        const Icon = item.icon;
-        const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
-        return (
-          <Link
-            key={item.to}
-            to={item.to}
-            onClick={onNavigate}
-            className={cn(
-              "flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors",
-              active
-                ? "bg-primary-soft text-primary-deep"
-                : "text-muted-foreground hover:bg-surface hover:text-foreground",
-            )}
-          >
-            <Icon className="size-4" />
-            {item.label}
-          </Link>
-        );
-      })}
+      {items
+        .filter((item) => !item.permission || hasPermission(item.permission))
+        .map((item) => {
+          const Icon = item.icon;
+          const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              onClick={onNavigate}
+              className={cn(
+                "flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors",
+                active
+                  ? "bg-primary-soft text-primary-deep"
+                  : "text-muted-foreground hover:bg-surface hover:text-foreground",
+              )}
+            >
+              <Icon className="size-4" />
+              {item.label}
+            </Link>
+          );
+        })}
     </nav>
   );
 }
@@ -122,10 +128,17 @@ export function PortalShell({
 
           <div className="flex items-center gap-2">
             <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold leading-tight">{profile?.full_name ?? "Account"}</p>
+              <p className="text-sm font-semibold leading-tight">
+                {profile?.full_name ?? "Account"}
+              </p>
               <p className="text-xs text-muted-foreground">{profile?.email}</p>
             </div>
-            <Button variant="outline" size="sm" onClick={handleSignOut} className="min-h-11 sm:min-h-9">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSignOut}
+              className="min-h-11 sm:min-h-9"
+            >
               <LogOut className="size-4" />
               <span className="hidden sm:inline">Sign out</span>
             </Button>

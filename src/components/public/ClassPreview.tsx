@@ -9,7 +9,11 @@ import { settingList, settingText, usePublicSettings } from "@/lib/public-data";
  * Video URL, poster, intro copy and bullets all come from admin-editable
  * platform settings — nothing about the video is hardcoded.
  */
-export function ClassPreview({ heading = "What a DiaLearn class looks like" }: { heading?: string }) {
+export function ClassPreview({
+  heading = "What a DiaLearn class looks like",
+}: {
+  heading?: string;
+}) {
   const [playing, setPlaying] = useState(false);
   const { data: settings } = usePublicSettings();
 

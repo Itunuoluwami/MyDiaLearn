@@ -25,9 +25,7 @@ export function LazyImage({
 
   return (
     <span className={cn("relative block overflow-hidden bg-muted", wrapperClassName)}>
-      {!loaded ? (
-        <span aria-hidden="true" className="absolute inset-0 shimmer" />
-      ) : null}
+      {!loaded ? <span aria-hidden="true" className="absolute inset-0 shimmer" /> : null}
       <img
         src={src}
         alt={alt}

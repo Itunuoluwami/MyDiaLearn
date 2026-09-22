@@ -273,7 +273,10 @@ function TutorEarningsPage() {
                       <div className="flex items-center gap-2">
                         <PaymentStatusBadge status={row.status} />
                         <span className="text-sm font-semibold tabular-nums">
-                          {formatMoney(Number(row.net_amount ?? 0), row.settlement_currency ?? row.currency)}
+                          {formatMoney(
+                            Number(row.net_amount ?? 0),
+                            row.settlement_currency ?? row.currency,
+                          )}
                         </span>
                       </div>
                     </div>

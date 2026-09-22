@@ -32,7 +32,9 @@ export function AuthSidePanel() {
 
       <div className="relative flex h-full min-h-[34rem] flex-col justify-end gap-6 p-8 xl:p-10">
         <div className="max-w-sm">
-          <h2 className="font-display text-3xl leading-tight text-primary-foreground">{headline}</h2>
+          <h2 className="font-display text-3xl leading-tight text-primary-foreground">
+            {headline}
+          </h2>
           <p className="mt-3 text-sm leading-relaxed text-primary-foreground/85">{body}</p>
         </div>
 
@@ -49,7 +51,11 @@ export function AuthSidePanel() {
               </div>
               <div className="flex gap-0.5" aria-label="Rated 5 out of 5">
                 {[0, 1, 2, 3, 4].map((index) => (
-                  <Star key={index} className="size-3.5 fill-secondary text-secondary" aria-hidden="true" />
+                  <Star
+                    key={index}
+                    className="size-3.5 fill-secondary text-secondary"
+                    aria-hidden="true"
+                  />
                 ))}
               </div>
             </figcaption>

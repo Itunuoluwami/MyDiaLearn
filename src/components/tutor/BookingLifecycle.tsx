@@ -27,7 +27,9 @@ export function BookingLifecycle({
     { label: "Lesson requested", done: true },
     { label: "Tutor accepted", done: Boolean(acceptedAt) || confirmed },
     {
-      label: paymentStatus ? `Payment ${PAYMENT_STATUS_LABEL[paymentStatus].toLowerCase()}` : "Payment pending",
+      label: paymentStatus
+        ? `Payment ${PAYMENT_STATUS_LABEL[paymentStatus].toLowerCase()}`
+        : "Payment pending",
       done: paid,
     },
     { label: "Booking confirmed", done: confirmed },

@@ -49,7 +49,9 @@ export function useEndClass() {
     mutationFn: async (input: { bookingId: string; studentAttended?: boolean }) => {
       const { error } = await supabase.rpc("tutor_end_class", {
         p_booking_id: input.bookingId,
-        ...(input.studentAttended === undefined ? {} : { p_student_attended: input.studentAttended }),
+        ...(input.studentAttended === undefined
+          ? {}
+          : { p_student_attended: input.studentAttended }),
       });
       if (error) throw error;
     },
@@ -132,7 +134,9 @@ export function useLearningResources() {
   });
 }
 
-export type LearningResourceRow = NonNullable<ReturnType<typeof useLearningResources>["data"]>[number];
+export type LearningResourceRow = NonNullable<
+  ReturnType<typeof useLearningResources>["data"]
+>[number];
 
 export function useCreateResource() {
   const queryClient = useQueryClient();
@@ -157,10 +161,12 @@ export function useCreateResource() {
         const extension = input.file.name.split(".").pop()?.toLowerCase() ?? "bin";
         storagePath = `${tutor.id}/${crypto.randomUUID()}.${extension}`;
         input.onProgress?.(15);
-        const upload = await supabase.storage.from(RESOURCE_BUCKET).upload(storagePath, input.file, {
-          ...(input.file.type ? { contentType: input.file.type } : {}),
-          upsert: false,
-        });
+        const upload = await supabase.storage
+          .from(RESOURCE_BUCKET)
+          .upload(storagePath, input.file, {
+            ...(input.file.type ? { contentType: input.file.type } : {}),
+            upsert: false,
+          });
         if (upload.error) throw upload.error;
         input.onProgress?.(85);
         mime = input.file.type || null;

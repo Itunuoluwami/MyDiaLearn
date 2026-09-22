@@ -70,7 +70,9 @@ function TutorClassesPage() {
     const now = Date.now();
     const liveStatuses: BookingStatus[] = ["confirmed", "in_progress"];
     if (view === "requests") {
-      return rows.filter((row) => row.status === "pending" && new Date(row.ends_at).getTime() > now);
+      return rows.filter(
+        (row) => row.status === "pending" && new Date(row.ends_at).getTime() > now,
+      );
     }
     if (view === "upcoming") {
       return rows.filter(
@@ -80,7 +82,8 @@ function TutorClassesPage() {
     if (view === "cancelled") {
       return rows
         .filter(
-          (row) => row.status === "cancelled" || row.status === "rejected" || row.status === "no_show",
+          (row) =>
+            row.status === "cancelled" || row.status === "rejected" || row.status === "no_show",
         )
         .sort((a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime());
     }
@@ -116,9 +119,7 @@ function TutorClassesPage() {
   async function handleRespond(bookingId: string, accept: boolean) {
     try {
       await respond.mutateAsync({ bookingId, accept });
-      toast.success(
-        accept ? "Accepted — confirmed once payment clears" : "Request declined",
-      );
+      toast.success(accept ? "Accepted — confirmed once payment clears" : "Request declined");
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       toast.error(
@@ -144,8 +145,8 @@ function TutorClassesPage() {
       <div className="max-w-5xl space-y-5">
         {awaitingPayment > 0 ? (
           <p className="rounded-2xl border border-secondary/40 bg-secondary-soft/60 p-3 text-sm">
-            {awaitingPayment} accepted {awaitingPayment === 1 ? "lesson is" : "lessons are"} waiting on
-            the family's payment. They move to Upcoming automatically once payment succeeds.
+            {awaitingPayment} accepted {awaitingPayment === 1 ? "lesson is" : "lessons are"} waiting
+            on the family's payment. They move to Upcoming automatically once payment succeeds.
           </p>
         ) : null}
 

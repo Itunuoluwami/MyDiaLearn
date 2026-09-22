@@ -7,12 +7,24 @@ import { CalendarDays, CheckCircle2, Clock, Globe2, Loader2, ShieldCheck } from 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ParentShell } from "@/components/parent/ParentShell";
-import { CardSkeletonList, EmptyPanel, LoadError, SectionCard, VerifiedChip } from "@/components/parent/ui";
+import {
+  CardSkeletonList,
+  EmptyPanel,
+  LoadError,
+  SectionCard,
+  VerifiedChip,
+} from "@/components/parent/ui";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   childName,
@@ -33,7 +45,7 @@ type BookSearch = { child?: string };
 export const Route = createFileRoute("/_authenticated/book/$tutorId")({
   validateSearch: (search: Record<string, unknown>): BookSearch => {
     const next: BookSearch = {};
-    if (typeof search['child'] === "string") next.child = search['child'];
+    if (typeof search["child"] === "string") next.child = search["child"];
     return next;
   },
   head: () => ({
@@ -87,7 +99,8 @@ function BookClassPage() {
   const uniqueSubjects = useMemo(() => {
     const map = new Map<string, { id: string; name: string }>();
     for (const row of tutorSubjects.data ?? []) {
-      if (row.subject_id) map.set(row.subject_id, { id: row.subject_id, name: row.subjects?.name ?? "Subject" });
+      if (row.subject_id)
+        map.set(row.subject_id, { id: row.subject_id, name: row.subjects?.name ?? "Subject" });
     }
     return [...map.values()];
   }, [tutorSubjects.data]);
@@ -209,7 +222,10 @@ function BookClassPage() {
             )}
           </SectionCard>
 
-          <SectionCard title="Lesson length" description="Durations are configured by the platform.">
+          <SectionCard
+            title="Lesson length"
+            description="Durations are configured by the platform."
+          >
             {durations.isLoading ? (
               <CardSkeletonList rows={1} height="h-12" />
             ) : durationOptions.length === 0 ? (
@@ -280,7 +296,9 @@ function BookClassPage() {
                                 : "border-border bg-card hover:bg-surface",
                             )}
                           >
-                            <span className="block">{formatTimeInZone(slot.starts_at, timezone)}</span>
+                            <span className="block">
+                              {formatTimeInZone(slot.starts_at, timezone)}
+                            </span>
                             <span className="block text-[0.7rem] font-normal opacity-80">
                               {formatTimeInZone(slot.starts_at, slot.tutor_timezone)} tutor time
                             </span>
@@ -294,7 +312,10 @@ function BookClassPage() {
             )}
           </SectionCard>
 
-          <SectionCard title="Notes for the tutor" description="Optional — share goals or focus areas.">
+          <SectionCard
+            title="Notes for the tutor"
+            description="Optional — share goals or focus areas."
+          >
             <Textarea
               rows={4}
               value={notes}
@@ -311,16 +332,20 @@ function BookClassPage() {
                 {(tutorInfo?.full_name ?? "T").charAt(0)}
               </span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">
-                  {tutorInfo?.full_name ?? "Tutor"}
-                </p>
+                <p className="truncate text-sm font-semibold">{tutorInfo?.full_name ?? "Tutor"}</p>
                 <VerifiedChip status={tutorInfo?.verification_status ?? null} />
               </div>
             </div>
 
             <dl className="space-y-2 border-t border-border pt-3 text-sm">
-              <Row label="Child" value={selectedChild ? childName(selectedChild) : "Not selected"} />
-              <Row label="Lesson length" value={effectiveDuration ? `${effectiveDuration} min` : "—"} />
+              <Row
+                label="Child"
+                value={selectedChild ? childName(selectedChild) : "Not selected"}
+              />
+              <Row
+                label="Lesson length"
+                value={effectiveDuration ? `${effectiveDuration} min` : "—"}
+              />
               <Row
                 label="Start"
                 value={
@@ -385,7 +410,8 @@ function BookClassPage() {
             </p>
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
               <ShieldCheck className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-              Payment happens on the next screen — the class is confirmed once payment clears and the tutor accepts.
+              Payment happens on the next screen — the class is confirmed once payment clears and
+              the tutor accepts.
             </p>
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
               <Globe2 className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />

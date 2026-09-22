@@ -14,8 +14,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DISPUTE_CATEGORY_LABEL, DISPUTE_CATEGORY_OPTIONS, useRaiseDispute, type DisputeCategory } from "@/lib/disputes";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DISPUTE_CATEGORY_LABEL,
+  DISPUTE_CATEGORY_OPTIONS,
+  useRaiseDispute,
+  type DisputeCategory,
+} from "@/lib/disputes";
 
 /**
  * "Report an issue" — the Parent/Student/Tutor-side UI for raise_dispute(),
@@ -24,7 +35,13 @@ import { DISPUTE_CATEGORY_LABEL, DISPUTE_CATEGORY_OPTIONS, useRaiseDispute, type
  * RPC itself checks the caller is actually party to the booking; each portal
  * just needs to render this next to its booking.
  */
-export function ReportIssueDialog({ bookingId, trigger }: { bookingId: string; trigger?: ReactNode }) {
+export function ReportIssueDialog({
+  bookingId,
+  trigger,
+}: {
+  bookingId: string;
+  trigger?: ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<DisputeCategory>("other");
   const [description, setDescription] = useState("");
@@ -46,7 +63,9 @@ export function ReportIssueDialog({ bookingId, trigger }: { bookingId: string; t
       setOpen(false);
       reset();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Couldn't submit your report. Please try again.");
+      toast.error(
+        error instanceof Error ? error.message : "Couldn't submit your report. Please try again.",
+      );
     }
   }
 
@@ -76,7 +95,10 @@ export function ReportIssueDialog({ bookingId, trigger }: { bookingId: string; t
         <div className="space-y-4 py-2">
           <div className="space-y-2">
             <Label>What kind of issue?</Label>
-            <Select value={category} onValueChange={(value) => setCategory(value as DisputeCategory)}>
+            <Select
+              value={category}
+              onValueChange={(value) => setCategory(value as DisputeCategory)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -105,7 +127,11 @@ export function ReportIssueDialog({ bookingId, trigger }: { bookingId: string; t
             Cancel
           </Button>
           <Button disabled={raiseDispute.isPending} onClick={() => void handleSubmit()}>
-            {raiseDispute.isPending ? <Loader2 className="size-4 animate-spin" /> : <Flag className="size-4" />}
+            {raiseDispute.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Flag className="size-4" />
+            )}
             Submit report
           </Button>
         </DialogFooter>

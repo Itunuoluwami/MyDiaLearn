@@ -365,7 +365,9 @@ function TutorResourcesPage() {
                   </div>
 
                   {row.description ? (
-                    <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">{row.description}</p>
+                    <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">
+                      {row.description}
+                    </p>
                   ) : null}
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
@@ -375,7 +377,9 @@ function TutorResourcesPage() {
                       </span>
                     ) : null}
                     <span className="rounded-full bg-surface px-2.5 py-1 text-xs text-muted-foreground">
-                      {row.students?.first_name ? `Shared with ${row.students.first_name}` : "My library"}
+                      {row.students?.first_name
+                        ? `Shared with ${row.students.first_name}`
+                        : "My library"}
                     </span>
                   </div>
 

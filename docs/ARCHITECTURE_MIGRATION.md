@@ -15,7 +15,7 @@ proposed controlled migration path to TanStack → NestJS → PostgreSQL.
 
 The repository contains **70 PL/pgSQL functions** (almost all `SECURITY DEFINER`),
 **130 row-level security policies** and **51 triggers** across **41 tables**. The
-TanStack frontend is, architecturally, a *thin client over Postgres RPCs*: it calls
+TanStack frontend is, architecturally, a _thin client over Postgres RPCs_: it calls
 36 distinct stored procedures and issues direct table reads against 31 tables and views.
 
 This reframes the migration. It is **not** "put an API in front of the database."
@@ -64,14 +64,14 @@ Security is delegated wholly to RLS and to `SECURITY DEFINER` function guards.
 
 ### Build and deployment
 
-| Item | Value |
-|---|---|
-| Bundler | Vite 8.1.5 via `@lovable.dev/vite-tanstack-config` (opinionated wrapper) |
-| Framework | TanStack Start 1.168 / React Router 1.170 |
-| Server build | nitro 3.0 beta → Cloudflare Workers (`.output/server/wrangler.json`) |
-| Package manager | **bun** (`bun.lock`, `bunfig.toml`) |
-| Scripts | `dev`, `build`, `build:dev`, `preview`, `lint`, `format` — **no `test`, no `typecheck`** |
-| Dev port | 8080 (`.claude/launch.json`) |
+| Item            | Value                                                                                    |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| Bundler         | Vite 8.1.5 via `@lovable.dev/vite-tanstack-config` (opinionated wrapper)                 |
+| Framework       | TanStack Start 1.168 / React Router 1.170                                                |
+| Server build    | nitro 3.0 beta → Cloudflare Workers (`.output/server/wrangler.json`)                     |
+| Package manager | **bun** (`bun.lock`, `bunfig.toml`)                                                      |
+| Scripts         | `dev`, `build`, `build:dev`, `preview`, `lint`, `format` — **no `test`, no `typecheck`** |
+| Dev port        | 8080 (`.claude/launch.json`)                                                             |
 
 `vite.config.ts` warns explicitly that the Lovable config already injects the
 TanStack, Tailwind, nitro and env-injection plugins and that adding them manually
@@ -79,12 +79,12 @@ breaks the build. **Treat `vite.config.ts` as fragile.**
 
 ### Baseline health (measured 2026-09-22)
 
-| Check | Result |
-|---|---|
-| `vite build` | Passes (837 ms) |
-| `tsc --noEmit` | **84 errors** |
-| `eslint .` | 3,306 problems — 3,285 are Prettier formatting; **21 real** |
-| Tests | **None.** No test runner, no test files, no CI config |
+| Check          | Result                                                      |
+| -------------- | ----------------------------------------------------------- |
+| `vite build`   | Passes (837 ms)                                             |
+| `tsc --noEmit` | **84 errors**                                               |
+| `eslint .`     | 3,306 problems — 3,285 are Prettier formatting; **21 real** |
+| Tests          | **None.** No test runner, no test files, no CI config       |
 
 The 84 type errors are overwhelmingly a single root cause: see §3.
 
@@ -97,17 +97,17 @@ The 84 type errors are overwhelmingly a single root cause: see §3.
 File-based routing under `src/routes/`. `src/routes/README.md` documents the
 conventions and warns that `routeTree.gen.ts` is generated.
 
-| Group | Count | Guard |
-|---|---|---|
-| Public (marketing, discovery, auth) | 16 | none |
-| `_authenticated/*` | 49 | `beforeLoad` → `supabase.auth.getUser()` |
-| └─ admin | 14 | `adminBeforeLoad()` in `src/lib/admin-guard.ts` |
-| └─ tutor | 17 | role-based in component |
-| └─ student | 8 | role-based in component |
-| └─ parent/shared | 10 | role-based in component |
+| Group                               | Count | Guard                                           |
+| ----------------------------------- | ----- | ----------------------------------------------- |
+| Public (marketing, discovery, auth) | 16    | none                                            |
+| `_authenticated/*`                  | 49    | `beforeLoad` → `supabase.auth.getUser()`        |
+| └─ admin                            | 14    | `adminBeforeLoad()` in `src/lib/admin-guard.ts` |
+| └─ tutor                            | 17    | role-based in component                         |
+| └─ student                          | 8     | role-based in component                         |
+| └─ parent/shared                    | 10    | role-based in component                         |
 
 `_authenticated/route.tsx` sets `ssr: false` and checks only that a session exists.
-Fine-grained authorization is enforced *in the database*, not in the router.
+Fine-grained authorization is enforced _in the database_, not in the router.
 
 ### State management
 
@@ -122,15 +122,15 @@ Fine-grained authorization is enforced *in the database*, not in the router.
 
 74 components total:
 
-| Directory | Count | Purpose |
-|---|---|---|
-| `ui/` | 48 | shadcn/ui primitives over Radix — **do not touch** |
-| `auth/` | 7 | Sign-in/up, forgot/reset password, accept-invite, password input |
-| `public/` | 5 | Marketing shell, browse, search, tutor cards, class preview |
-| `parent/` | 5 | Parent shell, child switcher, class/tutor cards, shared `ui.tsx` |
-| `tutor/` | 4 | Tutor shell, booking lifecycle, booking/class cards |
-| `student/`, `admin/`, `layout/` | 1 each | Portal shells |
-| `shared/` | 2 | `PayNowButton`, `ReportIssueDialog` |
+| Directory                       | Count  | Purpose                                                          |
+| ------------------------------- | ------ | ---------------------------------------------------------------- |
+| `ui/`                           | 48     | shadcn/ui primitives over Radix — **do not touch**               |
+| `auth/`                         | 7      | Sign-in/up, forgot/reset password, accept-invite, password input |
+| `public/`                       | 5      | Marketing shell, browse, search, tutor cards, class preview      |
+| `parent/`                       | 5      | Parent shell, child switcher, class/tutor cards, shared `ui.tsx` |
+| `tutor/`                        | 4      | Tutor shell, booking lifecycle, booking/class cards              |
+| `student/`, `admin/`, `layout/` | 1 each | Portal shells                                                    |
+| `shared/`                       | 2      | `PayNowButton`, `ReportIssueDialog`                              |
 
 Styling is Tailwind v4 + `tw-animate-css`, tokens in `src/styles.css`,
 `components.json` drives shadcn generation.
@@ -167,10 +167,10 @@ Postgres function**, which validates in PL/pgSQL and raises exceptions
 
 ### 3.1 Client construction
 
-| File | Key | RLS | Notes |
-|---|---|---|---|
-| `src/integrations/supabase/client.ts` | publishable/anon | **enforced** | Lazy `Proxy` singleton. Custom `fetch` strips `Authorization` for new-style `sb_publishable_` keys and sets `apikey`. |
-| `src/integrations/supabase/client.server.ts` | **service role** | **bypassed** | Server-only. Must be imported *dynamically inside handlers* — a top-level import in a route or `*.functions.ts` would ship the key to the browser bundle. |
+| File                                         | Key              | RLS          | Notes                                                                                                                                                     |
+| -------------------------------------------- | ---------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/integrations/supabase/client.ts`        | publishable/anon | **enforced** | Lazy `Proxy` singleton. Custom `fetch` strips `Authorization` for new-style `sb_publishable_` keys and sets `apikey`.                                     |
+| `src/integrations/supabase/client.server.ts` | **service role** | **bypassed** | Server-only. Must be imported _dynamically inside handlers_ — a top-level import in a route or `*.functions.ts` would ship the key to the browser bundle. |
 
 `src/integrations/supabase/auth-attacher.ts` is a global TanStack `functionMiddleware`
 registered in `src/start.ts`; it attaches the bearer token to every server-function RPC.
@@ -193,20 +193,20 @@ the automatic one).
 
 ### 3.3 Stored procedures called from the client — 36
 
-| Domain | RPCs |
-|---|---|
-| Public discovery | `public_tutor_cards`, `public_tutor_detail`, `public_tutor_reviews`, `public_search_suggestions`, `public_subject_facets`, `public_curriculum_facets`, `public_country_facets` |
-| Booking & payment | `booking_quote`, `pay_for_booking`, `tutor_respond_booking` |
-| Tutor workspace | `tutor_bookings`, `tutor_students`, `tutor_reviews`, `tutor_dashboard_summary`, `tutor_available_slots`, `tutor_open_class`, `tutor_start_class`, `tutor_end_class`, `tutor_start_conversation`, `tutor_rating_summary`, `tutor_rating_categories` |
-| Earnings | `tutor_earnings_summary`, `tutor_earnings_records`, `tutor_request_payout` |
-| Verification | `tutor_submit_verification`, `ensure_tutor_record` |
-| Parent/student | `parent_dashboard_summary`, `parent_child_progress`, `my_conversations` |
-| Disputes | `raise_dispute`, `admin_resolve_dispute` |
-| Admin | `admin_dashboard_summary`, `admin_report_summary`, `admin_invite_create`, `is_super_admin` |
+| Domain            | RPCs                                                                                                                                                                                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public discovery  | `public_tutor_cards`, `public_tutor_detail`, `public_tutor_reviews`, `public_search_suggestions`, `public_subject_facets`, `public_curriculum_facets`, `public_country_facets`                                                                     |
+| Booking & payment | `booking_quote`, `pay_for_booking`, `tutor_respond_booking`                                                                                                                                                                                        |
+| Tutor workspace   | `tutor_bookings`, `tutor_students`, `tutor_reviews`, `tutor_dashboard_summary`, `tutor_available_slots`, `tutor_open_class`, `tutor_start_class`, `tutor_end_class`, `tutor_start_conversation`, `tutor_rating_summary`, `tutor_rating_categories` |
+| Earnings          | `tutor_earnings_summary`, `tutor_earnings_records`, `tutor_request_payout`                                                                                                                                                                         |
+| Verification      | `tutor_submit_verification`, `ensure_tutor_record`                                                                                                                                                                                                 |
+| Parent/student    | `parent_dashboard_summary`, `parent_child_progress`, `my_conversations`                                                                                                                                                                            |
+| Disputes          | `raise_dispute`, `admin_resolve_dispute`                                                                                                                                                                                                           |
+| Admin             | `admin_dashboard_summary`, `admin_report_summary`, `admin_invite_create`, `is_super_admin`                                                                                                                                                         |
 
 ### 3.4 The stale-types problem — root cause of 84 type errors
 
-`src/integrations/supabase/types.ts` (2,586 lines, marked *do not edit*) was last
+`src/integrations/supabase/types.ts` (2,586 lines, marked _do not edit_) was last
 generated **before** the `20260903*` and `20260907*` migrations. Missing entirely:
 
 ```
@@ -243,6 +243,7 @@ Privileged: `auth.admin.inviteUserByEmail` and `auth.admin.updateUserById` in
 `src/lib/admin-invite.functions.ts` (service-role, server function only).
 
 Identity resolution in `use-auth.tsx`:
+
 1. `supabase.auth.getSession()`
 2. parallel read of `profiles` + `user_roles`
 3. `my_permissions()` RPC for effective permissions (per-user overrides and the
@@ -251,13 +252,13 @@ Identity resolution in `use-auth.tsx`:
 
 ### 3.6 Storage — 3 buckets
 
-| Bucket | Used by | Operations |
-|---|---|---|
-| `avatars` | profiles | RLS-scoped read/write/update/delete by owner |
-| `tutor-documents` | `src/lib/tutor-data.ts` | `upload`, `remove`, signed URLs (admin verification) |
-| `learning-resources` | `src/lib/tutor-workspace.ts` | `upload`, `remove`, `createSignedUrl(path, 120)` |
+| Bucket               | Used by                      | Operations                                           |
+| -------------------- | ---------------------------- | ---------------------------------------------------- |
+| `avatars`            | profiles                     | RLS-scoped read/write/update/delete by owner         |
+| `tutor-documents`    | `src/lib/tutor-data.ts`      | `upload`, `remove`, signed URLs (admin verification) |
+| `learning-resources` | `src/lib/tutor-workspace.ts` | `upload`, `remove`, `createSignedUrl(path, 120)`     |
 
-Storage RLS policies are non-trivial: *"Families read shared learning files"* joins
+Storage RLS policies are non-trivial: _"Families read shared learning files"_ joins
 `storage.objects.name` against `learning_resources.storage_path`. **These join-based
 object policies are the hardest part of the storage migration** — an S3-compatible
 provider has no equivalent, so the authorization must move into a NestJS
@@ -290,7 +291,7 @@ PL/pgSQL and in two TanStack server functions.
 
 **Booking & delivery (4)** — `bookings`, `class_sessions`, `cancellation_policies`, `lesson_notes`
 
-**Money (5)** — `payments`, `payouts`, `commission_rules`, `platform_settings`, `subscription_plans` *(dropped by `20260903195507`)*
+**Money (5)** — `payments`, `payouts`, `commission_rules`, `platform_settings`, `subscription_plans` _(dropped by `20260903195507`)_
 
 **Teaching (3)** — `assignments`, `learning_resources`, `rating_categories`
 
@@ -310,6 +311,7 @@ PL/pgSQL and in two TanStack server functions.
 ### Triggers — 51
 
 Three functional families:
+
 1. **`set_updated_at`** on ~20 tables — trivially replaced by TypeORM/Prisma/Drizzle column decorators.
 2. **Audit** — `*_audit` triggers calling `log_audit()` on `bookings`, `payments`, `payouts`, `profiles`, `tutors`, `user_roles`, `user_permissions`, `ratings`, `messages`, `disputes`, `platform_settings`, `admin_invitations`, `admin_action_requests`. **Must be preserved** — this is a compliance surface.
 3. **Business invariants** — `bookings_prevent_overlap` (`prevent_booking_overlap()`), `payments_confirm_booking` (`confirm_booking_on_payment()`), `tutors_enforce_verification`, `tutors_admin_only_hourly_rate`, `user_roles_guard` (`enforce_user_role_guards()`), `assignments_notify`, `messages_notify`, `on_auth_user_created` (`handle_new_user()`).
@@ -323,18 +325,18 @@ Three functional families:
 
 ## 5. Current authentication implementation
 
-| Concern | Today | Target |
-|---|---|---|
-| Identity store | Supabase `auth.users` | Own `users` table, or federated |
-| Token issuance | GoTrue JWT | NestJS + `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` |
-| Session storage | Browser storage via `brokeredPreviewStorage()` | httpOnly refresh cookie + in-memory access token |
-| Token refresh | `autoRefreshToken: true` | `/auth/refresh` endpoint |
-| Route guard | `beforeLoad` → `getUser()` | `beforeLoad` → `/auth/me` |
-| Role resolution | `user_roles` table read + `my_permissions()` RPC | Claims in JWT, or `/auth/me` |
-| Password reset | `resetPasswordForEmail` + Supabase email templates | NestJS + SMTP |
-| Invite | `auth.admin.inviteUserByEmail` with OTP in user metadata | NestJS invite service + SMTP |
-| Forced password change | `profiles.must_change_password` + `clear_must_change_password()` | Preserve exactly |
-| New-user provisioning | `on_auth_user_created` → `handle_new_user()` | NestJS registration transaction |
+| Concern                | Today                                                            | Target                                              |
+| ---------------------- | ---------------------------------------------------------------- | --------------------------------------------------- |
+| Identity store         | Supabase `auth.users`                                            | Own `users` table, or federated                     |
+| Token issuance         | GoTrue JWT                                                       | NestJS + `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` |
+| Session storage        | Browser storage via `brokeredPreviewStorage()`                   | httpOnly refresh cookie + in-memory access token    |
+| Token refresh          | `autoRefreshToken: true`                                         | `/auth/refresh` endpoint                            |
+| Route guard            | `beforeLoad` → `getUser()`                                       | `beforeLoad` → `/auth/me`                           |
+| Role resolution        | `user_roles` table read + `my_permissions()` RPC                 | Claims in JWT, or `/auth/me`                        |
+| Password reset         | `resetPasswordForEmail` + Supabase email templates               | NestJS + SMTP                                       |
+| Invite                 | `auth.admin.inviteUserByEmail` with OTP in user metadata         | NestJS invite service + SMTP                        |
+| Forced password change | `profiles.must_change_password` + `clear_must_change_password()` | Preserve exactly                                    |
+| New-user provisioning  | `on_auth_user_created` → `handle_new_user()`                     | NestJS registration transaction                     |
 
 There is **no refresh-token rotation, revocation list or device session table**
 today — GoTrue provided all of it. The NestJS implementation must add these from
@@ -384,17 +386,17 @@ See §3.6. Summary of migration seams:
 
 **There are effectively none.** Every third-party seam is stubbed:
 
-| Integration | Present state | Evidence |
-|---|---|---|
-| **Payments** | **Simulated.** `pay_for_booking()` inserts a `payments` row with status `paid` and computes the fee/commission split. No gateway, no card capture. `payments.provider` and `payments.provider_reference` exist and are unused. | `supabase/migrations/20260903195505_pay_for_booking.sql`, `src/lib/payments.ts` |
-| **Email** | **Supabase Auth only** — signup verification, password reset, invite. No transactional email. `notification_channel` includes `'email'` but `notify_user()` only writes in-app rows. SMTP must be configured in the Supabase dashboard (see runbook §1.2). | `docs/admin-governance-runbook.md` |
-| **Classroom/video** | **Not integrated.** `class_sessions.meeting_url` / `meeting_provider` / `recording_url` exist and are never populated. The classroom route renders mic/camera/screen-share controls over a chat backed by the `messages` table. | `class_sessions` DDL, `tutor.classroom.$bookingId.tsx` |
-| **Error reporting** | Lovable platform | `src/lib/lovable-error-reporting.ts` |
-| **Cron** | `LOVABLE_CRON_SECRET` + `src/integrations/supabase/cron-auth.ts` | Lovable-coupled |
+| Integration         | Present state                                                                                                                                                                                                                                              | Evidence                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **Payments**        | **Simulated.** `pay_for_booking()` inserts a `payments` row with status `paid` and computes the fee/commission split. No gateway, no card capture. `payments.provider` and `payments.provider_reference` exist and are unused.                             | `supabase/migrations/20260903195505_pay_for_booking.sql`, `src/lib/payments.ts` |
+| **Email**           | **Supabase Auth only** — signup verification, password reset, invite. No transactional email. `notification_channel` includes `'email'` but `notify_user()` only writes in-app rows. SMTP must be configured in the Supabase dashboard (see runbook §1.2). | `docs/admin-governance-runbook.md`                                              |
+| **Classroom/video** | **Not integrated.** `class_sessions.meeting_url` / `meeting_provider` / `recording_url` exist and are never populated. The classroom route renders mic/camera/screen-share controls over a chat backed by the `messages` table.                            | `class_sessions` DDL, `tutor.classroom.$bookingId.tsx`                          |
+| **Error reporting** | Lovable platform                                                                                                                                                                                                                                           | `src/lib/lovable-error-reporting.ts`                                            |
+| **Cron**            | `LOVABLE_CRON_SECRET` + `src/integrations/supabase/cron-auth.ts`                                                                                                                                                                                           | Lovable-coupled                                                                 |
 
 > **This is the migration's biggest opportunity.** Because no real provider is wired
 > in, the adapter interfaces required by the target architecture can be designed
-> *clean*, with no legacy provider semantics to accommodate. The `.env` already
+> _clean_, with no legacy provider semantics to accommodate. The `.env` already
 > declares `PAYMENT_PROVIDER`, `STORAGE_PROVIDER`, `CLASSROOM_PROVIDER` and their
 > credentials. Build the ports now; the first real adapter can come later.
 
@@ -403,20 +405,24 @@ See §3.6. Summary of migration seams:
 ## 8. Current routes
 
 ### Public (16)
+
 `/`, `/about`, `/explore`, `/tutors`, `/tutors/$tutorId`, `/how-it-works`, `/pricing`,
 `/contact`, `/become-a-tutor`, `/for-agencies`, `/trust-and-safety`, `/class-preview`,
 `/auth`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/accept-invite`
 
 ### Shared authenticated (10)
+
 `/dashboard`, `/account`, `/settings`, `/notifications`, `/bookings`, `/find-tutor`,
 `/book/$tutorId`, `/family`, `/children`, `/children/$studentId`
 
 ### Student (8)
+
 `/student/dashboard`, `/student/find-tutor`, `/student/book/$tutorId`,
 `/student/classroom/$bookingId`, `/student/history`, `/student/materials`,
 `/student/messages`, `/student/notifications`
 
 ### Tutor (17)
+
 `/tutor/dashboard`, `/tutor/onboarding`, `/tutor/profile`, `/tutor/availability`,
 `/tutor/classes`, `/tutor/classroom/$bookingId`, `/tutor/students`,
 `/tutor/students/$studentId`, `/tutor/assignments`, `/tutor/resources`,
@@ -424,7 +430,8 @@ See §3.6. Summary of migration seams:
 `/tutor/verification`, `/tutor/settings`, `/tutor/notifications`
 
 ### Admin (14)
-`/admin/dashboard`, `/admin/users`, `/admin/admins` *(super-admin only)*,
+
+`/admin/dashboard`, `/admin/users`, `/admin/admins` _(super-admin only)_,
 `/admin/bookings`, `/admin/payments`, `/admin/payouts`, `/admin/disputes`,
 `/admin/moderation`, `/admin/verification`, `/admin/approvals`, `/admin/reports`,
 `/admin/settings`, `/admin/audit`, `/admin/security`
@@ -438,24 +445,24 @@ See §3.6. Summary of migration seams:
 These 21 modules are the de-facto service layer and map almost one-to-one onto
 future NestJS modules.
 
-| File | LOC | Responsibility | Target NestJS module |
-|---|---|---|---|
-| `admin-data.ts` | 27.6 KB | Admin CRUD, verification, payouts, storage signed URLs | `AdminModule` |
-| `tutor-workspace.ts` | 18.8 KB | Classroom, messaging, resources, assignments | `ClassroomModule`, `MessagingModule` |
-| `parent-data.ts` | 16.4 KB | Parent dashboard, children, bookings, timezones | `ParentModule` |
-| `admin-governance.ts` | 16.4 KB | Invites, permissions, maker-checker, audit | `GovernanceModule` |
-| `tutor-data.ts` | 14.8 KB | Tutor profile, availability, documents, earnings | `TutorModule` |
-| `auth-validation.ts` | 8.8 KB | Zod schemas for auth forms | shared DTOs |
-| `public-data.ts` | 8.2 KB | Discovery, search, facets | `CatalogueModule` |
-| `student-data.ts` | 6.9 KB | Student dashboard, materials, history | `StudentModule` |
-| `admin-invite.functions.ts` | 6.4 KB | **Server fn** — service-role invite | `GovernanceModule` |
-| `admin-guard.ts` | 3.9 KB | Route guard + role cache | Nest guards + frontend guard |
-| `error-capture.ts` / `error-page.ts` | 4.3 KB | SSR error handling | keep |
-| `lovable-error-reporting.ts` | 1.7 KB | Lovable telemetry | **delete at cutover** |
-| `payments.ts` | 1.7 KB | `pay_for_booking` mutation | `PaymentsModule` |
-| `disputes.ts` | 1.4 KB | `raise_dispute` mutation | `DisputesModule` |
-| `signup.functions.ts` | 1.4 KB | **Server fn** — signup | `AuthModule` |
-| `csv.ts`, `brand.ts`, `portal-home.ts`, `utils.ts` | small | Helpers | keep as-is |
+| File                                               | LOC     | Responsibility                                         | Target NestJS module                 |
+| -------------------------------------------------- | ------- | ------------------------------------------------------ | ------------------------------------ |
+| `admin-data.ts`                                    | 27.6 KB | Admin CRUD, verification, payouts, storage signed URLs | `AdminModule`                        |
+| `tutor-workspace.ts`                               | 18.8 KB | Classroom, messaging, resources, assignments           | `ClassroomModule`, `MessagingModule` |
+| `parent-data.ts`                                   | 16.4 KB | Parent dashboard, children, bookings, timezones        | `ParentModule`                       |
+| `admin-governance.ts`                              | 16.4 KB | Invites, permissions, maker-checker, audit             | `GovernanceModule`                   |
+| `tutor-data.ts`                                    | 14.8 KB | Tutor profile, availability, documents, earnings       | `TutorModule`                        |
+| `auth-validation.ts`                               | 8.8 KB  | Zod schemas for auth forms                             | shared DTOs                          |
+| `public-data.ts`                                   | 8.2 KB  | Discovery, search, facets                              | `CatalogueModule`                    |
+| `student-data.ts`                                  | 6.9 KB  | Student dashboard, materials, history                  | `StudentModule`                      |
+| `admin-invite.functions.ts`                        | 6.4 KB  | **Server fn** — service-role invite                    | `GovernanceModule`                   |
+| `admin-guard.ts`                                   | 3.9 KB  | Route guard + role cache                               | Nest guards + frontend guard         |
+| `error-capture.ts` / `error-page.ts`               | 4.3 KB  | SSR error handling                                     | keep                                 |
+| `lovable-error-reporting.ts`                       | 1.7 KB  | Lovable telemetry                                      | **delete at cutover**                |
+| `payments.ts`                                      | 1.7 KB  | `pay_for_booking` mutation                             | `PaymentsModule`                     |
+| `disputes.ts`                                      | 1.4 KB  | `raise_dispute` mutation                               | `DisputesModule`                     |
+| `signup.functions.ts`                              | 1.4 KB  | **Server fn** — signup                                 | `AuthModule`                         |
+| `csv.ts`, `brand.ts`, `portal-home.ts`, `utils.ts` | small   | Helpers                                                | keep as-is                           |
 
 ---
 
@@ -488,7 +495,7 @@ VITE_SUPABASE_PROJECT_ID   VITE_SUPABASE_PUBLISHABLE_KEY  VITE_SUPABASE_URL
 
 These are publishable/anon keys — public by design; RLS is the protection.
 
-### Referenced in code but *not* in `.env`
+### Referenced in code but _not_ in `.env`
 
 - `SUPABASE_SERVICE_ROLE_KEY` — required by `client.server.ts`; the runbook (§1.1)
   documents that it is missing and must be added to `.env` and Lovable Cloud secrets.
@@ -661,21 +668,21 @@ Strict ordering constraints — each depends on everything above it:
 
 ## 14. Migration risks
 
-| # | Risk | Severity | Mitigation |
-|---|---|---|---|
-| R1 | **RLS removal opens data leaks.** 130 policies enforce tenancy today. A repository querying as one privileged DB user has no equivalent. A missed predicate fails *silently*. | **Critical** | Port every policy predicate to an explicit repository-level `WHERE` scope. Write an authorization test per policy *before* the endpoint. Consider retaining RLS with `SET LOCAL role` (DECISION-1). |
-| R2 | **Business logic in 70 SQL functions.** Far more backend exists than the TS tree suggests. Silent behaviour drift during porting. | **Critical** | Golden-master tests: run the RPC and the new endpoint against the same fixture, diff the output. |
-| R3 | **No tests at all.** Nothing detects regression; rules 15/16 are unsatisfiable. | **Critical** | Step 1 of the sequence. Non-negotiable. |
-| R4 | **Stale generated types.** Porting against a wrong schema bakes in drift. | High | Step 0. |
-| R5 | **Auth cutover is atomic.** Sessions are Supabase JWTs; switching issuers logs everyone out. | High | Dual-accept both token types during the window, or schedule a forced re-login. |
-| R6 | **Storage RLS joins application tables.** No S3 equivalent. | High | Move authorization into a signed-URL service before changing provider. |
-| R7 | **51 triggers**, 13 of them audit triggers on money tables. | High | Retain triggers in PG. Do not reimplement audit in the service layer only. |
-| R8 | **Lovable sync.** `AGENTS.md` forbids rewriting published history; commits sync back to the editor and Lovable may itself write to the branch. | High | Long-lived feature branch; never force-push `main`; agree a freeze on Lovable-side edits. |
-| R9 | **`vite.config.ts` is a Lovable wrapper** that forbids manual plugin addition. Monorepo restructuring may break it. | Medium | Move the app without editing the config; validate `vite build` after every structural change. |
-| R10 | **Cloudflare Workers runtime.** The frontend deploys to Workers; NestJS needs Node. Two runtimes, two deploy targets, CORS between them. | Medium | Decide hosting early (DECISION-4). `CORS_ORIGIN` already declared. |
-| R11 | **Payments are simulated.** A real gateway introduces async webhooks, idempotency and refund semantics that `pay_for_booking()` never had. | Medium | Treat as new feature work behind `PaymentProvider`, not as migration. |
-| R12 | **`super_admin` enum drift** already worked around in two places. | Low | Resolved by step 0. |
-| R13 | **Agency role is DB-only.** `tutor_agencies`, `agency_id`, `commission_rules.agency_id` and the `agency` role exist; there is **no agency UI**. | Low | Do not invent behaviour (rule 10). Port the schema, build no endpoints until specified. |
+| #   | Risk                                                                                                                                                                          | Severity     | Mitigation                                                                                                                                                                                          |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | **RLS removal opens data leaks.** 130 policies enforce tenancy today. A repository querying as one privileged DB user has no equivalent. A missed predicate fails _silently_. | **Critical** | Port every policy predicate to an explicit repository-level `WHERE` scope. Write an authorization test per policy _before_ the endpoint. Consider retaining RLS with `SET LOCAL role` (DECISION-1). |
+| R2  | **Business logic in 70 SQL functions.** Far more backend exists than the TS tree suggests. Silent behaviour drift during porting.                                             | **Critical** | Golden-master tests: run the RPC and the new endpoint against the same fixture, diff the output.                                                                                                    |
+| R3  | **No tests at all.** Nothing detects regression; rules 15/16 are unsatisfiable.                                                                                               | **Critical** | Step 1 of the sequence. Non-negotiable.                                                                                                                                                             |
+| R4  | **Stale generated types.** Porting against a wrong schema bakes in drift.                                                                                                     | High         | Step 0.                                                                                                                                                                                             |
+| R5  | **Auth cutover is atomic.** Sessions are Supabase JWTs; switching issuers logs everyone out.                                                                                  | High         | Dual-accept both token types during the window, or schedule a forced re-login.                                                                                                                      |
+| R6  | **Storage RLS joins application tables.** No S3 equivalent.                                                                                                                   | High         | Move authorization into a signed-URL service before changing provider.                                                                                                                              |
+| R7  | **51 triggers**, 13 of them audit triggers on money tables.                                                                                                                   | High         | Retain triggers in PG. Do not reimplement audit in the service layer only.                                                                                                                          |
+| R8  | **Lovable sync.** `AGENTS.md` forbids rewriting published history; commits sync back to the editor and Lovable may itself write to the branch.                                | High         | Long-lived feature branch; never force-push `main`; agree a freeze on Lovable-side edits.                                                                                                           |
+| R9  | **`vite.config.ts` is a Lovable wrapper** that forbids manual plugin addition. Monorepo restructuring may break it.                                                           | Medium       | Move the app without editing the config; validate `vite build` after every structural change.                                                                                                       |
+| R10 | **Cloudflare Workers runtime.** The frontend deploys to Workers; NestJS needs Node. Two runtimes, two deploy targets, CORS between them.                                      | Medium       | Decide hosting early (DECISION-4). `CORS_ORIGIN` already declared.                                                                                                                                  |
+| R11 | **Payments are simulated.** A real gateway introduces async webhooks, idempotency and refund semantics that `pay_for_booking()` never had.                                    | Medium       | Treat as new feature work behind `PaymentProvider`, not as migration.                                                                                                                               |
+| R12 | **`super_admin` enum drift** already worked around in two places.                                                                                                             | Low          | Resolved by step 0.                                                                                                                                                                                 |
+| R13 | **Agency role is DB-only.** `tutor_agencies`, `agency_id`, `commission_rules.agency_id` and the `agency` role exist; there is **no agency UI**.                               | Low          | Do not invent behaviour (rule 10). Port the schema, build no endpoints until specified.                                                                                                             |
 
 ---
 
@@ -710,7 +717,8 @@ what makes the auth cutover a one-file change instead of a 49-route change.**
 
 ## 16. Recommended migration order
 
-### Phase 0 — Stabilise *(no architecture change)*
+### Phase 0 — Stabilise _(no architecture change)_
+
 1. `git rm --cached .env` and commit the removal — see BLOCKER-1.
 2. Regenerate `types.ts`; delete `governance-types.ts`; remove the `super_admin` workaround in `use-auth.tsx`.
 3. Fix the residual type errors; add a `typecheck` script.
@@ -720,7 +728,8 @@ what makes the auth cutover a one-file change instead of a 49-route change.**
 
 **Exit criteria:** `tsc` clean, CI green, booking→payment→class→rating covered end-to-end.
 
-### Phase 1 — Backend skeleton *(no frontend change)*
+### Phase 1 — Backend skeleton _(no frontend change)_
+
 7. Scaffold `apps/api`; move the web app to `apps/web` **without editing `vite.config.ts`**.
 8. `ConfigModule` with schema-validated env; structured logging; `AllExceptionsFilter`.
 9. Provision external PostgreSQL 18.x. Transfer schema via the existing migrations.
@@ -729,6 +738,7 @@ what makes the auth cutover a one-file change instead of a 49-route change.**
 **Exit criteria:** `/health` responds; schema matches; frontend untouched and still green.
 
 ### Phase 2 — Identity
+
 11. `AuthModule`: login, refresh, logout, reset, `/auth/me`.
 12. `JwtAuthGuard`, `RolesGuard`, `PermissionsGuard` — port `is_admin()`, `is_super_admin()`, `has_permission()`.
 13. `src/lib/api/` client; switch `use-auth.tsx` behind the **unchanged** `AuthContextValue`.
@@ -737,29 +747,33 @@ what makes the auth cutover a one-file change instead of a 49-route change.**
 **Exit criteria:** every portal logs in through NestJS; Supabase Auth still live and revertible.
 
 ### Phase 3 — Read-only domains
+
 15. Catalogue, then Discovery. Port the 7 `public_*` functions.
 16. Run old and new side by side; diff responses until identical.
 
 **Exit criteria:** public pages served by NestJS; Supabase reads removed from those routes only.
 
-### Phase 4 — Transactional core *(highest risk — one domain per PR)*
-17. Users/Tutors/Students → 18. Bookings *(keep `prevent_booking_overlap` in PG)* →
-19. Payments *(keep `confirm_booking_on_payment` in PG)* → 20. Classroom/Teaching/Messaging →
-21. Ratings/Disputes.
+### Phase 4 — Transactional core _(highest risk — one domain per PR)_
+
+17. Users/Tutors/Students → 18. Bookings _(keep `prevent_booking_overlap` in PG)_ →
+18. Payments _(keep `confirm_booking_on_payment` in PG)_ → 20. Classroom/Teaching/Messaging →
+19. Ratings/Disputes.
 
 **Exit criteria per domain:** golden-master parity, authorization tests per RLS policy, rollback verified.
 
 ### Phase 5 — Platform services
+
 22. Notifications + SMTP via `EmailProvider` — port `notify_user()` and `render_template()`.
 23. Storage: signed-URL service, then provider swap.
 24. Governance, admin dashboards, maker-checker, audit read APIs.
 
 ### Phase 6 — Decommission
+
 25. Remove `supabase-js`, `client.ts`, `client.server.ts`, `previewAuthStorage.ts`, `auth-attacher.ts`, `lovable-error-reporting.ts`, `cron-auth.ts`.
 26. Migrate storage objects; retire the Supabase project **only after a verified backup**.
 
 > Rule 7 holds throughout: Supabase functionality is removed **only** after its
-> replacement is implemented *and verified*. Every phase must be independently
+> replacement is implemented _and verified_. Every phase must be independently
 > revertible (rule 16).
 
 ---
@@ -796,10 +810,10 @@ Which is available?
 ### Decisions needed
 
 **DECISION-1 — RLS in the target.** Three options:
- (a) Drop RLS; enforce tenancy in repositories. Simplest, **highest leak risk**.
- (b) Keep RLS; have NestJS `SET LOCAL role` / `request.jwt.claims` per transaction. Preserves 130 policies as defence-in-depth; more complex connection handling.
- (c) Hybrid — RLS on money and PII tables only.
- *Recommendation: (b) for Phase 4 domains, (a) for catalogue/discovery.*
+(a) Drop RLS; enforce tenancy in repositories. Simplest, **highest leak risk**.
+(b) Keep RLS; have NestJS `SET LOCAL role` / `request.jwt.claims` per transaction. Preserves 130 policies as defence-in-depth; more complex connection handling.
+(c) Hybrid — RLS on money and PII tables only.
+_Recommendation: (b) for Phase 4 domains, (a) for catalogue/discovery._
 
 **DECISION-2 — ORM.** TypeORM, Prisma, Drizzle, or raw `pg` + a query builder?
 Affects repository shape, migration tooling and how the 41 existing tables are
@@ -808,7 +822,7 @@ modelled. The existing SQL migrations should remain the source of truth either w
 **DECISION-3 — PL/pgSQL functions: port or retain?** The 70 functions can be
 (a) fully ported to TypeScript services, (b) retained and called by repositories, or
 (c) ported incrementally with the SQL kept as a fallback.
-*Recommendation: (c) — it is the only option that satisfies rule 16 per-domain.*
+_Recommendation: (c) — it is the only option that satisfies rule 16 per-domain._
 
 **DECISION-4 — Hosting.** The frontend targets Cloudflare Workers; NestJS needs a
 Node runtime. Same origin behind a proxy, or separate origins with CORS?
@@ -821,7 +835,7 @@ backend repository? Monorepo eases shared DTO types but interacts with Lovable s
 migration? If yes, `AGENTS.md` constraints persist indefinitely and the Lovable
 vite wrapper cannot be removed. If no, when does the sync stop?
 
-### Questions on business rules *(rule 10 — do not invent)*
+### Questions on business rules _(rule 10 — do not invent)_
 
 - **Q1 — Payments.** `pay_for_booking()` simulates an instant successful charge. Which
   real provider, and does the fee/commission split (`platform_fee_percentage`,
@@ -866,22 +880,22 @@ vite wrapper cannot be removed. If no, when does the sync stop?
 
 ## Appendix B — Supabase dependency inventory (summary)
 
-| Surface | Count | Replacement |
-|---|---|---|
-| Files importing the Supabase client | 44 | `src/lib/api/` client |
-| Direct table reads/writes | ~140 across 31 tables/views | REST endpoints |
-| Stored-procedure calls | 36 distinct RPCs | NestJS services |
-| PL/pgSQL functions in schema | 70 | services + retained SQL |
-| RLS policies | 130 | guards + repository scoping (DECISION-1) |
-| Triggers | 51 | retain in PostgreSQL |
-| Tables | 41 | same schema, external PG 18.x |
-| Enums | 15 | same |
-| Auth methods | 10 | `AuthModule` |
-| Storage buckets | 3 | `StorageProvider` |
-| Edge functions | 0 | n/a |
-| Realtime subscriptions | 0 (data) | n/a |
-| TanStack server functions | 2 | controllers |
+| Surface                             | Count                       | Replacement                              |
+| ----------------------------------- | --------------------------- | ---------------------------------------- |
+| Files importing the Supabase client | 44                          | `src/lib/api/` client                    |
+| Direct table reads/writes           | ~140 across 31 tables/views | REST endpoints                           |
+| Stored-procedure calls              | 36 distinct RPCs            | NestJS services                          |
+| PL/pgSQL functions in schema        | 70                          | services + retained SQL                  |
+| RLS policies                        | 130                         | guards + repository scoping (DECISION-1) |
+| Triggers                            | 51                          | retain in PostgreSQL                     |
+| Tables                              | 41                          | same schema, external PG 18.x            |
+| Enums                               | 15                          | same                                     |
+| Auth methods                        | 10                          | `AuthModule`                             |
+| Storage buckets                     | 3                           | `StorageProvider`                        |
+| Edge functions                      | 0                           | n/a                                      |
+| Realtime subscriptions              | 0 (data)                    | n/a                                      |
+| TanStack server functions           | 2                           | controllers                              |
 
 ---
 
-*End of audit. No application code was modified in producing this document.*
+_End of audit. No application code was modified in producing this document._

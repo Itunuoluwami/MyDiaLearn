@@ -155,7 +155,11 @@ function DashboardPage() {
                 variant="primary"
                 label="Upcoming classes"
                 value={Number(s?.upcoming_classes ?? 0)}
-                hint={upcoming[0] ? `Next: ${upcoming[0].subjects?.name ?? "lesson"}` : "Nothing scheduled"}
+                hint={
+                  upcoming[0]
+                    ? `Next: ${upcoming[0].subjects?.name ?? "lesson"}`
+                    : "Nothing scheduled"
+                }
                 icon={CalendarDays}
               />
               <KpiCard
@@ -164,7 +168,11 @@ function DashboardPage() {
                 hint="On your account"
                 icon={Users}
               />
-              <KpiCard label="Active tutors" value={Number(s?.active_tutors ?? 0)} icon={GraduationCap} />
+              <KpiCard
+                label="Active tutors"
+                value={Number(s?.active_tutors ?? 0)}
+                icon={GraduationCap}
+              />
               <KpiCard
                 label="Completed lessons"
                 value={Number(s?.completed_lessons ?? 0)}
@@ -193,7 +201,11 @@ function DashboardPage() {
                 onRetry={() => void children.refetch()}
               />
             ) : (
-              <ChildSwitcher children={kids} selectedId={selectedChild} onSelect={setSelectedChild} />
+              <ChildSwitcher
+                children={kids}
+                selectedId={selectedChild}
+                onSelect={setSelectedChild}
+              />
             )}
           </SectionCard>
 
@@ -269,12 +281,32 @@ function DashboardPage() {
           <SectionCard title="Quick actions">
             <div className="grid gap-3 sm:grid-cols-2">
               {kids.length === 0 ? (
-                <QuickAction to="/children" icon={Plus} label="Add child" hint="Start a learner profile" />
+                <QuickAction
+                  to="/children"
+                  icon={Plus}
+                  label="Add child"
+                  hint="Start a learner profile"
+                />
               ) : (
-                <QuickAction to="/find-tutor" icon={Search} label="Find a tutor" hint="Search the marketplace" />
+                <QuickAction
+                  to="/find-tutor"
+                  icon={Search}
+                  label="Find a tutor"
+                  hint="Search the marketplace"
+                />
               )}
-              <QuickAction to="/bookings" icon={CalendarDays} label="View calendar" hint="All classes" />
-              <QuickAction to="/payments" icon={Receipt} label="View payments" hint="History & receipts" />
+              <QuickAction
+                to="/bookings"
+                icon={CalendarDays}
+                label="View calendar"
+                hint="All classes"
+              />
+              <QuickAction
+                to="/payments"
+                icon={Receipt}
+                label="View payments"
+                hint="History & receipts"
+              />
               <QuickAction to="/progress" icon={Clock} label="Learning progress" hint="Per child" />
             </div>
             {kids.length > 0 ? (

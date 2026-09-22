@@ -43,12 +43,11 @@ function ClassPreviewPage() {
       <section className="border-y border-border bg-surface">
         <div className="container-site section-y grid gap-8 lg:grid-cols-[minmax(20rem,1fr)_minmax(20rem,1fr)]">
           <div className="w-full min-w-0">
-
             <p className="eyebrow">Inside the hour</p>
             <h2 className="display-section mt-2">Calm, structured, one-to-one</h2>
             <p className="lead mt-3">
-              No large classes and no recorded lectures. Every DiaLearn lesson is a live conversation
-              between one tutor and one student.
+              No large classes and no recorded lectures. Every DiaLearn lesson is a live
+              conversation between one tutor and one student.
             </p>
           </div>
           <ul className="card-warm space-y-3 p-5 md:p-6">

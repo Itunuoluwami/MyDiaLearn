@@ -86,7 +86,13 @@ export function useTutorBookings(params?: {
 }) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["tutor-bookings", user?.id, params?.from ?? null, params?.to ?? null, params?.statuses ?? null],
+    queryKey: [
+      "tutor-bookings",
+      user?.id,
+      params?.from ?? null,
+      params?.to ?? null,
+      params?.statuses ?? null,
+    ],
     enabled: Boolean(user?.id),
     queryFn: async () => {
       const { data, error } = await supabase.rpc("tutor_bookings", {
@@ -212,7 +218,9 @@ export function useAvailabilityWindows() {
   });
 }
 
-export type AvailabilityWindow = NonNullable<ReturnType<typeof useAvailabilityWindows>["data"]>[number];
+export type AvailabilityWindow = NonNullable<
+  ReturnType<typeof useAvailabilityWindows>["data"]
+>[number];
 
 export function useAddAvailabilityWindow() {
   const queryClient = useQueryClient();
@@ -314,7 +322,9 @@ export function useTutorDocuments() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tutor_documents")
-        .select("id, step_id, label, storage_path, mime_type, size_bytes, status, reviewer_notes, created_at")
+        .select(
+          "id, step_id, label, storage_path, mime_type, size_bytes, status, reviewer_notes, created_at",
+        )
         .eq("tutor_id", tutor!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;

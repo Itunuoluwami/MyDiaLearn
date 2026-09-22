@@ -16,12 +16,7 @@ import { StudentShell } from "@/components/student/StudentShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   useStudentAssignments,
   useStudentMaterials,
@@ -73,14 +68,22 @@ function StudentMaterialsPage() {
       await submitAssignment.mutateAsync({ id, text: submissionText });
       toast.success("Assignment submitted! 🎉");
       setSubmitting(null);
-      setText((prev) => { const next = { ...prev }; delete next[id]; return next; });
+      setText((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
     } catch {
       toast.error("Couldn't submit. Please try again.");
     }
   }
 
-  const pending = (allAssignments.data ?? []).filter((a) => a.status === "assigned" || a.status === "pending");
-  const submitted = (allAssignments.data ?? []).filter((a) => a.status === "submitted" || a.status === "under_review");
+  const pending = (allAssignments.data ?? []).filter(
+    (a) => a.status === "assigned" || a.status === "pending",
+  );
+  const submitted = (allAssignments.data ?? []).filter(
+    (a) => a.status === "submitted" || a.status === "under_review",
+  );
   const completed = (allAssignments.data ?? []).filter((a) => a.status === "completed");
 
   return (
@@ -90,7 +93,10 @@ function StudentMaterialsPage() {
     >
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-5 h-12 rounded-2xl bg-muted p-1">
-          <TabsTrigger value="assignments" className="min-w-28 rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <TabsTrigger
+            value="assignments"
+            className="min-w-28 rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
             Assignments
             {pending.length > 0 && (
               <span className="ml-2 flex size-5 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
@@ -98,10 +104,16 @@ function StudentMaterialsPage() {
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="materials" className="min-w-28 rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <TabsTrigger
+            value="materials"
+            className="min-w-28 rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
             Materials
           </TabsTrigger>
-          <TabsTrigger value="completed" className="min-w-28 rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <TabsTrigger
+            value="completed"
+            className="min-w-28 rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
             Completed
           </TabsTrigger>
         </TabsList>
@@ -115,13 +127,16 @@ function StudentMaterialsPage() {
           ) : (
             pending.map((a) => {
               const isSubmitting = submitting === a.id;
-              const overdue = a.due_at && new Date(a.due_at) < new Date() && a.status !== "submitted";
+              const overdue =
+                a.due_at && new Date(a.due_at) < new Date() && a.status !== "submitted";
               return (
                 <div
                   key={a.id}
                   className={cn(
                     "rounded-2xl border p-5 transition-shadow",
-                    overdue ? "border-destructive/30 bg-destructive/5" : "border-border bg-card hover:shadow-sm",
+                    overdue
+                      ? "border-destructive/30 bg-destructive/5"
+                      : "border-border bg-card hover:shadow-sm",
                   )}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -134,13 +149,27 @@ function StudentMaterialsPage() {
                         <p className="text-sm text-muted-foreground">
                           {(a as typeof a & { subjects?: { name: string } | null }).subjects?.name}
                           {" · "}
-                          by {(a as typeof a & { tutors?: { profiles?: { full_name?: string } | null } | null }).tutors?.profiles?.full_name ?? "Your Tutor"}
+                          by{" "}
+                          {(
+                            a as typeof a & {
+                              tutors?: { profiles?: { full_name?: string } | null } | null;
+                            }
+                          ).tutors?.profiles?.full_name ?? "Your Tutor"}
                         </p>
                         {a.due_at && (
-                          <p className={cn("mt-1 flex items-center gap-1 text-xs font-bold", overdue ? "text-destructive" : "text-muted-foreground")}>
+                          <p
+                            className={cn(
+                              "mt-1 flex items-center gap-1 text-xs font-bold",
+                              overdue ? "text-destructive" : "text-muted-foreground",
+                            )}
+                          >
                             <Clock className="size-3.5" />
                             {overdue ? "⚠️ Overdue · " : "Due: "}
-                            {new Date(a.due_at).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
+                            {new Date(a.due_at).toLocaleDateString(undefined, {
+                              weekday: "short",
+                              day: "numeric",
+                              month: "short",
+                            })}
                           </p>
                         )}
                       </div>
@@ -152,7 +181,9 @@ function StudentMaterialsPage() {
 
                   {a.instructions && (
                     <div className="mt-4 rounded-xl border border-border/60 bg-muted/50 p-3 text-sm text-foreground leading-relaxed">
-                      <p className="mb-1 text-xs font-extrabold uppercase tracking-wide text-muted-foreground">Instructions</p>
+                      <p className="mb-1 text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
+                        Instructions
+                      </p>
                       {a.instructions}
                     </div>
                   )}
@@ -180,7 +211,9 @@ function StudentMaterialsPage() {
                           size="sm"
                           variant="ghost"
                           className="min-h-10 rounded-xl font-bold"
-                          onClick={() => { setSubmitting(null); }}
+                          onClick={() => {
+                            setSubmitting(null);
+                          }}
                         >
                           Cancel
                         </Button>
@@ -206,15 +239,24 @@ function StudentMaterialsPage() {
           {materials.isLoading ? (
             <SkeletonList rows={3} />
           ) : (materials.data ?? []).length === 0 ? (
-            <EmptyState emoji="📂" message="No materials yet. Your tutor will share resources here." />
+            <EmptyState
+              emoji="📂"
+              message="No materials yet. Your tutor will share resources here."
+            />
           ) : (
             (materials.data ?? []).map((material) => {
-              const icon = material.resource_type === "document" ? FileText
-                : material.resource_type === "link" ? LinkIcon
-                : BookOpen;
+              const icon =
+                material.resource_type === "document"
+                  ? FileText
+                  : material.resource_type === "link"
+                    ? LinkIcon
+                    : BookOpen;
               const Icon = icon;
               return (
-                <div key={material.id} className="flex items-start gap-4 rounded-2xl border border-border bg-card p-5 hover:shadow-sm transition-shadow">
+                <div
+                  key={material.id}
+                  className="flex items-start gap-4 rounded-2xl border border-border bg-card p-5 hover:shadow-sm transition-shadow"
+                >
                   <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                     <Icon className="size-6" />
                   </div>
@@ -224,13 +266,23 @@ function StudentMaterialsPage() {
                       <p className="mt-0.5 text-sm text-muted-foreground">{material.description}</p>
                     )}
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Shared by {(material as typeof material & { tutors?: { profiles?: { full_name?: string } | null } | null }).tutors?.profiles?.full_name ?? "Tutor"}
+                      Shared by{" "}
+                      {(
+                        material as typeof material & {
+                          tutors?: { profiles?: { full_name?: string } | null } | null;
+                        }
+                      ).tutors?.profiles?.full_name ?? "Tutor"}
                       {" · "}
                       {new Date(material.created_at).toLocaleDateString()}
                     </p>
                   </div>
                   {material.external_url && (
-                    <Button asChild size="sm" variant="outline" className="min-h-10 shrink-0 rounded-xl font-bold">
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="min-h-10 shrink-0 rounded-xl font-bold"
+                    >
                       <a href={material.external_url} target="_blank" rel="noopener noreferrer">
                         Open
                       </a>
@@ -250,7 +302,10 @@ function StudentMaterialsPage() {
             <EmptyState emoji="🏆" message="Submit assignments to see them here once graded." />
           ) : (
             completed.map((a) => (
-              <div key={a.id} className="flex items-start gap-4 rounded-2xl border border-success/20 bg-success/5 p-5">
+              <div
+                key={a.id}
+                className="flex items-start gap-4 rounded-2xl border border-success/20 bg-success/5 p-5"
+              >
                 <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-success/15 text-success">
                   <CheckCircle2 className="size-6" />
                 </div>
@@ -261,12 +316,16 @@ function StudentMaterialsPage() {
                   </p>
                   {a.feedback && (
                     <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm">
-                      <p className="mb-1 text-xs font-extrabold uppercase tracking-wide text-primary">Tutor Feedback</p>
+                      <p className="mb-1 text-xs font-extrabold uppercase tracking-wide text-primary">
+                        Tutor Feedback
+                      </p>
                       <p className="text-foreground leading-relaxed">{a.feedback}</p>
                     </div>
                   )}
                 </div>
-                <Badge className="rounded-full bg-success/10 text-xs font-bold text-success">Done ✓</Badge>
+                <Badge className="rounded-full bg-success/10 text-xs font-bold text-success">
+                  Done ✓
+                </Badge>
               </div>
             ))
           )}

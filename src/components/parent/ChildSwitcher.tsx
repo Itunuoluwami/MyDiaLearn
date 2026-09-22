@@ -83,7 +83,9 @@ export function ChildSwitcher({
             <span
               className={cn(
                 "flex size-8 items-center justify-center rounded-full text-xs font-semibold",
-                active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary-soft text-primary-deep",
+                active
+                  ? "bg-primary-foreground/20 text-primary-foreground"
+                  : "bg-primary-soft text-primary-deep",
               )}
             >
               {childInitials(child)}

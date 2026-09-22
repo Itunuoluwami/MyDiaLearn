@@ -16,7 +16,7 @@ The invite flow creates an `auth.users` row, which is impossible without it.
 
 `src/integrations/supabase/client.server.ts:34` reads `SUPABASE_SERVICE_ROLE_KEY`
 and it is **not currently in `.env`**. Get it from Supabase → Project Settings →
-API → `service_role` (the long one marked *secret*), and add it to:
+API → `service_role` (the long one marked _secret_), and add it to:
 
 - `.env` locally
 - Lovable Cloud secrets, for deployed environments
@@ -77,16 +77,16 @@ using an enum value in the same transaction that added it. If you paste
 migrations into the SQL editor, run that file **on its own and commit it** before
 running any of the others.
 
-| File | Adds |
-| --- | --- |
-| `…090000_app_role_super_admin.sql` | the `super_admin` enum value, alone |
-| `…090100_super_admin_helpers.sql` | `is_super_admin()`, widened `is_admin()`, permission seeds, **bootstrap** |
-| `…090200_user_roles_escalation_guard.sql` | role policies + `enforce_user_role_guards()` |
-| `…090300_user_permission_overrides.sql` | `user_permissions`, new `has_permission()`, `my_permissions()` |
-| `…090400_audit_logs.sql` | `audit_logs`, `log_audit()`, `audit_row_change()` + 12 triggers |
-| `…090500_profiles_must_change_password.sql` | the flag + column-level UPDATE grants |
-| `…090600_admin_invitations.sql` | invitations, both RPCs, invitation-aware guard |
-| `…090700_admin_maker_checker.sql` | approval queue, dispatcher, closes the end-runs |
+| File                                        | Adds                                                                      |
+| ------------------------------------------- | ------------------------------------------------------------------------- |
+| `…090000_app_role_super_admin.sql`          | the `super_admin` enum value, alone                                       |
+| `…090100_super_admin_helpers.sql`           | `is_super_admin()`, widened `is_admin()`, permission seeds, **bootstrap** |
+| `…090200_user_roles_escalation_guard.sql`   | role policies + `enforce_user_role_guards()`                              |
+| `…090300_user_permission_overrides.sql`     | `user_permissions`, new `has_permission()`, `my_permissions()`            |
+| `…090400_audit_logs.sql`                    | `audit_logs`, `log_audit()`, `audit_row_change()` + 12 triggers           |
+| `…090500_profiles_must_change_password.sql` | the flag + column-level UPDATE grants                                     |
+| `…090600_admin_invitations.sql`             | invitations, both RPCs, invitation-aware guard                            |
+| `…090700_admin_maker_checker.sql`           | approval queue, dispatcher, closes the end-runs                           |
 
 `090100` must land **before** `090200` — the bootstrap insert has to happen
 before the guard trigger that would block it.
@@ -107,7 +107,7 @@ run them one at a time. Wait for each to report success before starting the next
 `src/integrations/supabase/types.ts` is stale — it predates even the `20260903*`
 migrations, which is why `npx tsc --noEmit` currently reports 84 errors about
 `disputes`, `admin_cancel_booking` and `messages.is_hidden`. Regenerating clears
-those *and* the new objects in one go:
+those _and_ the new objects in one go:
 
 ```bash
 npx supabase gen types typescript --project-id acyxxesxhhbxywtzlidc > src/integrations/supabase/types.ts
@@ -178,7 +178,7 @@ Sign in as a **parent or student**, then type `/admin/users` in the address bar.
 Sign in as the bootstrap account.
 
 - ✅ Header pill reads **Super admin**, not Admin.
-- ✅ Sidebar shows a *Governance* group with Approvals, Audit log, Admins & roles.
+- ✅ Sidebar shows a _Governance_ group with Approvals, Audit log, Admins & roles.
 - ✅ A plain admin sees Approvals but **not** Admins & roles, and visiting
   `/admin/admins` directly redirects them to the dashboard.
 
@@ -186,7 +186,7 @@ Sign in as the bootstrap account.
 
 As super admin → Admins & roles → **Invite admin**.
 
-1. Try an address on a domain *not* in the allow-list → "That email domain isn't
+1. Try an address on a domain _not_ in the allow-list → "That email domain isn't
    on the allowed list."
 2. Invite a real address on an allowed domain.
 3. ✅ The invitee's inbox has one email containing **both** a 10-character code
@@ -208,7 +208,7 @@ As super admin → Admins & roles → **Invite admin**.
 `admin.audit` to **Grant**. That admin reloads and now sees Audit log. Set it to
 **Deny** and it disappears even though their role would allow it.
 
-**Roles — the escalation test.** As a *plain admin*, in the SQL editor while
+**Roles — the escalation test.** As a _plain admin_, in the SQL editor while
 impersonating them (or from the app), attempt:
 
 ```sql
@@ -216,7 +216,7 @@ insert into public.user_roles (user_id, role) values (auth.uid(), 'admin');
 ```
 
 - ✅ Fails with `SELF_ROLE_GRANT_FORBIDDEN`.
-- ✅ Granting `admin` to someone *else* as a plain admin fails with
+- ✅ Granting `admin` to someone _else_ as a plain admin fails with
   `ELEVATED_ROLE_REQUIRES_SUPER_ADMIN`.
 - ✅ Removing the only super admin fails with `LAST_SUPER_ADMIN_PROTECTED`.
 
@@ -245,7 +245,7 @@ Needs **two** admin accounts.
 2. As admin A: open Approvals. ✅ The row shows "You raised this request" with no
    buttons. Attempting it via RPC returns `SELF_APPROVAL_FORBIDDEN`.
 3. As admin B: Approvals → Approve. ✅ The payout flips to paid and the request
-   reads *Applied*.
+   reads _Applied_.
 4. ✅ Both halves are recorded:
    ```sql
    select created_at, actor_email, action, entity_type
@@ -296,7 +296,7 @@ but check `090300` actually applied:
 select proname from pg_proc where proname = 'my_permissions';
 ```
 
-### 5.3 An approval says *Failed*
+### 5.3 An approval says _Failed_
 
 The approval committed but the effect did not. The reason is stored, not lost:
 
@@ -324,7 +324,7 @@ gone.
   gates on it, so a super admin inherits all of it as a strict superset. Narrowing
   it would lock a super-admin-only account out of the entire portal.
 - **`security definer` bypasses RLS but not triggers.** That is why
-  `admin_invite_redeem()` marks the invitation `accepted` *before* inserting the
+  `admin_invite_redeem()` marks the invitation `accepted` _before_ inserting the
   role — the guard trigger looks for that row to permit the one legitimate
   self-grant.
 - **The guard's self-grant rule is scoped to elevated roles on purpose.**

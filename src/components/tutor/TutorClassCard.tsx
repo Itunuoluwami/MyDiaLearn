@@ -56,7 +56,10 @@ export function TutorClassCard({
               <h3 className="truncate text-sm font-semibold md:text-base">
                 {booking.subject_name ?? "Lesson"}
                 {booking.education_level_name ? (
-                  <span className="font-normal text-muted-foreground"> · {booking.education_level_name}</span>
+                  <span className="font-normal text-muted-foreground">
+                    {" "}
+                    · {booking.education_level_name}
+                  </span>
                 ) : null}
               </h3>
               <p className="mt-0.5 truncate text-sm text-muted-foreground">
@@ -69,7 +72,8 @@ export function TutorClassCard({
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
             <MetaItem icon={CalendarDays}>{formatDayInZone(booking.starts_at, timezone)}</MetaItem>
             <MetaItem icon={Clock}>
-              {formatTimeInZone(booking.starts_at, timezone)} – {formatTimeInZone(booking.ends_at, timezone)}
+              {formatTimeInZone(booking.starts_at, timezone)} –{" "}
+              {formatTimeInZone(booking.ends_at, timezone)}
             </MetaItem>
             <MetaItem icon={Timer}>{booking.duration_minutes} min</MetaItem>
             <MetaItem icon={Globe2}>{timezone}</MetaItem>
@@ -87,7 +91,13 @@ export function TutorClassCard({
           {onAccept || onDecline ? (
             <div className="mt-4 flex flex-wrap gap-2">
               {onAccept ? (
-                <Button variant="cta" size="sm" className="min-h-11 sm:min-h-10" disabled={busy} onClick={onAccept}>
+                <Button
+                  variant="cta"
+                  size="sm"
+                  className="min-h-11 sm:min-h-10"
+                  disabled={busy}
+                  onClick={onAccept}
+                >
                   Accept lesson
                 </Button>
               ) : null}

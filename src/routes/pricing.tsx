@@ -50,8 +50,8 @@ function PricingPage() {
             <Calculator className="size-5 text-primary" />
             <h2 className="mt-3 text-lg">Lesson price</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Tutor's hourly rate × lesson length. A shorter lesson costs proportionally less — there
-              is no minimum bundle.
+              Tutor's hourly rate × lesson length. A shorter lesson costs proportionally less —
+              there is no minimum bundle.
             </p>
           </div>
           <div className="card-warm p-5">

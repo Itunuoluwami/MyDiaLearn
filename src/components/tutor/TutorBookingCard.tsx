@@ -101,7 +101,9 @@ export function TutorBookingCard({
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-1.5">
               <BookingStatusBadge status={booking.status} startingSoon={startsSoon} />
-              {booking.payment_status ? <PaymentStatusBadge status={booking.payment_status} /> : null}
+              {booking.payment_status ? (
+                <PaymentStatusBadge status={booking.payment_status} />
+              ) : null}
             </div>
           </div>
 
@@ -143,7 +145,12 @@ export function TutorBookingCard({
             {onAccept ? (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="cta" size="sm" className="min-h-11 flex-1 sm:min-h-10 sm:flex-none" disabled={busy}>
+                  <Button
+                    variant="cta"
+                    size="sm"
+                    className="min-h-11 flex-1 sm:min-h-10 sm:flex-none"
+                    disabled={busy}
+                  >
                     Accept
                   </Button>
                 </AlertDialogTrigger>
@@ -153,8 +160,8 @@ export function TutorBookingCard({
                     <AlertDialogDescription>
                       {formatDayInZone(booking.starts_at, timezone)} at{" "}
                       {formatTimeInZone(booking.starts_at, timezone)} ({timezone}) with{" "}
-                      {booking.student_first_name ?? "this learner"}. The lesson is confirmed once the
-                      family's payment clears.
+                      {booking.student_first_name ?? "this learner"}. The lesson is confirmed once
+                      the family's payment clears.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -187,7 +194,9 @@ export function TutorBookingCard({
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="min-h-11 sm:min-h-10">Keep request</AlertDialogCancel>
+                    <AlertDialogCancel className="min-h-11 sm:min-h-10">
+                      Keep request
+                    </AlertDialogCancel>
                     <AlertDialogAction className="min-h-11 sm:min-h-10" onClick={onDecline}>
                       Decline
                     </AlertDialogAction>
@@ -207,7 +216,8 @@ export function TutorBookingCard({
             {notesReady ? (
               <Button asChild variant="outline" size="sm" className="min-h-11 sm:min-h-10">
                 <Link to="/tutor/notes/$bookingId" params={{ bookingId: booking.id }}>
-                  <NotebookPen className="size-4" /> {booking.has_notes ? "Lesson notes" : "Add notes"}
+                  <NotebookPen className="size-4" />{" "}
+                  {booking.has_notes ? "Lesson notes" : "Add notes"}
                 </Link>
               </Button>
             ) : null}
@@ -224,7 +234,11 @@ export function TutorBookingCard({
               <ReportIssueDialog
                 bookingId={booking.id}
                 trigger={
-                  <Button variant="ghost" size="sm" className="min-h-11 text-muted-foreground sm:min-h-10">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="min-h-11 text-muted-foreground sm:min-h-10"
+                  >
                     Report an issue
                   </Button>
                 }

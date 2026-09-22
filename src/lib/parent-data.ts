@@ -123,7 +123,7 @@ export function useTutorCards(ids: (string | null | undefined)[]) {
 
 export function useTutorCard(tutorId: string | undefined) {
   const { map, isLoading } = useTutorCards([tutorId]);
-  return { tutor: tutorId ? map.get(tutorId) ?? null : null, isLoading };
+  return { tutor: tutorId ? (map.get(tutorId) ?? null) : null, isLoading };
 }
 
 /* ------------------------------------------------------------------ */
@@ -318,7 +318,9 @@ export function useDurationOptions() {
       if (error) throw error;
       const value = data?.value;
       if (Array.isArray(value)) {
-        return value.map((item) => Number(item)).filter((item) => Number.isFinite(item) && item > 0);
+        return value
+          .map((item) => Number(item))
+          .filter((item) => Number.isFinite(item) && item > 0);
       }
       return [];
     },

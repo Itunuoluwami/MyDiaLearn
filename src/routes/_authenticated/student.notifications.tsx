@@ -115,20 +115,25 @@ function StudentNotificationsPage() {
                     : "border-border bg-card opacity-75",
                 )}
               >
-                <div className={cn(
-                  "flex size-11 shrink-0 items-center justify-center rounded-2xl text-xl",
-                  isUnread ? "bg-primary/10" : "bg-muted",
-                )}>
+                <div
+                  className={cn(
+                    "flex size-11 shrink-0 items-center justify-center rounded-2xl text-xl",
+                    isUnread ? "bg-primary/10" : "bg-muted",
+                  )}
+                >
                   {getEmoji(n.title ?? "")}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className={cn("font-bold text-sm", isUnread ? "text-foreground" : "text-muted-foreground")}>
+                    <p
+                      className={cn(
+                        "font-bold text-sm",
+                        isUnread ? "text-foreground" : "text-muted-foreground",
+                      )}
+                    >
                       {n.title}
                     </p>
-                    {isUnread && (
-                      <span className="size-2 shrink-0 rounded-full bg-accent mt-1.5" />
-                    )}
+                    {isUnread && <span className="size-2 shrink-0 rounded-full bg-accent mt-1.5" />}
                   </div>
                   {n.body && (
                     <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{n.body}</p>

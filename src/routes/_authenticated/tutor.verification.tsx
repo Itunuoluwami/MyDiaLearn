@@ -42,7 +42,8 @@ export const Route = createFileRoute("/_authenticated/tutor/verification")({
       { property: "og:title", content: "Verification — DiaLearn tutor" },
       {
         property: "og:description",
-        content: "Complete the DiaLearn verification steps so families can book you with confidence.",
+        content:
+          "Complete the DiaLearn verification steps so families can book you with confidence.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -167,7 +168,8 @@ function TutorVerificationPage() {
               <p className="mt-2 max-w-lg text-sm text-muted-foreground">
                 {record.verification_status === "verified"
                   ? "You're verified. Control whether you appear in tutor search from your teaching profile."
-                  : record.verification_status === "pending" || record.verification_status === "in_review"
+                  : record.verification_status === "pending" ||
+                      record.verification_status === "in_review"
                     ? "Your documents are with our review team. We'll notify you as soon as there's a decision."
                     : record.verification_status === "suspended"
                       ? "Your account is suspended. Please contact the DiaLearn team."
@@ -222,7 +224,10 @@ function TutorVerificationPage() {
           {steps.isLoading ? (
             <CardSkeletonList rows={3} height="h-16" />
           ) : steps.isError ? (
-            <LoadError message="We couldn't load the verification steps." onRetry={() => void steps.refetch()} />
+            <LoadError
+              message="We couldn't load the verification steps."
+              onRetry={() => void steps.refetch()}
+            />
           ) : stepList.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No verification steps are configured yet. Please check back shortly.
@@ -239,7 +244,9 @@ function TutorVerificationPage() {
                         <p className="text-sm font-semibold">
                           {step.name}
                           {step.is_required ? null : (
-                            <span className="ml-2 text-xs font-normal text-muted-foreground">Optional</span>
+                            <span className="ml-2 text-xs font-normal text-muted-foreground">
+                              Optional
+                            </span>
                           )}
                         </p>
                         {step.description ? (
@@ -249,10 +256,16 @@ function TutorVerificationPage() {
                       <span
                         className={cn(
                           "rounded-full px-2.5 py-1 text-xs font-semibold",
-                          VERIFICATION_TONE[state?.status ?? (stepDocs.length ? "pending" : "unverified")],
+                          VERIFICATION_TONE[
+                            state?.status ?? (stepDocs.length ? "pending" : "unverified")
+                          ],
                         )}
                       >
-                        {VERIFICATION_LABEL[state?.status ?? (stepDocs.length ? "pending" : "unverified")]}
+                        {
+                          VERIFICATION_LABEL[
+                            state?.status ?? (stepDocs.length ? "pending" : "unverified")
+                          ]
+                        }
                       </span>
                     </div>
                     {state?.reviewer_notes ? (
@@ -262,7 +275,8 @@ function TutorVerificationPage() {
                     ) : null}
                     {stepDocs.length > 0 ? (
                       <p className="mt-3 text-xs text-muted-foreground">
-                        {stepDocs.length} {stepDocs.length === 1 ? "document" : "documents"} attached
+                        {stepDocs.length} {stepDocs.length === 1 ? "document" : "documents"}{" "}
+                        attached
                       </p>
                     ) : null}
                   </li>
@@ -328,7 +342,10 @@ function TutorVerificationPage() {
           {documents.isLoading ? (
             <CardSkeletonList rows={2} height="h-16" />
           ) : documents.isError ? (
-            <LoadError message="We couldn't load your documents." onRetry={() => void documents.refetch()} />
+            <LoadError
+              message="We couldn't load your documents."
+              onRetry={() => void documents.refetch()}
+            />
           ) : docs.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nothing uploaded yet.</p>
           ) : (

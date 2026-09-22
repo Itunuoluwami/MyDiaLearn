@@ -14,7 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { adminBeforeLoad } from "@/lib/admin-guard";
 
@@ -48,7 +54,15 @@ function slugify(value: string) {
     .replace(/^-|-$/g, "");
 }
 
-function Panel({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+function Panel({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="panel-portal mt-4 p-4 md:p-6">
       <h2 className="text-base font-semibold">{title}</h2>
@@ -113,7 +127,10 @@ function SubjectsTab() {
   });
 
   return (
-    <Panel title="Subjects" description="The subject list powering search, filters and tutor profiles.">
+    <Panel
+      title="Subjects"
+      description="The subject list powering search, filters and tutor profiles."
+    >
       <form
         className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
         onSubmit={(event) => {
@@ -123,11 +140,20 @@ function SubjectsTab() {
       >
         <div className="space-y-2">
           <Label htmlFor="subject-name">Subject name</Label>
-          <Input id="subject-name" required value={name} onChange={(e) => setName(e.target.value)} />
+          <Input
+            id="subject-name"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="subject-category">Category</Label>
-          <Input id="subject-category" value={category} onChange={(e) => setCategory(e.target.value)} />
+          <Input
+            id="subject-category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          />
         </div>
         <div className="flex items-end">
           <Button type="submit" className="w-full sm:w-auto" disabled={create.isPending}>
@@ -139,7 +165,10 @@ function SubjectsTab() {
 
       <ul className="mt-5 divide-y divide-border">
         {(subjects.data ?? []).map((subject) => (
-          <li key={subject.id} className="flex min-h-14 flex-wrap items-center justify-between gap-3 py-2">
+          <li
+            key={subject.id}
+            className="flex min-h-14 flex-wrap items-center justify-between gap-3 py-2"
+          >
             <div>
               <p className="text-sm font-medium">{subject.name}</p>
               <p className="text-xs text-muted-foreground">{subject.category ?? "Uncategorised"}</p>
@@ -150,7 +179,12 @@ function SubjectsTab() {
                 aria-label="Active"
                 onCheckedChange={(checked) => toggle.mutate({ id: subject.id, is_active: checked })}
               />
-              <Button variant="ghost" size="icon" aria-label="Delete" onClick={() => remove.mutate(subject.id)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Delete"
+                onClick={() => remove.mutate(subject.id)}
+              >
                 <Trash2 className="size-4 text-destructive" />
               </Button>
             </div>
@@ -207,7 +241,10 @@ function CurriculaTab() {
   });
 
   return (
-    <Panel title="Curricula & levels" description="Curricula and the education levels students are placed in.">
+    <Panel
+      title="Curricula & levels"
+      description="Curricula and the education levels students are placed in."
+    >
       <form
         className="grid gap-3 sm:grid-cols-[1fr_10rem_auto]"
         onSubmit={(event) => {
@@ -217,7 +254,12 @@ function CurriculaTab() {
       >
         <div className="space-y-2">
           <Label htmlFor="curriculum-name">Curriculum name</Label>
-          <Input id="curriculum-name" required value={name} onChange={(e) => setName(e.target.value)} />
+          <Input
+            id="curriculum-name"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="curriculum-country">Country code</Label>
@@ -243,13 +285,16 @@ function CurriculaTab() {
               <div>
                 <p className="text-sm font-medium">{curriculum.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {curriculum.country_code ?? "International"} · {curriculum.education_levels.length} levels
+                  {curriculum.country_code ?? "International"} ·{" "}
+                  {curriculum.education_levels.length} levels
                 </p>
               </div>
               <Switch
                 checked={curriculum.is_active}
                 aria-label="Active"
-                onCheckedChange={(checked) => toggle.mutate({ id: curriculum.id, is_active: checked })}
+                onCheckedChange={(checked) =>
+                  toggle.mutate({ id: curriculum.id, is_active: checked })
+                }
               />
             </div>
             <div className="mt-2 flex flex-wrap gap-1">
@@ -284,7 +329,8 @@ function TierEditor({ tiers, onChange }: { tiers: Tier[]; onChange: (tiers: Tier
     <div className="space-y-2 sm:col-span-2">
       <Label>Volume tiers</Label>
       <p className="text-xs text-muted-foreground">
-        Commission % by completed lessons per tutor in the trailing 30 days. Leave "up to" empty for the top tier.
+        Commission % by completed lessons per tutor in the trailing 30 days. Leave "up to" empty for
+        the top tier.
       </p>
       <div className="space-y-2">
         {tiers.map((tier, index) => (
@@ -303,7 +349,9 @@ function TierEditor({ tiers, onChange }: { tiers: Tier[]; onChange: (tiers: Tier
                 type="number"
                 placeholder="No limit"
                 value={tier.max ?? ""}
-                onChange={(e) => update(index, { max: e.target.value ? Number(e.target.value) : null })}
+                onChange={(e) =>
+                  update(index, { max: e.target.value ? Number(e.target.value) : null })
+                }
               />
             </div>
             <div className="space-y-1">
@@ -315,7 +363,13 @@ function TierEditor({ tiers, onChange }: { tiers: Tier[]; onChange: (tiers: Tier
                 onChange={(e) => update(index, { percentage: Number(e.target.value) })}
               />
             </div>
-            <Button type="button" variant="ghost" size="icon" aria-label="Remove tier" onClick={() => remove(index)}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Remove tier"
+              onClick={() => remove(index)}
+            >
               <Trash2 className="size-4 text-destructive" />
             </Button>
           </div>
@@ -341,7 +395,10 @@ function CommissionTab() {
     tutor_id: "",
     agency_id: "",
   });
-  const [tiers, setTiers] = useState<Tier[]>([{ min: 0, max: 10, percentage: 20 }, { min: 11, max: null, percentage: 15 }]);
+  const [tiers, setTiers] = useState<Tier[]>([
+    { min: 0, max: 10, percentage: 20 },
+    { min: 11, max: null, percentage: 15 },
+  ]);
 
   const rules = useQuery({
     queryKey: ["admin-commission"],
@@ -373,7 +430,10 @@ function CommissionTab() {
   const agencyOptions = useQuery({
     queryKey: ["admin-commission-agencies"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("tutor_agencies").select("id, name").order("name");
+      const { data, error } = await supabase
+        .from("tutor_agencies")
+        .select("id, name")
+        .order("name");
       if (error) throw error;
       return data ?? [];
     },
@@ -448,7 +508,10 @@ function CommissionTab() {
         </div>
         <div className="space-y-2">
           <Label>Applies to</Label>
-          <Select value={form.applies_to} onValueChange={(value) => setForm({ ...form, applies_to: value })}>
+          <Select
+            value={form.applies_to}
+            onValueChange={(value) => setForm({ ...form, applies_to: value })}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -499,13 +562,15 @@ function CommissionTab() {
         <div className="space-y-2 sm:col-span-2">
           <Label>Assign to a specific tutor or agency (optional)</Label>
           <p className="text-xs text-muted-foreground">
-            Leave both on "Any" to apply this rule to every tutor matching the category above. A tutor-specific
-            assignment always wins over an agency or category-wide rule.
+            Leave both on "Any" to apply this rule to every tutor matching the category above. A
+            tutor-specific assignment always wins over an agency or category-wide rule.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Select
               value={form.tutor_id || "any"}
-              onValueChange={(value) => setForm({ ...form, tutor_id: value === "any" ? "" : value })}
+              onValueChange={(value) =>
+                setForm({ ...form, tutor_id: value === "any" ? "" : value })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any tutor" />
@@ -521,7 +586,9 @@ function CommissionTab() {
             </Select>
             <Select
               value={form.agency_id || "any"}
-              onValueChange={(value) => setForm({ ...form, agency_id: value === "any" ? "" : value })}
+              onValueChange={(value) =>
+                setForm({ ...form, agency_id: value === "any" ? "" : value })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Any agency" />
@@ -548,7 +615,10 @@ function CommissionTab() {
 
       <ul className="mt-5 divide-y divide-border">
         {(rules.data ?? []).map((rule) => (
-          <li key={rule.id} className="flex min-h-14 flex-wrap items-center justify-between gap-3 py-2">
+          <li
+            key={rule.id}
+            className="flex min-h-14 flex-wrap items-center justify-between gap-3 py-2"
+          >
             <div>
               <p className="text-sm font-medium">{rule.name}</p>
               <p className="text-xs text-muted-foreground">
@@ -575,9 +645,10 @@ function CommissionTab() {
 
 function PricingTab() {
   const queryClient = useQueryClient();
-  const [drafts, setDrafts] = useState<{ processing_fee_percentage: string; processing_fee_fixed: string } | null>(
-    null,
-  );
+  const [drafts, setDrafts] = useState<{
+    processing_fee_percentage: string;
+    processing_fee_fixed: string;
+  } | null>(null);
 
   const settings = useQuery({
     queryKey: ["admin-pricing-settings"],
@@ -589,21 +660,27 @@ function PricingTab() {
       if (error) throw error;
       const byKey = Object.fromEntries((data ?? []).map((row) => [row.key, row.value]));
       return {
-        processing_fee_percentage: String((byKey["payments.processing_fee_percentage"] as number) ?? 0),
+        processing_fee_percentage: String(
+          (byKey["payments.processing_fee_percentage"] as number) ?? 0,
+        ),
         processing_fee_fixed: String((byKey["payments.processing_fee_fixed"] as number) ?? 0),
       };
     },
   });
 
   const save = useMutation({
-    mutationFn: async (values: { processing_fee_percentage: string; processing_fee_fixed: string }) => {
+    mutationFn: async (values: {
+      processing_fee_percentage: string;
+      processing_fee_fixed: string;
+    }) => {
       const { error } = await supabase.from("platform_settings").upsert(
         [
           {
             key: "payments.processing_fee_percentage",
             value: Number(values.processing_fee_percentage || 0),
             label: "Payment processing fee (%)",
-            description: "Percentage of the lesson amount charged as a payment processing fee at checkout.",
+            description:
+              "Percentage of the lesson amount charged as a payment processing fee at checkout.",
             group_name: "payments",
             is_public: false,
           },
@@ -611,7 +688,8 @@ function PricingTab() {
             key: "payments.processing_fee_fixed",
             value: Number(values.processing_fee_fixed || 0),
             label: "Payment processing fee (fixed)",
-            description: "Flat payment processing fee added at checkout, in the tutor's listing currency.",
+            description:
+              "Flat payment processing fee added at checkout, in the tutor's listing currency.",
             group_name: "payments",
             is_public: false,
           },
@@ -653,7 +731,13 @@ function PricingTab() {
               step="0.001"
               value={values.processing_fee_percentage}
               onChange={(e) =>
-                setDrafts({ ...(values as { processing_fee_percentage: string; processing_fee_fixed: string }), processing_fee_percentage: e.target.value })
+                setDrafts({
+                  ...(values as {
+                    processing_fee_percentage: string;
+                    processing_fee_fixed: string;
+                  }),
+                  processing_fee_percentage: e.target.value,
+                })
               }
             />
           </div>
@@ -665,7 +749,13 @@ function PricingTab() {
               step="0.01"
               value={values.processing_fee_fixed}
               onChange={(e) =>
-                setDrafts({ ...(values as { processing_fee_percentage: string; processing_fee_fixed: string }), processing_fee_fixed: e.target.value })
+                setDrafts({
+                  ...(values as {
+                    processing_fee_percentage: string;
+                    processing_fee_fixed: string;
+                  }),
+                  processing_fee_fixed: e.target.value,
+                })
               }
             />
           </div>
@@ -684,7 +774,13 @@ function PricingTab() {
 function GeneralSettingsPanel() {
   const queryClient = useQueryClient();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [newRow, setNewRow] = useState({ key: "", label: "", description: "", group_name: "general", value: "" });
+  const [newRow, setNewRow] = useState({
+    key: "",
+    label: "",
+    description: "",
+    group_name: "general",
+    value: "",
+  });
 
   const settings = useQuery({
     queryKey: ["admin-general-settings"],
@@ -702,7 +798,10 @@ function GeneralSettingsPanel() {
 
   const save = useMutation({
     mutationFn: async ({ key, value }: { key: string; value: string }) => {
-      const { error } = await supabase.from("platform_settings").update({ value: JSON.parse(value) }).eq("key", key);
+      const { error } = await supabase
+        .from("platform_settings")
+        .update({ value: JSON.parse(value) })
+        .eq("key", key);
       if (error) throw error;
     },
     onSuccess: async (_data, { key }) => {
@@ -714,7 +813,12 @@ function GeneralSettingsPanel() {
       await queryClient.invalidateQueries({ queryKey: ["admin-general-settings"] });
       toast.success("Setting saved");
     },
-    onError: (error: Error) => toast.error(error.message.includes("JSON") ? "Value must be valid JSON, e.g. \"text\", 10, or true" : error.message),
+    onError: (error: Error) =>
+      toast.error(
+        error.message.includes("JSON")
+          ? 'Value must be valid JSON, e.g. "text", 10, or true'
+          : error.message,
+      ),
   });
 
   const create = useMutation({
@@ -734,7 +838,12 @@ function GeneralSettingsPanel() {
       await queryClient.invalidateQueries({ queryKey: ["admin-general-settings"] });
       toast.success("Setting added");
     },
-    onError: (error: Error) => toast.error(error.message.includes("JSON") ? "Value must be valid JSON, e.g. \"text\", 10, or true" : error.message),
+    onError: (error: Error) =>
+      toast.error(
+        error.message.includes("JSON")
+          ? 'Value must be valid JSON, e.g. "text", 10, or true'
+          : error.message,
+      ),
   });
 
   return (
@@ -763,8 +872,13 @@ function GeneralSettingsPanel() {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={save.isPending || (drafts[row.key] ?? JSON.stringify(row.value)) === JSON.stringify(row.value)}
-                onClick={() => save.mutate({ key: row.key, value: drafts[row.key] ?? JSON.stringify(row.value) })}
+                disabled={
+                  save.isPending ||
+                  (drafts[row.key] ?? JSON.stringify(row.value)) === JSON.stringify(row.value)
+                }
+                onClick={() =>
+                  save.mutate({ key: row.key, value: drafts[row.key] ?? JSON.stringify(row.value) })
+                }
               >
                 {save.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
                 Save
@@ -793,11 +907,19 @@ function GeneralSettingsPanel() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="setting-label">Label</Label>
-          <Input id="setting-label" value={newRow.label} onChange={(e) => setNewRow({ ...newRow, label: e.target.value })} />
+          <Input
+            id="setting-label"
+            value={newRow.label}
+            onChange={(e) => setNewRow({ ...newRow, label: e.target.value })}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="setting-group">Group</Label>
-          <Input id="setting-group" value={newRow.group_name} onChange={(e) => setNewRow({ ...newRow, group_name: e.target.value })} />
+          <Input
+            id="setting-group"
+            value={newRow.group_name}
+            onChange={(e) => setNewRow({ ...newRow, group_name: e.target.value })}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="setting-value">Value (JSON)</Label>
@@ -883,11 +1005,19 @@ function TemplateEditor({
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Trigger key</Label>
-          <Input value={draft.trigger_key} onChange={(e) => setDraft({ ...draft, trigger_key: e.target.value })} />
+          <Input
+            value={draft.trigger_key}
+            onChange={(e) => setDraft({ ...draft, trigger_key: e.target.value })}
+          />
         </div>
         <div className="space-y-2">
           <Label>Channel</Label>
-          <Select value={draft.channel} onValueChange={(value) => setDraft({ ...draft, channel: value as TemplateDraft["channel"] })}>
+          <Select
+            value={draft.channel}
+            onValueChange={(value) =>
+              setDraft({ ...draft, channel: value as TemplateDraft["channel"] })
+            }
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -904,7 +1034,12 @@ function TemplateEditor({
           <Label>Audience</Label>
           <Select
             value={draft.audience || "all"}
-            onValueChange={(value) => setDraft({ ...draft, audience: value === "all" ? "" : (value as TemplateDraft["audience"]) })}
+            onValueChange={(value) =>
+              setDraft({
+                ...draft,
+                audience: value === "all" ? "" : (value as TemplateDraft["audience"]),
+              })
+            }
           >
             <SelectTrigger>
               <SelectValue />
@@ -921,12 +1056,19 @@ function TemplateEditor({
         </div>
         <div className="space-y-2">
           <Label>Subject (email only)</Label>
-          <Input value={draft.subject} onChange={(e) => setDraft({ ...draft, subject: e.target.value })} />
+          <Input
+            value={draft.subject}
+            onChange={(e) => setDraft({ ...draft, subject: e.target.value })}
+          />
         </div>
       </div>
       <div className="space-y-2">
         <Label>Body</Label>
-        <Textarea rows={3} value={draft.body} onChange={(e) => setDraft({ ...draft, body: e.target.value })} />
+        <Textarea
+          rows={3}
+          value={draft.body}
+          onChange={(e) => setDraft({ ...draft, body: e.target.value })}
+        />
       </div>
       <div className="flex justify-end gap-2">
         <Button size="sm" variant="ghost" onClick={onCancel}>
@@ -1047,7 +1189,10 @@ function TemplatesTab() {
 
   const toggle = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase.from("notification_templates").update({ is_active }).eq("id", id);
+      const { error } = await supabase
+        .from("notification_templates")
+        .update({ is_active })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-templates"] }),
@@ -1085,7 +1230,9 @@ function TemplatesTab() {
                     <Switch
                       checked={template.is_active}
                       aria-label="Active"
-                      onCheckedChange={(checked) => toggle.mutate({ id: template.id, is_active: checked })}
+                      onCheckedChange={(checked) =>
+                        toggle.mutate({ id: template.id, is_active: checked })
+                      }
                     />
                     <Button size="sm" variant="ghost" onClick={() => setEditingId(template.id)}>
                       Edit
@@ -1095,7 +1242,9 @@ function TemplatesTab() {
                 {template.subject ? (
                   <p className="mt-2 text-xs text-muted-foreground">Subject: {template.subject}</p>
                 ) : null}
-                <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{template.body}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+                  {template.body}
+                </p>
               </>
             )}
           </li>

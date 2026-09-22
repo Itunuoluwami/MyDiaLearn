@@ -160,7 +160,12 @@ export function ResetPasswordForm({ onSuccess }: { onSuccess: () => void }) {
         ) : null}
       </div>
 
-      <Button type="submit" variant="cta" className="min-h-12 w-full text-base" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        variant="cta"
+        className="min-h-12 w-full text-base"
+        disabled={isSubmitting}
+      >
         {isSubmitting ? (
           <>
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />

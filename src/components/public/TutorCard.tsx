@@ -1,12 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import {
-  BadgeCheck,
-  BookOpen,
-  CalendarClock,
-  GraduationCap,
-  MapPin,
-  Star,
-} from "lucide-react";
+import { BadgeCheck, BookOpen, CalendarClock, GraduationCap, MapPin, Star } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { LazyImage } from "@/components/ui/lazy-image";
@@ -132,7 +125,9 @@ export function TutorCard({
               </Badge>
             ))}
             {primarySubject ? (
-              <Badge className="bg-secondary-soft text-secondary-foreground">{primarySubject}</Badge>
+              <Badge className="bg-secondary-soft text-secondary-foreground">
+                {primarySubject}
+              </Badge>
             ) : null}
           </div>
         ) : null}

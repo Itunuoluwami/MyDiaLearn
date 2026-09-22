@@ -30,7 +30,8 @@ export const Route = createFileRoute("/tutors/$tutorId")({
       { property: "og:title", content: "Tutor profile — DiaLearn" },
       {
         property: "og:description",
-        content: "Biography, qualifications, subjects, reviews and hourly rate for a DiaLearn tutor.",
+        content:
+          "Biography, qualifications, subjects, reviews and hourly rate for a DiaLearn tutor.",
       },
       { property: "og:type", content: "profile" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -57,10 +58,10 @@ function stringList(value: unknown): string[] {
       if (item && typeof item === "object") {
         const record = item as Record<string, unknown>;
         const parts = [
-          record['title'],
-          record['name'],
-          record['institution'],
-          record['year'],
+          record["title"],
+          record["name"],
+          record["institution"],
+          record["year"],
         ].filter((part) => typeof part === "string" || typeof part === "number");
 
         return parts.join(" — ");
@@ -132,7 +133,6 @@ function TutorProfilePage() {
     );
   }
 
-
   const rating = Number(tutor.rating_avg ?? 0);
   const qualifications = stringList(tutor.qualifications);
   const languages = stringList(tutor.languages);
@@ -153,7 +153,9 @@ function TutorProfilePage() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <h1 className="display-section text-3xl">{tutor.full_name ?? "DiaLearn tutor"}</h1>
+                  <h1 className="display-section text-3xl">
+                    {tutor.full_name ?? "DiaLearn tutor"}
+                  </h1>
                   {tutor.headline ? (
                     <p className="mt-1 text-sm text-muted-foreground">{tutor.headline}</p>
                   ) : null}
@@ -264,7 +266,10 @@ function TutorProfilePage() {
             ) : (
               <ul className="mt-4 space-y-4">
                 {reviews.map((review) => (
-                  <li key={review.id} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                  <li
+                    key={review.id}
+                    className="border-b border-border pb-4 last:border-0 last:pb-0"
+                  >
                     <div className="flex items-center gap-2 text-sm font-semibold">
                       <span className="flex items-center gap-1">
                         <Star className="size-4 fill-secondary text-secondary" />
