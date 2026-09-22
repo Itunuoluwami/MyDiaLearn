@@ -16,7 +16,7 @@ proposed controlled migration path to TanStack → NestJS → PostgreSQL.
 The repository contains **70 PL/pgSQL functions** (almost all `SECURITY DEFINER`),
 **130 row-level security policies** and **51 triggers** across **41 tables**. The
 TanStack frontend is, architecturally, a _thin client over Postgres RPCs_: it calls
-36 distinct stored procedures and issues direct table reads against 31 tables and views.
+45 distinct stored procedures and issues direct table reads against 35 tables and views.
 
 This reframes the migration. It is **not** "put an API in front of the database."
 It is **"port an existing backend that happens to be written in SQL into NestJS."**
@@ -180,7 +180,7 @@ the automatic one).
 `previewAuthStorage.ts` brokers session storage for Lovable's preview iframe —
 **Lovable-coupled, delete at cutover**.
 
-### 3.2 Direct table access — 31 tables/views, ~140 call sites
+### 3.2 Direct table access — 35 tables/views, ~140 call sites
 
 `students` (10), `tutors` (8), `platform_settings` (8), `profiles` (7), `bookings` (7),
 `tutor_documents` (5), `subjects` (5), `notifications` (5), `curricula` (5),
@@ -191,7 +191,11 @@ the automatic one).
 `payouts` (2), `lesson_notes` (2), `cancellation_policies` (2), `tutor_agencies` (1),
 `role_permissions` (1), `permissions` (1), `disputes` (1), `conversation_participants` (1)
 
-### 3.3 Stored procedures called from the client — 36
+Plus four reached only through the untyped `governanceTable` helper, because they
+postdate the generated types: `admin_invitations`, `user_permissions`,
+`admin_action_requests`, `audit_logs`.
+
+### 3.3 Stored procedures called from the client — 45
 
 | Domain            | RPCs                                                                                                                                                                                                                                               |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -203,6 +207,17 @@ the automatic one).
 | Parent/student    | `parent_dashboard_summary`, `parent_child_progress`, `my_conversations`                                                                                                                                                                            |
 | Disputes          | `raise_dispute`, `admin_resolve_dispute`                                                                                                                                                                                                           |
 | Admin             | `admin_dashboard_summary`, `admin_report_summary`, `admin_invite_create`, `is_super_admin`                                                                                                                                                         |
+
+> **Correction to the first pass of this audit,** which reported 36. A plain
+> `.rpc("` grep undercounts by ten: nine governance procedures are reached
+> through the untyped `governanceRpc` helper, and `public_tutor_search` is
+> called with a line break after the paren. The missing ten —
+> `admin_invite_redeem`, `admin_invite_revoke`, `admin_reject_payout`,
+> `admin_request_action`, `admin_review_action`, `admin_set_user_permission`,
+> `admin_set_user_roles`, `clear_must_change_password`, `my_permissions`,
+> `public_tutor_search` — are now pinned by
+> `test/contract/supabase-coupling.test.ts`, which fails if the inventory moves
+> in either direction.
 
 ### 3.4 The stale-types problem — root cause of 84 type errors
 
@@ -575,7 +590,7 @@ through their interface tokens, injected via DI — never imported concretely by
 │  Current data/API layer                 │
 │  src/lib/*.ts (21 modules)              │
 │  src/hooks/use-auth.tsx                 │
-│  ~140 .from()  ·  36 .rpc()             │
+│  ~140 .from()  ·  45 .rpc()             │
 └────────────────┬────────────────────────┘
                  ▼
 ┌─────────────────────────────────────────┐
@@ -723,7 +738,7 @@ what makes the auth cutover a one-file change instead of a 49-route change.**
 2. Regenerate `types.ts`; delete `governance-types.ts`; remove the `super_admin` workaround in `use-auth.tsx`.
 3. Fix the residual type errors; add a `typecheck` script.
 4. `npm run format` to clear 3,285 Prettier errors in one commit, isolated from logic changes.
-5. Add Vitest + Playwright. Characterisation tests for the 36 RPCs and the critical flows.
+5. Add Vitest. Freeze the Supabase coupling inventory and cover the auth DTOs.
 6. Add CI: typecheck + lint + test.
 
 **Exit criteria:** `tsc` clean, CI green, booking→payment→class→rating covered end-to-end.
@@ -883,8 +898,8 @@ vite wrapper cannot be removed. If no, when does the sync stop?
 | Surface                             | Count                       | Replacement                              |
 | ----------------------------------- | --------------------------- | ---------------------------------------- |
 | Files importing the Supabase client | 44                          | `src/lib/api/` client                    |
-| Direct table reads/writes           | ~140 across 31 tables/views | REST endpoints                           |
-| Stored-procedure calls              | 36 distinct RPCs            | NestJS services                          |
+| Direct table reads/writes           | ~140 across 35 tables/views | REST endpoints                           |
+| Stored-procedure calls              | 45 distinct RPCs            | NestJS services                          |
 | PL/pgSQL functions in schema        | 70                          | services + retained SQL                  |
 | RLS policies                        | 130                         | guards + repository scoping (DECISION-1) |
 | Triggers                            | 51                          | retain in PostgreSQL                     |
