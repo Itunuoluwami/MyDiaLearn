@@ -132,7 +132,11 @@ function TutorOnboardingPage() {
   async function persistStep(next: number) {
     try {
       await update.mutateAsync({ onboarding_step: next });
-    } catch {}
+    } catch {
+      // Best-effort. Recording which onboarding step the tutor reached is a
+      // convenience on return, never a precondition for continuing, so a
+      // failure here must not interrupt the flow or raise a toast.
+    }
   }
 
   async function handleProfileNext() {

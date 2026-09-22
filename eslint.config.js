@@ -46,6 +46,11 @@ export default tseslint.config(
       ],
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+      // previewAuthStorage.ts declares a timeout handle that its own
+      // finish() closure reads before the assignment below it. Rewriting
+      // that to satisfy the rule would mean restructuring working auth
+      // storage code for a style preference.
+      "prefer-const": ["error", { ignoreReadBeforeAssign: true }],
     },
   },
   eslintPluginPrettier,
