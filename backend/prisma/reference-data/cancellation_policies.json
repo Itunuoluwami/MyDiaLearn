@@ -1,0 +1,28 @@
+[
+    {
+        "id": "90546a96-a71f-4111-8abf-9dbc1a64d39a",
+        "name": "Flexible (24 hours)",
+        "hours_before": 24,
+        "refund_percentage": 100.0,
+        "tutor_compensation_percentage": 0.0,
+        "applies_to": null,
+        "description": "Full refund when cancelled at least 24 hours before the lesson",
+        "is_default": true,
+        "is_active": true,
+        "created_at": "2026-08-26T12:14:49.379956+00:00",
+        "updated_at": "2026-08-26T12:14:49.379956+00:00"
+    },
+    {
+        "id": "870d047e-d4ee-49fe-bb07-38b4ec2a2712",
+        "name": "Late cancellation (under 24 hours)",
+        "hours_before": 0,
+        "refund_percentage": 50.0,
+        "tutor_compensation_percentage": 50.0,
+        "applies_to": null,
+        "description": "Half refund; tutor is compensated for reserved time",
+        "is_default": false,
+        "is_active": true,
+        "created_at": "2026-08-26T12:14:49.379956+00:00",
+        "updated_at": "2026-08-26T12:14:49.379956+00:00"
+    }
+]

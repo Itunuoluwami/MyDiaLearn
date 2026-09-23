@@ -2,7 +2,7 @@
   "name": "dialearn-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "DiaLearn NestJS API — foundation phase",
+  "description": "DiaLearn NestJS API \u2014 foundation phase",
   "scripts": {
     "build": "nest build",
     "start": "nest start",
@@ -21,7 +21,9 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:status": "prisma migrate status",
     "db:seed": "ts-node prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:schema:dryrun": "node scripts/build-schema.mjs --strip-roles",
+    "db:schema:apply": "node scripts/build-schema.mjs --strip-roles --apply"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

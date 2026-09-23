@@ -12,10 +12,10 @@ business logic and authorization live in PostgreSQL, not TypeScript.
 
 ## What this phase does and does not do
 
-| | |
-|---|---|
-| **Does** | Application skeleton, DI wiring, configuration contract, error handling, logging, security posture, integration ports, repository pattern, health checks, tests |
-| **Does not** | Serve any product feature, replace any Supabase call, own any data, issue any token |
+|              |                                                                                                                                                                 |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Does**     | Application skeleton, DI wiring, configuration contract, error handling, logging, security posture, integration ports, repository pattern, health checks, tests |
+| **Does not** | Serve any product feature, replace any Supabase call, own any data, issue any token                                                                             |
 
 No existing behaviour changed. The frontend builds and runs exactly as before,
 because nothing in `src/` was touched.
@@ -59,7 +59,7 @@ Dependencies point inward and never reverse. Concretely:
 - **Controllers** do HTTP only: validate, delegate, shape the response. No
   database access, no business rules.
 - **Services** hold business logic. They depend on repository classes and on
-  integration *tokens*, never on a provider implementation.
+  integration _tokens_, never on a provider implementation.
 - **Repositories** are the only code that touches Prisma.
 - **Adapters** are the only code that knows a provider's name.
 
@@ -84,21 +84,21 @@ keeps a service from quietly acquiring a dependency on `SmtpEmailProvider`.
 
 ### Global providers, in order
 
-| Order | Provider | Why here |
-|---|---|---|
-| 1 | `ThrottlerGuard` | Reject floods before any work is done |
-| 2 | `JwtAuthGuard` | Establish who is calling |
-| 3 | `RolesGuard` | Coarse role check against that identity |
-| 4 | `PermissionsGuard` | Fine-grained permission check |
-| — | `AllExceptionsFilter` | One error shape for every failure |
-| — | `LoggingInterceptor` | Per-request timing, keyed by correlation id |
+| Order | Provider              | Why here                                    |
+| ----- | --------------------- | ------------------------------------------- |
+| 1     | `ThrottlerGuard`      | Reject floods before any work is done       |
+| 2     | `JwtAuthGuard`        | Establish who is calling                    |
+| 3     | `RolesGuard`          | Coarse role check against that identity     |
+| 4     | `PermissionsGuard`    | Fine-grained permission check               |
+| —     | `AllExceptionsFilter` | One error shape for every failure           |
+| —     | `LoggingInterceptor`  | Per-request timing, keyed by correlation id |
 
 `JwtAuthGuard` is bound globally, so **the API denies by default**. A route
 opts out with `@Public()`. Forgetting the decorator makes an endpoint
 unreachable — a loud failure. The opposite arrangement, adding a guard per
 route, fails silently by leaving an endpoint open.
 
-One caveat, pinned by an e2e test: guards run per *matched handler*, so an
+One caveat, pinned by an e2e test: guards run per _matched handler_, so an
 unrouted path returns 404 without reaching the guard chain. Deny-by-default
 protects declared routes, not the absence of one.
 
@@ -149,12 +149,12 @@ pool. This choice keeps that option open.
 
 Four ports, each an interface plus a DI token, each with at least one adapter:
 
-| Port | Token | Adapter today | Reflects |
-|---|---|---|---|
-| `EmailService` | `EMAIL_SERVICE` | `LogEmailProvider` / `SmtpEmailProvider` | No transactional email exists yet |
-| `PaymentProvider` | `PAYMENT_PROVIDER` | `SimulatedPaymentProvider` | `pay_for_booking()` simulates an instant charge |
-| `StorageProvider` | `STORAGE_PROVIDER` | `UnconfiguredStorageProvider` | Supabase Storage still owns files |
-| `ClassroomProvider` | `CLASSROOM_PROVIDER` | `NoneClassroomProvider` | `meeting_url` has never been populated |
+| Port                | Token                | Adapter today                            | Reflects                                        |
+| ------------------- | -------------------- | ---------------------------------------- | ----------------------------------------------- |
+| `EmailService`      | `EMAIL_SERVICE`      | `LogEmailProvider` / `SmtpEmailProvider` | No transactional email exists yet               |
+| `PaymentProvider`   | `PAYMENT_PROVIDER`   | `SimulatedPaymentProvider`               | `pay_for_booking()` simulates an instant charge |
+| `StorageProvider`   | `STORAGE_PROVIDER`   | `UnconfiguredStorageProvider`            | Supabase Storage still owns files               |
+| `ClassroomProvider` | `CLASSROOM_PROVIDER` | `NoneClassroomProvider`                  | `meeting_url` has never been populated          |
 
 `IntegrationsModule` is the only file that names a concrete adapter. Selection
 is by environment variable. Adding a provider means writing an adapter, adding
@@ -164,7 +164,7 @@ Three principles the defaults follow:
 
 **Adapters describe reality, not aspiration.** `SimulatedPaymentProvider` is not
 a stub to delete; it is the faithful adapter for how DiaLearn works right now.
-That lets the payment domain migrate to NestJS *without* simultaneously
+That lets the payment domain migrate to NestJS _without_ simultaneously
 introducing a live gateway — two reversible changes instead of one irreversible
 one.
 
@@ -267,15 +267,15 @@ OTPs and payment details.
 
 ## 7. Security
 
-| Control | Implementation |
-|---|---|
-| Authentication | `JwtAuthGuard`, global, deny-by-default |
-| Authorization | `RolesGuard` + `PermissionsGuard`, mirroring `has_role()` / `has_permission()` |
-| Headers | `helmet` — HSTS, `nosniff`, frame options, no `x-powered-by` |
-| CORS | Explicit origin allow-list from `CORS_ORIGIN` |
-| Validation | Global `ValidationPipe`, `whitelist` + `forbidNonWhitelisted` |
-| Env validation | Joi at boot; the app refuses to start when it fails |
-| Rate limiting | `ThrottlerGuard`, configurable, skipped on `/health` |
+| Control        | Implementation                                                                 |
+| -------------- | ------------------------------------------------------------------------------ |
+| Authentication | `JwtAuthGuard`, global, deny-by-default                                        |
+| Authorization  | `RolesGuard` + `PermissionsGuard`, mirroring `has_role()` / `has_permission()` |
+| Headers        | `helmet` — HSTS, `nosniff`, frame options, no `x-powered-by`                   |
+| CORS           | Explicit origin allow-list from `CORS_ORIGIN`                                  |
+| Validation     | Global `ValidationPipe`, `whitelist` + `forbidNonWhitelisted`                  |
+| Env validation | Joi at boot; the app refuses to start when it fails                            |
+| Rate limiting  | `ThrottlerGuard`, configurable, skipped on `/health`                           |
 
 `forbidNonWhitelisted` matters more here than usual: the frontend currently
 posts to Postgres functions with no client-side validation at all, so these DTOs
@@ -284,7 +284,7 @@ are the first place unexpected input is ever caught.
 `super_admin` short-circuits both authorization guards, matching `is_admin()`.
 
 > **Role checks are not tenancy.** Holding the `tutor` role says nothing about
-> whether this tutor may read *that* booking. Row scoping belongs in the
+> whether this tutor may read _that_ booking. Row scoping belongs in the
 > repository layer. Treating a role check as sufficient is exactly how removing
 > RLS leaks data.
 
@@ -292,11 +292,11 @@ are the first place unexpected input is ever caught.
 
 ## 8. Health checks
 
-| Endpoint | Behaviour |
-|---|---|
-| `GET /health` | Always 200 while the process answers. Reports `ok` or `degraded` with per-component detail |
-| `GET /health/live` | Liveness. No dependencies consulted |
-| `GET /health/ready` | Readiness. 503 when the database is down, so traffic is withheld |
+| Endpoint            | Behaviour                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------ |
+| `GET /health`       | Always 200 while the process answers. Reports `ok` or `degraded` with per-component detail |
+| `GET /health/live`  | Liveness. No dependencies consulted                                                        |
+| `GET /health/ready` | Readiness. 503 when the database is down, so traffic is withheld                           |
 
 All three are `@Public()` and skip throttling — a health endpoint that needs a
 token is useless to a load balancer, and one that can be rate-limited into
@@ -320,7 +320,7 @@ Three layers, all runnable without a database:
 through the DI container. `health.service.spec.ts` asserts behaviour, including
 that a database error never leaks credentials into the response.
 
-**End-to-end** (`test/*.e2e-spec.ts`, Jest + supertest) — boots the *real*
+**End-to-end** (`test/*.e2e-spec.ts`, Jest + supertest) — boots the _real_
 module graph with no database reachable. This is the cheapest check that the
 foundation holds together: a misconfigured provider, an unbound token or a guard
 that cannot resolve a dependency all fail here. It uses `configureApp()`, the
@@ -344,19 +344,19 @@ cd .. && bun run test         # frontend
 
 ## 10. Scripts
 
-| Command | Purpose |
-|---|---|
-| `dev` | Watch-mode server |
-| `build` / `start:prod` | Compile to `dist/`, run it |
-| `lint` / `format` | ESLint, Prettier |
-| `test` / `test:watch` / `test:cov` | Unit tests |
-| `test:e2e` | End-to-end |
-| `db:generate` | Regenerate the Prisma client |
-| `db:pull` | **Introspect** — the safe way to add models |
-| `db:migrate` | `prisma migrate dev` — see the warning in §3 |
-| `db:migrate:deploy` / `db:migrate:status` | Deployment-side migration |
-| `db:seed` | Seed (currently guarded and empty — see below) |
-| `db:studio` | Prisma Studio |
+| Command                                   | Purpose                                        |
+| ----------------------------------------- | ---------------------------------------------- |
+| `dev`                                     | Watch-mode server                              |
+| `build` / `start:prod`                    | Compile to `dist/`, run it                     |
+| `lint` / `format`                         | ESLint, Prettier                               |
+| `test` / `test:watch` / `test:cov`        | Unit tests                                     |
+| `test:e2e`                                | End-to-end                                     |
+| `db:generate`                             | Regenerate the Prisma client                   |
+| `db:pull`                                 | **Introspect** — the safe way to add models    |
+| `db:migrate`                              | `prisma migrate dev` — see the warning in §3   |
+| `db:migrate:deploy` / `db:migrate:status` | Deployment-side migration                      |
+| `db:seed`                                 | Seed (currently guarded and empty — see below) |
+| `db:studio`                               | Prisma Studio                                  |
 
 `prisma/seed.ts` seeds nothing. DiaLearn's reference data — subjects, curricula,
 currencies, commission rules, notification templates — is admin-managed and
@@ -366,24 +366,76 @@ it refuses to run when `APP_ENV` is `production` or `staging`.
 
 ---
 
-## 11. Known state
+## 11. Database state
 
-**The database does not exist yet.** `DATABASE_URL` points at
-`pg8001.site4now.net:6432`, and the server answers:
+**Populated, 2026-09-23.** The schema was built on the external PostgreSQL 18.4
+server directly from `supabase/migrations`, with no pg_dump and nothing
+extracted from the Supabase project.
 
-```
-database "DB_AC20BA_dialearn" does not exist
-```
+| Object         | Count                                                                             |
+| -------------- | --------------------------------------------------------------------------------- |
+| Tables         | 40 (41 minus `subscription_plans`, which migration `20260903195507` drops)        |
+| Functions      | 68                                                                                |
+| RLS policies   | 123 (111 public, 12 storage)                                                      |
+| Triggers       | 49                                                                                |
+| Enums          | 13                                                                                |
+| Reference rows | subjects 13, education levels 24, curricula 6, currencies 8, platform settings 28 |
 
-The credentials authenticate; the database has not been created. Until it is,
-`/health` correctly reports `degraded` / `db: down` and `/health/ready` returns
-503. The API still boots, because outside production an unreachable database is
-a warning rather than a fatal error — CI and local work need that. Inside
-production it is fatal by design.
+`npm run db:schema:apply` applies the compatibility layer in
+`prisma/sql/000_compat.sql` and then all 35 migrations, each in its own
+transaction. `db:schema:dryrun` does the same and rolls back. Apply refuses to
+run against a non-empty public schema.
 
-**Still open from the audit:** DECISION-1 (RLS strategy), DECISION-3 (port vs
-retain the PL/pgSQL functions), DECISION-4 (hosting split), and business-rule
-questions Q1–Q7. None block this phase; all block Phase 4.
+### The compatibility layer
+
+Three things stand between those migrations and a plain PostgreSQL server:
+
+1. **`auth.uid()`** — 124 call sites across 19 migrations. The shim reads
+   `current_setting('request.jwt.claims')`, which the backend sets per
+   transaction with `SET LOCAL`. All 123 RLS policies therefore work unchanged,
+   and that is why `PrismaService` is built on the pg driver adapter.
+2. **`auth.users`** — 10 foreign keys point at it. Now an ordinary table in this
+   database, which `AuthModule` takes ownership of in Phase 2.
+3. **`storage`** — schema, buckets, objects and `storage.foldername()`, so the
+   12 storage policies can exist. The authorization they express moves into the
+   files module before a signed URL is minted.
+
+Two adjustments are made by the runner rather than the SQL, because the database
+user is not a superuser:
+
+- **Role targets become `PUBLIC`.** `CREATE ROLE` is not permitted, so `anon`,
+  `authenticated` and `service_role` do not exist. Nothing is lost: those roles
+  existed for PostgREST to switch between, and the backend connects as a single
+  owning user. Policy _predicates_ are untouched.
+- **`ALTER EXTENSION btree_gist SET SCHEMA` is stripped.** Moving an extension
+  requires ownership of its internal types; the compat layer creates it in
+  `extensions` directly instead.
+
+### Constraints Prisma cannot see
+
+Introspection warns about three exclusion constraints it will not model:
+`bookings_no_tutor_overlap`, `bookings_no_student_overlap` and
+`students_owner_present`. They remain enforced by PostgreSQL, which is the right
+place for them — the rule that a tutor cannot be double-booked should not depend
+on application code remembering to check.
+
+### PgBouncer
+
+Port 6432 is a connection pooler in transaction mode. Two consequences already
+met: session-level startup parameters such as `statement_timeout` are rejected,
+and a failed login is cached and replayed after its cause is fixed — which is
+what made a lowercase database name look like a missing database for far longer
+than it should have.
+
+`SET LOCAL` is transaction-scoped and works normally, so the `auth.uid()` shim
+is unaffected.
+
+### Still open
+
+DECISION-3 (port vs retain the PL/pgSQL functions), DECISION-4 (hosting split),
+and business-rule questions Q1-Q7. DECISION-1 is effectively settled: RLS is
+preserved, because the compatibility layer made keeping it cheaper than
+replacing it.
 
 ---
 
@@ -391,13 +443,14 @@ questions Q1–Q7. None block this phase; all block Phase 4.
 
 Per the audit's migration order, Phase 2 is identity:
 
-1. Regenerate the Supabase types — still blocked on CLI access (BLOCKER-3).
-2. Create the database on the external host.
-3. `db:pull` to introspect the real schema.
-4. `AuthModule`: login, refresh, logout, reset, `/auth/me`.
-5. Frontend API client, swapping `use-auth.tsx` behind an **unchanged**
+1. ~~Create the database~~ — done.
+2. ~~Introspect the schema~~ — done; `prisma/schema.prisma` now has 43 models.
+3. `AuthModule`: login, refresh, logout, reset, `/auth/me`, writing to
+   `auth.users`. The Supabase type regeneration that used to block this is moot
+   — the frontend's Supabase calls are being replaced, not retyped.
+4. Frontend API client, swapping `use-auth.tsx` behind an **unchanged**
    `AuthContextValue` — that shape is what makes the cutover a one-file change
    instead of a 49-route change.
-6. Dual-accept Supabase and NestJS tokens during the window.
+5. Dual-accept Supabase and NestJS tokens during the window.
 
 Supabase stays live and revertible throughout (rule 7).

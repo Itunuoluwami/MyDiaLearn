@@ -1,0 +1,567 @@
+[
+    {
+        "key": "brand.tagline",
+        "value": "Learn. Grow. Go Global.",
+        "label": "Brand tagline",
+        "description": "Shown across the public site",
+        "group_name": "branding",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T12:14:49.379956+00:00",
+        "updated_at": "2026-08-26T12:14:49.379956+00:00"
+    },
+    {
+        "key": "booking.default_duration_minutes",
+        "value": 60,
+        "label": "Default lesson duration",
+        "description": "Default lesson length in minutes",
+        "group_name": "booking",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T12:14:49.379956+00:00",
+        "updated_at": "2026-08-26T12:14:49.379956+00:00"
+    },
+    {
+        "key": "booking.allowed_durations",
+        "value": [
+            30,
+            45,
+            60,
+            90,
+            120
+        ],
+        "label": "Allowed lesson durations",
+        "description": "Selectable lesson lengths in minutes",
+        "group_name": "booking",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T12:14:49.379956+00:00",
+        "updated_at": "2026-08-26T12:14:49.379956+00:00"
+    },
+    {
+        "key": "booking.min_notice_hours",
+        "value": 12,
+        "label": "Minimum booking notice",
+        "description": "How far ahead a lesson must be booked",
+        "group_name": "booking",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T12:14:49.379956+00:00",
+        "updated_at": "2026-08-26T12:14:49.379956+00:00"
+    },
+    {
+        "key": "booking.max_advance_days",
+        "value": 60,
+        "label": "Maximum booking horizon",
+        "description": "How far ahead lessons can be booked",
+        "group_name": "booking",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T12:14:49.379956+00:00",
+        "updated_at": "2026-08-26T12:14:49.379956+00:00"
+    },
+    {
+        "key": "auth.account_types",
+        "value": [
+            "student",
+            "parent",
+            "tutor",
+            "agency"
+        ],
+        "label": "Self-serve account types",
+        "description": "Account types that can be created at sign-up",
+        "group_name": "auth",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T12:14:49.379956+00:00",
+        "updated_at": "2026-08-26T12:14:49.379956+00:00"
+    },
+    {
+        "key": "money.base_currency",
+        "value": "USD",
+        "label": "Base currency",
+        "description": "Currency used for internal accounting",
+        "group_name": "money",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T12:14:49.379956+00:00",
+        "updated_at": "2026-08-26T12:14:49.379956+00:00"
+    },
+    {
+        "key": "content.hero_video_url",
+        "value": "",
+        "label": "Hero video URL",
+        "description": "Embedded video on the public home page",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T12:14:49.379956+00:00",
+        "updated_at": "2026-08-26T12:14:49.379956+00:00"
+    },
+    {
+        "key": "content.class_preview_video_url",
+        "value": "https://www.youtube.com/embed/ScMzIvxBSi4",
+        "label": "Class preview video URL",
+        "description": "Embeddable URL for the \"What a DiaLearn class looks like\" player. Swap without a code change.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T14:18:04.248552+00:00",
+        "updated_at": "2026-08-26T14:18:04.248552+00:00"
+    },
+    {
+        "key": "content.class_preview_poster_url",
+        "value": "",
+        "label": "Class preview poster image",
+        "description": "Optional poster/thumbnail image URL shown before the video plays.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T14:18:04.248552+00:00",
+        "updated_at": "2026-08-26T14:18:04.248552+00:00"
+    },
+    {
+        "key": "content.class_preview_intro",
+        "value": "See what a typical DiaLearn lesson feels like \u2014 a calm, focused hour between one student and one tutor.",
+        "label": "Class preview intro copy",
+        "description": "Short paragraph shown above the video player.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T14:18:04.248552+00:00",
+        "updated_at": "2026-08-26T14:18:04.248552+00:00"
+    },
+    {
+        "key": "content.class_preview_bullets",
+        "value": [
+            "Live one-to-one video lessons",
+            "Interactive whiteboard and shared notes",
+            "Recorded so parents can review the session"
+        ],
+        "label": "Class preview bullet points",
+        "description": "Supporting points listed under the video player.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T14:18:04.248552+00:00",
+        "updated_at": "2026-08-26T14:18:04.248552+00:00"
+    },
+    {
+        "key": "content.hero_eyebrow",
+        "value": "Diaspora families, African teachers",
+        "label": "Homepage hero eyebrow",
+        "description": "Small label above the homepage headline.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T14:18:04.248552+00:00",
+        "updated_at": "2026-08-26T14:18:04.248552+00:00"
+    },
+    {
+        "key": "content.hero_headline",
+        "value": "Learning that keeps your child close to home.",
+        "label": "Homepage hero headline",
+        "description": "Main homepage headline.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T14:18:04.248552+00:00",
+        "updated_at": "2026-08-26T14:18:04.248552+00:00"
+    },
+    {
+        "key": "content.hero_subcopy",
+        "value": "DiaLearn connects students and parents in the diaspora with vetted tutors across Africa \u2014 for one-to-one lessons in the curriculum your child actually sits.",
+        "label": "Homepage hero subcopy",
+        "description": "Paragraph under the homepage headline.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T14:18:04.248552+00:00",
+        "updated_at": "2026-08-26T14:18:04.248552+00:00"
+    },
+    {
+        "key": "content.persona_options",
+        "value": [
+            {
+                "cta": "Find a tutor",
+                "key": "parent",
+                "href": "/tutors",
+                "label": "Find a tutor for my child",
+                "description": "Browse vetted tutors, book a trial lesson and follow every session."
+            },
+            {
+                "cta": "Explore subjects",
+                "key": "student",
+                "href": "/explore",
+                "label": "I am a student",
+                "description": "Study with a tutor who knows your curriculum and your timezone."
+            },
+            {
+                "cta": "Become a tutor",
+                "key": "tutor",
+                "href": "/become-a-tutor",
+                "label": "I am a tutor",
+                "description": "Teach diaspora families from anywhere in Africa and get paid reliably."
+            },
+            {
+                "cta": "For agencies",
+                "key": "agency",
+                "href": "/for-agencies",
+                "label": "I run a tutoring agency",
+                "description": "Bring your teaching team onto DiaLearn and manage them in one place."
+            }
+        ],
+        "label": "Persona picker options",
+        "description": "Options shown in the \"What brings you to DiaLearn today?\" module.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T14:18:04.248552+00:00",
+        "updated_at": "2026-08-26T14:18:04.248552+00:00"
+    },
+    {
+        "key": "content.trust_signals",
+        "value": [
+            {
+                "body": "Identity, qualifications and a live teaching demo are checked before a tutor is listed.",
+                "title": "Every tutor is verified"
+            },
+            {
+                "body": "Lesson fees are held until the class has been delivered, then released to the tutor.",
+                "title": "Payments held securely"
+            },
+            {
+                "body": "Parents own the payment method, the permissions and the record of every lesson.",
+                "title": "Parents stay in control"
+            }
+        ],
+        "label": "Homepage trust signals",
+        "description": "Trust and safety points shown on the homepage.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T14:18:04.248552+00:00",
+        "updated_at": "2026-08-26T14:18:04.248552+00:00"
+    },
+    {
+        "key": "content.country_labels",
+        "value": {
+            "CA": "Canada",
+            "EG": "Egypt",
+            "GB": "United Kingdom",
+            "GH": "Ghana",
+            "KE": "Kenya",
+            "NG": "Nigeria",
+            "RW": "Rwanda",
+            "TZ": "Tanzania",
+            "UG": "Uganda",
+            "US": "United States",
+            "ZA": "South Africa"
+        },
+        "label": "Country labels",
+        "description": "Display names used for browse-by-location tiles.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T14:18:04.248552+00:00",
+        "updated_at": "2026-08-26T14:18:04.248552+00:00"
+    },
+    {
+        "key": "content.testimonials",
+        "value": [
+            {
+                "name": "Adaeze O.",
+                "quote": "Our daughter sits IGCSE in London but her tutor in Lagos knows the syllabus better than anyone we found here. The recordings mean I can follow along after work.",
+                "detail": "Parent, London"
+            },
+            {
+                "name": "Tunde A.",
+                "quote": "I wanted my son to keep his Yoruba. He now looks forward to Saturday lessons more than anything else in the week.",
+                "detail": "Parent, Toronto"
+            },
+            {
+                "name": "Grace M.",
+                "quote": "Booking in my own timezone and paying per lesson made it easy to try. We are eleven lessons in.",
+                "detail": "Parent, Houston"
+            }
+        ],
+        "label": "Homepage testimonials",
+        "description": "Quotes shown in the dark testimonial band on the homepage.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T14:30:02.209821+00:00",
+        "updated_at": "2026-08-26T14:30:02.209821+00:00"
+    },
+    {
+        "key": "content.trending_searches",
+        "value": [
+            "IGCSE Maths",
+            "WAEC English",
+            "A-Level Physics",
+            "Yoruba for beginners",
+            "SAT Prep",
+            "French DELF",
+            "Cambridge Primary Science",
+            "IB Chemistry",
+            "Hausa Language",
+            "Nigerian Common Entrance",
+            "KCSE Mathematics",
+            "Python for Kids",
+            "Spoken Arabic",
+            "IELTS Preparation",
+            "Advanced Calculus"
+        ],
+        "label": "Trending searches",
+        "description": "Editable trending searches on the public site",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-26T12:14:49.379956+00:00",
+        "updated_at": "2026-08-27T07:13:36.996503+00:00"
+    },
+    {
+        "key": "auth.countries",
+        "value": [
+            {
+                "code": "NG",
+                "flag": "\ud83c\uddf3\ud83c\uddec",
+                "name": "Nigeria",
+                "dial_code": "+234",
+                "max_digits": 10,
+                "min_digits": 10
+            },
+            {
+                "code": "GB",
+                "flag": "\ud83c\uddec\ud83c\udde7",
+                "name": "United Kingdom",
+                "dial_code": "+44",
+                "max_digits": 10,
+                "min_digits": 9
+            },
+            {
+                "code": "US",
+                "flag": "\ud83c\uddfa\ud83c\uddf8",
+                "name": "United States",
+                "dial_code": "+1",
+                "max_digits": 10,
+                "min_digits": 10
+            },
+            {
+                "code": "CA",
+                "flag": "\ud83c\udde8\ud83c\udde6",
+                "name": "Canada",
+                "dial_code": "+1",
+                "max_digits": 10,
+                "min_digits": 10
+            },
+            {
+                "code": "GH",
+                "flag": "\ud83c\uddec\ud83c\udded",
+                "name": "Ghana",
+                "dial_code": "+233",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "KE",
+                "flag": "\ud83c\uddf0\ud83c\uddea",
+                "name": "Kenya",
+                "dial_code": "+254",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "ZA",
+                "flag": "\ud83c\uddff\ud83c\udde6",
+                "name": "South Africa",
+                "dial_code": "+27",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "GM",
+                "flag": "\ud83c\uddec\ud83c\uddf2",
+                "name": "Gambia",
+                "dial_code": "+220",
+                "max_digits": 7,
+                "min_digits": 7
+            },
+            {
+                "code": "SL",
+                "flag": "\ud83c\uddf8\ud83c\uddf1",
+                "name": "Sierra Leone",
+                "dial_code": "+232",
+                "max_digits": 8,
+                "min_digits": 8
+            },
+            {
+                "code": "CM",
+                "flag": "\ud83c\udde8\ud83c\uddf2",
+                "name": "Cameroon",
+                "dial_code": "+237",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "EG",
+                "flag": "\ud83c\uddea\ud83c\uddec",
+                "name": "Egypt",
+                "dial_code": "+20",
+                "max_digits": 10,
+                "min_digits": 9
+            },
+            {
+                "code": "UG",
+                "flag": "\ud83c\uddfa\ud83c\uddec",
+                "name": "Uganda",
+                "dial_code": "+256",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "TZ",
+                "flag": "\ud83c\uddf9\ud83c\uddff",
+                "name": "Tanzania",
+                "dial_code": "+255",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "RW",
+                "flag": "\ud83c\uddf7\ud83c\uddfc",
+                "name": "Rwanda",
+                "dial_code": "+250",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "ET",
+                "flag": "\ud83c\uddea\ud83c\uddf9",
+                "name": "Ethiopia",
+                "dial_code": "+251",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "IE",
+                "flag": "\ud83c\uddee\ud83c\uddea",
+                "name": "Ireland",
+                "dial_code": "+353",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "FR",
+                "flag": "\ud83c\uddeb\ud83c\uddf7",
+                "name": "France",
+                "dial_code": "+33",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "DE",
+                "flag": "\ud83c\udde9\ud83c\uddea",
+                "name": "Germany",
+                "dial_code": "+49",
+                "max_digits": 11,
+                "min_digits": 10
+            },
+            {
+                "code": "NL",
+                "flag": "\ud83c\uddf3\ud83c\uddf1",
+                "name": "Netherlands",
+                "dial_code": "+31",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "IT",
+                "flag": "\ud83c\uddee\ud83c\uddf9",
+                "name": "Italy",
+                "dial_code": "+39",
+                "max_digits": 10,
+                "min_digits": 9
+            },
+            {
+                "code": "ES",
+                "flag": "\ud83c\uddea\ud83c\uddf8",
+                "name": "Spain",
+                "dial_code": "+34",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "AE",
+                "flag": "\ud83c\udde6\ud83c\uddea",
+                "name": "United Arab Emirates",
+                "dial_code": "+971",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "AU",
+                "flag": "\ud83c\udde6\ud83c\uddfa",
+                "name": "Australia",
+                "dial_code": "+61",
+                "max_digits": 9,
+                "min_digits": 9
+            },
+            {
+                "code": "NZ",
+                "flag": "\ud83c\uddf3\ud83c\uddff",
+                "name": "New Zealand",
+                "dial_code": "+64",
+                "max_digits": 10,
+                "min_digits": 8
+            }
+        ],
+        "label": "Countries & dialling codes",
+        "description": "Country selector used by sign-up phone numbers. min_digits/max_digits are national number lengths.",
+        "group_name": "auth",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-27T08:08:52.481554+00:00",
+        "updated_at": "2026-08-27T08:08:52.481554+00:00"
+    },
+    {
+        "key": "content.auth_panel",
+        "value": {
+            "body": "Connect with trusted African educators and give every learner the support they need to thrive.",
+            "quote": "My daughter finally looks forward to her maths lessons. Her tutor understands both her curriculum and her culture.",
+            "author": "Adaeze O.",
+            "headline": "Learning starts with the right support.",
+            "image_url": "/__l5e/assets-v1/placeholder/parent-child.jpg",
+            "author_role": "Parent in London"
+        },
+        "label": "Sign-in / sign-up side panel",
+        "description": "Imagery and reassuring copy shown beside the sign-in and sign-up forms.",
+        "group_name": "content",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-27T08:08:52.481554+00:00",
+        "updated_at": "2026-08-27T08:08:52.481554+00:00"
+    },
+    {
+        "key": "payouts.schedule_label",
+        "value": "Every second Friday",
+        "label": "Payout schedule",
+        "description": "Human-readable payout schedule shown to tutors.",
+        "group_name": "payouts",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-27T14:51:22.825602+00:00",
+        "updated_at": "2026-08-27T14:51:22.825602+00:00"
+    },
+    {
+        "key": "payouts.next_payout_date",
+        "value": null,
+        "label": "Next payout date",
+        "description": "ISO date of the next scheduled payout run. Leave null to hide.",
+        "group_name": "payouts",
+        "is_public": true,
+        "updated_by": null,
+        "created_at": "2026-08-27T14:51:22.825602+00:00",
+        "updated_at": "2026-08-27T14:51:22.825602+00:00"
+    }
+]

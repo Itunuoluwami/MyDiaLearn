@@ -828,10 +828,30 @@ through PgBouncer on 6432 obscured it further: the pooler caches a failed login
 and replays the original error after the cause is gone. Now connected —
 PostgreSQL 18.4, **0 public tables**. See §18.
 
-**BLOCKER-3 — Supabase CLI access.**
-Regenerating `types.ts` needs either `supabase link` against the hosted project
-(requires CLI login — user action) or `supabase gen types --local` (requires Docker).
-Which is available?
+**BLOCKER-3 — MOOT 2026-09-23.** It asked how to regenerate `types.ts` without
+Supabase CLI access. The question no longer arises: the schema was rebuilt in
+DiaLearn's own PostgreSQL directly from `supabase/migrations`, and Prisma
+introspects it. The stale `types.ts` still types the frontend's remaining
+supabase-js calls, which are being replaced rather than retyped, so the 84 type
+errors shrink as domains migrate instead of being fixed in one pass.
+
+**Nothing is now required from the Supabase project.** Verified by measurement,
+not assumption:
+
+- The schema is fully reproducible from the repository — 35/35 migrations apply.
+- The catalogue is seeded by those same migrations. Comparing a freshly built
+  database against Supabase shows identical content for subjects, curricula,
+  education levels, currencies, cancellation policies, verification steps and
+  commission rules. Only the generated UUIDs differ.
+- There is **no user data**. profiles, tutors, students, bookings, payments,
+  ratings, messages and user_roles are all empty, confirmed through
+  `public_subject_facets()`, a SECURITY DEFINER function that bypasses RLS and
+  reports `tutor_count: 0` for every subject.
+- The one exception was 11 `content.*` rows in `platform_settings` — homepage
+  hero copy, testimonials, trust signals, country labels, persona options and
+  the class-preview media — which no migration creates. They were exported
+  through the public REST API using the publishable key, and now live in
+  `backend/prisma/reference-data/`.
 
 ### Decisions needed
 
@@ -880,70 +900,59 @@ vite wrapper cannot be removed. If no, when does the sync stop?
 
 ---
 
-## 18. Going Supabase-free: what the schema costs
+## 18. Going Supabase-free — done
 
-_Added 2026-09-23, after the external PostgreSQL 18.4 database came online empty._
+_Executed 2026-09-23._
 
-The stated goal is to run without Supabase. The 35 files in `supabase/migrations`
-cannot simply be replayed into the new database, because a large part of them is
-written against Supabase's own schemas and roles.
+The earlier version of this section proposed a `pg_dump` from Supabase. That was
+unnecessary. The migrations in this repository reproduce the schema exactly, and
+running them proved it: **35 of 35 apply**, producing 40 tables, 68 functions,
+123 RLS policies, 49 triggers and 13 enums on the external PostgreSQL 18.4
+server.
 
-### Measured coupling
+### What it took
 
-| Construct                  | Occurrences | Files (of 35) |
-| -------------------------- | ----------- | ------------- |
-| `auth.uid()`               | 124         | 19            |
-| `auth.users` (FK targets)  | 10          | 5             |
-| `storage.objects` policies | 21          | 2             |
-| `GRANT … TO authenticated` | 198         | 25            |
-| `GRANT … TO service_role`  | 38          | 16            |
-| `GRANT … TO anon`          | 44          | —             |
+A compatibility layer (`backend/prisma/sql/000_compat.sql`, 110 lines) supplying
+the three things Supabase provides that a plain server does not:
 
-`auth.uid()` is the load-bearing one. 52 of its uses are inside RLS policy
-predicates; the rest sit inside `SECURITY DEFINER` functions. Vanilla PostgreSQL
-has no such function, no `auth` schema and no `authenticated` / `anon` /
-`service_role` roles.
+| Need             | Why                                 | Supplied                                                                          |
+| ---------------- | ----------------------------------- | --------------------------------------------------------------------------------- |
+| `auth.uid()`     | 124 call sites, 19 migrations       | Reads `current_setting('request.jwt.claims')`, set per transaction by the backend |
+| `auth.users`     | 10 foreign keys                     | An ordinary table, owned by `AuthModule` from Phase 2                             |
+| `storage` schema | 12 policies, `storage.foldername()` | Schema, buckets, objects and the path helper                                      |
 
-### The three things that must be decided
+Plus two rewrites applied by the runner, because the database user is not a
+superuser:
 
-**1. Identity.** `profiles.id` and `user_roles.user_id` are foreign keys into
-`auth.users`, which will not exist. A `users` table owned by `AuthModule`
-replaces it, and those FKs re-point. This is unavoidable and is Phase 2's first
-task.
+- **Role targets → `PUBLIC`.** `anon`, `authenticated` and `service_role` cannot
+  be created. They existed so PostgREST could switch between them; the backend
+  connects as one owning user. **Policy predicates are unchanged**, so tenancy
+  logic is preserved exactly.
+- **`ALTER EXTENSION btree_gist SET SCHEMA` stripped.** Requires ownership of
+  the extension's internal types. The compat layer creates it in `extensions`
+  directly.
 
-**2. `auth.uid()`.** Two options:
-(a) Provide a compatibility shim — create the roles, and define
-`auth.uid()` reading `current_setting('request.jwt.claims')`, set per
-transaction by the backend. The 124 call sites and 130 policies then work
-unchanged, and RLS survives as defence in depth. This is DECISION-1(b), and
-the pg driver adapter chosen in Phase 1 exists to make it reachable.
-(b) Strip RLS entirely and enforce every predicate in repositories. Simpler
-SQL, but 130 policies become 130 things that must be re-implemented correctly
-and can fail silently.
+One subtlety worth recording: migration `20260907090000` adds `super_admin` to
+the `app_role` enum and four later migrations use it. PostgreSQL refuses to use
+an enum value in the transaction that added it, so each migration must commit
+separately. A savepoint is not sufficient.
 
-_Recommendation: (a)._ It is less work, it preserves a security net during the
-riskiest phase, and it can be removed later per-domain rather than all at once.
+### This settles DECISION-1
 
-**3. Storage policies.** The 21 `storage.objects` policies have no target in a
-plain database — there is no `storage` schema. They are dropped, and their logic
-moves into the files module ahead of minting a signed URL, which is what
-`StorageProvider` was shaped for.
+RLS is **preserved**. Option (b) — keep the policies, feed them the caller
+through a transaction-local setting — turned out to cost one 110-line SQL file,
+against re-implementing 123 policies in repository code and hoping none were
+missed. The pg driver adapter chosen in Phase 1 is what makes it work.
 
-### Suggested route to a populated database
+Repository-level scoping is still required wherever a query runs as the owner,
+which bypasses RLS. The policies are a second line, not the only one.
 
-1. Dump the current Supabase schema (`pg_dump --schema-only`) as the true
-   starting point — the migrations are a history, not a snapshot, and one
-   migration already drops a table another created.
-2. Apply the compatibility layer first: `auth` schema, the three roles, and an
-   `auth.uid()` reading the transaction-local JWT claim.
-3. Load the schema dump into `db_ac20ba_dialearn`, minus the storage policies.
-4. Verify object counts match: 41 tables, 70 functions, 130 policies, 51
-   triggers, 15 enums.
-5. `prisma db pull` to introspect the real schema into the Prisma models.
-6. Migrate data separately, once the schema is proven (question Q6).
+### Remaining Supabase surface
 
-Step 1 needs the Supabase database password or CLI access — the same credential
-gap as BLOCKER-3.
+The frontend still calls Supabase for everything — 45 RPCs and 35 tables, frozen
+by `test/contract/supabase-coupling.test.ts`. None of that changes here. What
+changed is that the destination now exists, is populated, and owes the Supabase
+project nothing.
 
 ---
 
