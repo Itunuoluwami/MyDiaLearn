@@ -15,6 +15,11 @@ export default tseslint.config(
       ".output",
       ".vinxi",
       ".wrangler",
+      // Separate application with its own eslint.config.mjs and Prettier
+      // settings (single quotes, width 95). Linting it from here reports
+      // style conflicts against the frontend's rules, and `format` would
+      // rewrite it incorrectly.
+      "backend",
       "**/routeTree.gen.ts",
       "src/integrations/supabase/types.ts",
     ],

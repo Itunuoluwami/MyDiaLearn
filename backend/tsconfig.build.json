@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Without an explicit rootDir, TypeScript infers it from the widest common
+    // directory of the inputs. Including prisma/ and test/ in tsconfig.json
+    // pushed that to the package root and emitted dist/src/main.js, which
+    // start:prod does not look for.
+    "rootDir": "src",
+    // nest-cli deletes dist on every build. With incremental output, the stale
+    // .tsbuildinfo then convinces tsc that files it already "emitted" are up to
+    // date, and it silently skips writing them — leaving a partial dist that
+    // fails at require time.
+    "incremental": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "test", "dist", "prisma", "**/*.spec.ts"]
+}

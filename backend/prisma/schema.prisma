@@ -1,0 +1,93 @@
+// DiaLearn — Prisma schema (foundation phase)
+//
+// ⚠️  READ THIS BEFORE RUNNING ANY PRISMA MIGRATE COMMAND.
+//
+// The DiaLearn database already exists and is in production. It holds 41
+// tables, 70 PL/pgSQL functions, 130 row-level security policies and 51
+// triggers, created by the 35 SQL files in ../../supabase/migrations. Those
+// files remain the source of truth for the schema.
+//
+// Prisma does not know about any of that. `prisma migrate dev` diffs this file
+// against the database and writes SQL to make the database match — which, with
+// a partial schema like this one, means DROPPING every table not modelled here.
+//
+// Therefore:
+//
+//   * Use `npm run db:pull` (prisma db pull) to introspect. Introspection is
+//     read-only and is how new models should be added to this file.
+//   * Do NOT run `db:migrate` against the existing database. It is wired up for
+//     the future, once this schema covers the whole domain and ownership of DDL
+//     has formally moved from supabase/migrations to Prisma.
+//   * Functions, RLS policies and triggers are invisible to Prisma. They must
+//     keep being managed as SQL regardless of what happens to the tables.
+//
+// Only two models are declared here, chosen because Phase 2 (authentication)
+// needs them first. Everything else is introspected as its domain is migrated.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+// Prisma 7 no longer accepts `url` here. The connection string for the CLI
+// (introspect / migrate) lives in ../prisma.config.ts, and the runtime client
+// is constructed with a pg driver adapter in src/database/prisma.service.ts.
+datasource db {
+  provider = "postgresql"
+}
+
+/// Mirrors the app_role enum. 'super_admin' was appended by migration
+/// 20260907090000; the ordering here matches the database's.
+enum AppRole {
+  student
+  parent
+  tutor
+  agency
+  admin
+  super_admin
+
+  @@map("app_role")
+}
+
+/// One row per account, keyed by the auth user id.
+///
+/// `id` references auth.users(id) in the current Supabase deployment. That
+/// foreign key is intentionally not modelled: auth.users belongs to GoTrue,
+/// which this backend replaces in Phase 2. Until then the column is an
+/// unconstrained UUID from Prisma's point of view.
+model Profile {
+  id                  String   @id @db.Uuid
+  email               String?
+  fullName            String?  @map("full_name")
+  phone               String?
+  avatarUrl           String?  @map("avatar_url")
+  countryCode         String?  @map("country_code")
+  timezone            String   @default("UTC")
+  preferredCurrency   String   @default("USD") @map("preferred_currency")
+  primaryRole         AppRole  @default(student) @map("primary_role")
+  onboardingCompleted Boolean  @default(false) @map("onboarding_completed")
+  isActive            Boolean  @default(true) @map("is_active")
+  mustChangePassword  Boolean  @default(false) @map("must_change_password")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("profiles")
+}
+
+/// Role grants. An account may hold several.
+///
+/// Roles live in their own table rather than only on profiles.primary_role
+/// because authorization must not be a single mutable column on a row the user
+/// can otherwise update — the user_roles_guard trigger exists for the same
+/// reason. primary_role drives which portal they land in; this table decides
+/// what they may do.
+model UserRole {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  role      AppRole
+  grantedAt DateTime @default(now()) @map("granted_at") @db.Timestamptz(6)
+
+  @@unique([userId, role])
+  @@index([userId])
+  @@map("user_roles")
+}

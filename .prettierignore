@@ -1,5 +1,8 @@
 node_modules
 dist
+
+# Separate application with its own .prettierrc (single quotes, width 95).
+backend
 .output
 .vinxi
 .wrangler

@@ -14,7 +14,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs"
+    "typecheck:ratchet": "node scripts/typecheck-ratchet.mjs",
+    "backend:dev": "cd backend && npm run dev",
+    "backend:build": "cd backend && npm run build",
+    "backend:test": "cd backend && npm run test",
+    "backend:test:e2e": "cd backend && npm run test:e2e",
+    "backend:lint": "cd backend && npm run lint"
   },
   "overrides": {
     "rolldown": "1.2.1"
