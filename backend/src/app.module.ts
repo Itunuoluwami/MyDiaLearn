@@ -28,13 +28,16 @@ import {
   RequestIdMiddleware,
   REQUEST_ID_HEADER,
 } from './common/middleware/request-id.middleware';
+import { AuditModule } from './common/audit/audit.module';
 import { DatabaseModule } from './database/database.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { HealthModule } from './health/health.module';
+import { PlatformSettingsModule } from './platform-settings/platform-settings.module';
 
 import { AgenciesModule } from './agencies/agencies.module';
 import { AuthModule } from './auth/auth.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { CatalogueModule } from './catalogue/catalogue.module';
 import { FilesModule } from './files/files.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ParentsModule } from './parents/parents.module';
@@ -112,20 +115,25 @@ import { UsersModule } from './users/users.module';
     }),
 
     DatabaseModule,
+    AuditModule,
     IntegrationsModule,
+    PlatformSettingsModule,
     HealthModule,
 
-    // Domain boundaries. Empty during the foundation phase by design — see
-    // each module's header for what it will own and what it replaces.
+    // Implemented domains.
     AuthModule,
     UsersModule,
+    CatalogueModule,
+    NotificationsModule,
+    PaymentsModule,
+    BookingsModule,
+
+    // Boundaries still to be filled. Each module's header names what it will
+    // own and what it replaces.
     ParentsModule,
     StudentsModule,
     TutorsModule,
     AgenciesModule,
-    BookingsModule,
-    PaymentsModule,
-    NotificationsModule,
     FilesModule,
   ],
   providers: [

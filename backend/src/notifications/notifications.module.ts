@@ -1,19 +1,20 @@
 import { Module } from '@nestjs/common';
 
+import { NotificationsController } from './notifications.controller';
+import { NotificationsRepository } from './notifications.repository';
+import { NotificationsService } from './notifications.service';
+import { NotificationDispatchService } from './services/notification-dispatch.service';
+
 /**
- * In-app notifications and transactional email.
+ * In-app notifications and template-driven dispatch.
  *
- * Replaces notify_user() and render_template(), and the notifications /
- * notification_templates tables. Triggered today by assignments_notify and
- * messages_notify.
- *
- * The notification_channel enum already allows 'email', but notify_user() only
- * ever writes in-app rows, so email dispatch is new work rather than a port —
- * see question Q4. Delivery goes through EmailService; this module never talks
- * to SMTP directly.
- *
- * Foundation phase: boundary only. No controllers or services yet — migration
- * rule 7 keeps Supabase serving this domain until a verified replacement exists.
+ * NotificationDispatchService is exported because other domains raise
+ * notifications — a booking accepted, an assignment set. They pass a trigger
+ * key, never a message.
  */
-@Module({})
+@Module({
+  controllers: [NotificationsController],
+  providers: [NotificationsRepository, NotificationsService, NotificationDispatchService],
+  exports: [NotificationDispatchService, NotificationsService],
+})
 export class NotificationsModule {}

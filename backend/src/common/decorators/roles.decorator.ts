@@ -1,7 +1,16 @@
 import { SetMetadata } from '@nestjs/common';
 
-/** Mirrors the app_role enum in the existing database. */
-export type AppRole = 'student' | 'parent' | 'tutor' | 'agency' | 'admin' | 'super_admin';
+/** Mirrors the app_role enum in the existing database, in its declared order. */
+export const APP_ROLES = [
+  'student',
+  'parent',
+  'tutor',
+  'agency',
+  'admin',
+  'super_admin',
+] as const;
+
+export type AppRole = (typeof APP_ROLES)[number];
 
 export const ROLES_KEY = 'roles';
 export const PERMISSIONS_KEY = 'permissions';

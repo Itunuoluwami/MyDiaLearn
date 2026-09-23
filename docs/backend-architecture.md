@@ -598,18 +598,105 @@ remains `supabase`.
 
 ---
 
-## 13. What comes next
+## 13. Domain modules
 
-Phase 2 is done. Phase 3 is the users domain, and it is what closes the gap that
-keeps `supabase` the default:
+_Phase 3, 2026-09-23. See [`database-migration-map.md`](./database-migration-map.md)
+for the table-by-table and function-by-function status._
 
-1. `profiles` read/write endpoints, so `use-auth` has a profile under the
-   `nestjs` provider and the account screen fills in.
-2. `user_roles`, `permissions` and the governance surface (invitations,
-   maker-checker, audit reads).
-3. Then flip `VITE_AUTH_PROVIDER=nestjs` per environment, verify, and only then
-   remove the Supabase adapter — migration rule 7.
+### The pattern
 
-Supabase stays live and revertible throughout. The coupling ratchet in
-`test/contract/supabase-coupling.test.ts` still reports 45 RPCs and 35 tables;
-authentication moved, data access did not.
+Repositories **call** the existing `SECURITY DEFINER` functions rather than
+reimplementing them, inside `PrismaService.withUser()`:
+
+```ts
+return this.prisma.withUser(callerId, async (tx) => {
+  return tx.$queryRaw`select * from public.booking_quote(...)`;
+});
+```
+
+`withUser` opens a transaction and sets `request.jwt.claims` with `SET LOCAL`,
+so `auth.uid()` resolves and all 123 RLS policies apply. `SET LOCAL` is
+transaction-scoped, so a claim cannot leak to the next query on a pooled
+connection — which is what makes it safe under PgBouncer.
+
+Three things follow:
+
+1. **No business rule is restated in TypeScript.** The commission split, the
+   overlap constraints, the two-sided booking confirmation and the verification
+   gate all stay where they are and keep working.
+2. **Multi-statement work is atomic for free.** Booking creation quotes and
+   inserts in one transaction, so the price shown and the price stored are the
+   same number even if a commission rule changes in between.
+3. **Porting a function later is a change inside one repository method.** Its
+   callers do not move, which keeps each domain independently revertible.
+
+`asAnonymous()` is the counterpart for genuinely public reads — the catalogue
+and tutor search, which `anon` could already call. Naming it makes using it a
+visible decision rather than an omission.
+
+### What the API layer adds
+
+Validation (DTOs with allow-listed sort keys and capped page sizes), pagination,
+audit records for every sensitive operation, rate limiting, role and permission
+guards, and response mapping so a new column cannot silently start being
+returned.
+
+### Configurable rules, not constants
+
+`PlatformSettingsService` reads the admin-managed rows that govern behaviour —
+allowed lesson durations, minimum notice, booking horizon, payout threshold,
+base currency. Nothing in `src/` hardcodes any of them; `BookingsService` and
+`SettlementService` fail with the configured value quoted back in the message.
+
+Financial arithmetic is not implemented here at all. `PricingService` delegates
+to `booking_quote()`, which resolves the applicable `commission_rules` row
+including the tiered model and its 30-day window. Amounts stay **strings** end
+to end: they are `NUMERIC`, and rounding money through a JavaScript float is how
+settlement reports stop reconciling.
+
+### Notification copy comes from templates
+
+No service composes a message. `NotificationDispatchService` takes a trigger key
+and a variables bag; subject and body come from `notification_templates`. In-app
+delivery goes through `notify_user()`, preserving the existing path. Email is
+new — the `notification_channel` enum has always allowed it but `notify_user()`
+only ever wrote in-app rows — and goes through `EmailService`, so this module
+never touches SMTP. No active email template means nothing is sent, which is an
+admin decision rather than a service assumption.
+
+### Auditing
+
+`AuditService` writes to the existing `audit_logs` with a typed action union, so
+a typo is a compile error rather than an event nobody can search for. Every
+write is best-effort: refusing a booking because its audit row failed is the
+worse outcome. A `redact()` pass strips anything resembling a credential before
+persistence — audit rows are long-lived and widely readable, so a secret there
+is worse than in a log line that rotates.
+
+### One bug worth recording
+
+`count(*)` is `bigint`, and `JSON.stringify` refuses BigInt outright. The
+failure happens _after_ the handler succeeds, so a working query returned a 500
+with the real cause buried in the logs. `installBigIntSerializer()` emits counts
+as numbers and falls back to a string beyond the safe integer range. Money is
+unaffected — `NUMERIC` arrives as a string and stays one.
+
+---
+
+## 14. What comes next
+
+Six modules are complete, five partial, nine still boundaries — the map has the
+detail. The highest-value remaining work, in order:
+
+1. **Tutors, Students, Parents.** Completes the portal data paths and lets
+   `use-auth` drop its Supabase reads entirely.
+2. **Tutor Verification.** The gate itself is enforced in the database, but the
+   submit/approve/reject workflow still runs through Supabase.
+3. **Messaging, Assignments, Lesson Notes, Materials.** Straightforward against
+   the existing functions.
+4. **Admin operations and the audit read API.** Invitations and maker-checker
+   are the sensitive part and should come last, after the domains they govern.
+
+Supabase stays the default auth provider and still serves all data. The
+coupling ratchet in `test/contract/supabase-coupling.test.ts` remains at 45 RPCs
+and 35 tables: the frontend has not been repointed, by design.

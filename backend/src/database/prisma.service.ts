@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 
 import { appConfig, databaseConfig } from '../config/configuration';
@@ -69,5 +69,59 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   /** Cheapest possible round trip, for liveness probes. */
   async ping(): Promise<void> {
     await this.$queryRaw`SELECT 1`;
+  }
+
+  /**
+   * Runs work as a specific user, inside one transaction.
+   *
+   * This is the single most important method in the data layer. DiaLearn's
+   * authorization lives in PostgreSQL — 123 RLS policies and 64 SECURITY
+   * DEFINER functions, all resolving the caller through auth.uid(). Prisma
+   * connects as one privileged role, so without this they would see either
+   * nothing or everything.
+   *
+   * `SET LOCAL` scopes the claim to the transaction, so it cannot leak to the
+   * next query that happens to reuse the pooled connection. That property is
+   * what makes it safe under PgBouncer in transaction mode.
+   *
+   * Two consequences worth knowing:
+   *  - Every statement in `fn` must use the transaction client it is handed.
+   *    Using `this.prisma` directly inside would run outside the claim and
+   *    silently lose the caller.
+   *  - Because it is one transaction, multi-statement work is atomic for free,
+   *    which is what several booking and payment paths need anyway.
+   */
+  async withUser<T>(
+    userId: string,
+    fn: (tx: Prisma.TransactionClient) => Promise<T>,
+    options?: { role?: string; timeoutMs?: number },
+  ): Promise<T> {
+    const claims = JSON.stringify({
+      sub: userId,
+      role: options?.role ?? 'authenticated',
+    });
+
+    return this.$transaction(
+      async (tx) => {
+        // `true` is the is_local flag: reverted when the transaction ends.
+        await tx.$executeRaw`select set_config('request.jwt.claims', ${claims}, true)`;
+        return fn(tx);
+      },
+      { timeout: options?.timeoutMs ?? 15_000 },
+    );
+  }
+
+  /**
+   * Runs work with no caller set, so auth.uid() is null.
+   *
+   * For genuinely public reads — the tutor search and catalogue facets, which
+   * anon could already call. Named explicitly so that using it is a visible
+   * decision rather than an omission.
+   */
+  async asAnonymous<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+    return this.$transaction(async (tx) => {
+      await tx.$executeRaw`select set_config('request.jwt.claims', '', true)`;
+      return fn(tx);
+    });
   }
 }

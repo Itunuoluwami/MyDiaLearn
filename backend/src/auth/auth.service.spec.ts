@@ -6,7 +6,7 @@ import { UserRepository } from '../database/repositories/user.repository';
 import { VerificationTokenRepository } from '../database/repositories/verification-token.repository';
 import { EMAIL_SERVICE } from '../integrations/email/email.interface';
 import { AuthService } from './auth.service';
-import { AuthAuditService } from './services/auth-audit.service';
+import { AuditService } from '../common/audit/audit.service';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
 
@@ -76,7 +76,10 @@ describe('AuthService', () => {
       revokeToken: jest.fn(),
     };
     audit = { record: jest.fn() };
-    email = { send: jest.fn().mockResolvedValue({}), isReady: jest.fn().mockReturnValue(true) };
+    email = {
+      send: jest.fn().mockResolvedValue({}),
+      isReady: jest.fn().mockReturnValue(true),
+    };
     verification = { create: jest.fn(), consume: jest.fn() };
 
     const moduleRef = await Test.createTestingModule({
@@ -86,7 +89,7 @@ describe('AuthService', () => {
         { provide: VerificationTokenRepository, useValue: verification },
         { provide: PasswordService, useValue: passwords },
         { provide: TokenService, useValue: tokens },
-        { provide: AuthAuditService, useValue: audit },
+        { provide: AuditService, useValue: audit },
         { provide: EMAIL_SERVICE, useValue: email },
         { provide: authConfig.KEY, useValue: config },
       ],
@@ -287,7 +290,10 @@ describe('AuthService', () => {
       );
 
       expect(users.setPassword).toHaveBeenCalled();
-      expect(tokens.revokeAllForUser).toHaveBeenCalledWith(verifiedUser.id, 'password_changed');
+      expect(tokens.revokeAllForUser).toHaveBeenCalledWith(
+        verifiedUser.id,
+        'password_changed',
+      );
     });
   });
 });

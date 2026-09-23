@@ -1,22 +1,28 @@
 import { Module } from '@nestjs/common';
 
+import { PaymentsController } from './payments.controller';
+import { PaymentsRepository } from './payments.repository';
+import { PaymentsService } from './payments.service';
+import { CommissionService } from './services/commission.service';
+import { PricingService } from './services/pricing.service';
+import { SettlementService } from './services/settlement.service';
+
 /**
- * Charges, commission, payouts and settlement.
+ * Charges, commission, earnings and payouts.
  *
- * Replaces pay_for_booking(), tutor_request_payout(), admin_reject_payout() and
- * the payments/payouts/commission_rules reads.
- *
- * The fee split is not a formula to re-derive: it reads commission_rules, honours
- * the 'tiered' model over a 30-day completed-booking window, and charges
- * bookings.total_amount as captured at booking_quote() time so that a later rule
- * change never retroactively alters an existing charge. Reproduce it exactly.
- *
- * Money never moves through business logic directly — it goes through
- * PaymentProvider. Today that is the simulated adapter, matching current
- * behaviour.
- *
- * Foundation phase: boundary only. No controllers or services yet — migration
- * rule 7 keeps Supabase serving this domain until a verified replacement exists.
+ * PricingService is exported because bookings quote before they are created;
+ * CommissionService because the admin module lists the rule set. Neither
+ * duplicates the arithmetic — both read what the database already decides.
  */
-@Module({})
+@Module({
+  controllers: [PaymentsController],
+  providers: [
+    PaymentsRepository,
+    PaymentsService,
+    PricingService,
+    CommissionService,
+    SettlementService,
+  ],
+  exports: [PaymentsService, PricingService, CommissionService, SettlementService],
+})
 export class PaymentsModule {}

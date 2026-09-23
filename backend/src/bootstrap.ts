@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 
 import { appConfig, type AppConfig } from './config/configuration';
+import { installBigIntSerializer } from './common/bigint-serializer';
 import { createValidationPipe } from './common/pipes/validation.pipe';
 
 /**
@@ -14,6 +15,10 @@ import { createValidationPipe } from './common/pipes/validation.pipe';
  * about those behaviours prove nothing.
  */
 export function configureApp(app: INestApplication): AppConfig {
+  // Before anything can serialise a response: count(*) is bigint, and
+  // JSON.stringify refuses BigInt outright.
+  installBigIntSerializer();
+
   const config = app.get<AppConfig>(appConfig.KEY);
 
   // The refresh token travels as an httpOnly cookie, so it has to be parsed

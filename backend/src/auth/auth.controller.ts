@@ -1,19 +1,13 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Post,
-  Req,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Inject } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
 import { authConfig, type AuthConfig } from '../config/configuration';
-import { CurrentUser, type AuthenticatedUser } from '../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  type AuthenticatedUser,
+} from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { AuthService } from './auth.service';
 import {
@@ -157,10 +151,7 @@ export class AuthController {
   @Post('password/reset')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({ default: { limit: 10, ttl: 300_000 } })
-  async resetPassword(
-    @Body() dto: ResetPasswordDto,
-    @Req() request: Request,
-  ): Promise<void> {
+  async resetPassword(@Body() dto: ResetPasswordDto, @Req() request: Request): Promise<void> {
     await this.auth.resetPassword(dto, this.contextOf(request));
   }
 

@@ -1,18 +1,13 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 
-import {
-  RefreshTokenRepository,
-} from '../database/repositories/refresh-token.repository';
+import { RefreshTokenRepository } from '../database/repositories/refresh-token.repository';
 import { UserRepository } from '../database/repositories/user.repository';
-import {
-  VerificationTokenRepository,
-} from '../database/repositories/verification-token.repository';
+import { VerificationTokenRepository } from '../database/repositories/verification-token.repository';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { AuthAuditService } from './services/auth-audit.service';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
 
@@ -31,7 +26,6 @@ import { TokenService } from './services/token.service';
     AuthService,
     TokenService,
     PasswordService,
-    AuthAuditService,
     JwtStrategy,
     JwtAuthGuard,
     UserRepository,

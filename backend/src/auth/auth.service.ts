@@ -24,7 +24,7 @@ import type {
   RegisterDto,
   ResetPasswordDto,
 } from './dto/auth.dto';
-import { AuthAuditService } from './services/auth-audit.service';
+import { AuditService } from '../common/audit/audit.service';
 import { PasswordService } from './services/password.service';
 import { TokenService } from './services/token.service';
 
@@ -48,7 +48,7 @@ export class AuthService {
     private readonly verificationTokens: VerificationTokenRepository,
     private readonly passwords: PasswordService,
     private readonly tokens: TokenService,
-    private readonly audit: AuthAuditService,
+    private readonly audit: AuditService,
     @Inject(EMAIL_SERVICE) private readonly email: EmailService,
     @Inject(authConfig.KEY) private readonly config: AuthConfig,
   ) {}
@@ -57,7 +57,10 @@ export class AuthService {
   // Registration
   // -------------------------------------------------------------------------
 
-  async register(dto: RegisterDto, context: RequestContext): Promise<{ requiresVerification: boolean }> {
+  async register(
+    dto: RegisterDto,
+    context: RequestContext,
+  ): Promise<{ requiresVerification: boolean }> {
     const existing = await this.users.findByEmail(dto.email);
     if (existing) {
       // The signup form already tells the user when an address is taken, and
@@ -192,7 +195,8 @@ export class AuthService {
     }
 
     const user = await this.users.findById(outcome.userId);
-    if (!user) throw new UnauthenticatedError('Your session has expired. Please sign in again.');
+    if (!user)
+      throw new UnauthenticatedError('Your session has expired. Please sign in again.');
 
     // Claims are rebuilt from the database on every refresh, so a role or
     // permission change takes effect within one access-token lifetime rather
