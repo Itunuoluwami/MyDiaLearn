@@ -137,6 +137,8 @@ export class UsersRepository extends BaseRepository {
   /** Role assignment, via admin_set_user_roles(). Super-admin gated there. */
   async setRoles(adminId: string, userId: string, roles: string[]): Promise<void> {
     await this.prisma.withUser(adminId, async (tx) => {
+      // app_role[] is a real array column, so Prisma's array literal binding
+      // is what it wants. Only jsonb columns need a JSON string.
       await tx.$executeRaw`
         select public.admin_set_user_roles(${userId}::uuid, ${roles}::app_role[])
       `;

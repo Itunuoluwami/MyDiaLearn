@@ -1,18 +1,21 @@
 import { Module } from '@nestjs/common';
 
+import { StudentsModule } from '../students/students.module';
+import { ParentsController } from './parents.controller';
+import { ParentsRepository } from './parents.repository';
+import { ParentsService } from './parents.service';
+
 /**
- * Parent portal.
+ * The parent portal: dashboard, children and their progress.
  *
- * Replaces parent_dashboard_summary() and parent_child_progress(), and the
- * parent-side reads in src/lib/parent-data.ts.
- *
- * Owns the parent-child relationship expressed by students.parent_id and the
- * can_access_student() predicate — the check deciding whether a parent may see a
- * given learner. That predicate currently lives in the database and applies
- * automatically; here it must be applied explicitly by every query.
- *
- * Foundation phase: boundary only. No controllers or services yet — migration
- * rule 7 keeps Supabase serving this domain until a verified replacement exists.
+ * Replaces parent_dashboard_summary() and parent_child_progress(). Imports
+ * StudentsModule rather than re-querying students, so the parent-child
+ * relationship has one definition.
  */
-@Module({})
+@Module({
+  imports: [StudentsModule],
+  controllers: [ParentsController],
+  providers: [ParentsRepository, ParentsService],
+  exports: [ParentsService],
+})
 export class ParentsModule {}

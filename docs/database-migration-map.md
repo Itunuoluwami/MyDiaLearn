@@ -30,20 +30,20 @@ revertible.
 | #   | Module               | Status | Endpoints                               |
 | --- | -------------------- | ------ | --------------------------------------- |
 | 1   | Users                | ✅     | 7                                       |
-| 2   | Parents              | ⬜     | —                                       |
-| 3   | Students             | ⬜     | —                                       |
-| 4   | Tutors               | ⬜     | —                                       |
+| 2   | Parents              | ✅     | 4                                       |
+| 3   | Students             | ✅     | 6                                       |
+| 4   | Tutors               | ✅     | 21                                      |
 | 5   | Tutor Agencies       | ⬜     | —                                       |
 | 6   | Subjects / catalogue | ✅     | 10                                      |
-| 7   | Tutor Qualifications | ⬜     | —                                       |
-| 8   | Tutor Verification   | ⬜     | —                                       |
-| 9   | Tutor Availability   | 🟡     | via bookings `available-slots`          |
+| 7   | Tutor Qualifications | ✅     | via tutors `me/subjects`                |
+| 8   | Tutor Verification   | 🟡     | tutor side built; admin review pending  |
+| 9   | Tutor Availability   | ✅     | via tutors `me/availability`            |
 | 10  | Bookings             | ✅     | 9                                       |
 | 11  | Payments             | ✅     | 9                                       |
-| 12  | Reviews / Ratings    | 🟡     | public reviews via catalogue            |
+| 12  | Reviews / Ratings    | 🟡     | tutor-side + public reads               |
 | 13  | Notifications        | ✅     | 4                                       |
 | 14  | Messaging            | ⬜     | —                                       |
-| 15  | Learning Progress    | ⬜     | —                                       |
+| 15  | Learning Progress    | 🟡     | `students/:id/progress`                 |
 | 16  | Lesson Notes         | ⬜     | —                                       |
 | 17  | Assignments          | ⬜     | —                                       |
 | 18  | Learning Materials   | ⬜     | —                                       |
@@ -81,15 +81,15 @@ rules), `AuditService`, `NotificationDispatchService` (template-driven),
 
 ### Marketplace
 
-| Table                                               | Module             | Status              |
-| --------------------------------------------------- | ------------------ | ------------------- |
-| `tutors`                                            | Tutors             | 🟡 public read only |
-| `tutor_subjects`                                    | Tutors             | ⬜                  |
-| `tutor_documents`                                   | Tutor Verification | ⬜                  |
-| `tutor_verification_progress`, `verification_steps` | Tutor Verification | ⬜                  |
-| `availability_windows`                              | Tutor Availability | 🟡 read via slots   |
-| `tutor_agencies`                                    | Agencies           | ⬜                  |
-| `students`                                          | Students           | ⬜                  |
+| Table                                               | Module             | Status |
+| --------------------------------------------------- | ------------------ | ------ |
+| `tutors`                                            | Tutors             | ✅     |
+| `tutor_subjects`                                    | Tutors             | ✅     |
+| `tutor_documents`                                   | Tutor Verification | ✅     |
+| `tutor_verification_progress`, `verification_steps` | Tutor Verification | ✅     |
+| `availability_windows`                              | Tutor Availability | ✅     |
+| `tutor_agencies`                                    | Agencies           | ⬜     |
+| `students`                                          | Students           | ✅     |
 
 ### Delivery
 
@@ -145,11 +145,8 @@ rules), `AuditService`, `NotificationDispatchService` (template-driven),
 
 ### Not yet wired
 
-`parent_dashboard_summary()` · `parent_child_progress()` · `tutor_students()` ·
-`tutor_reviews()` · `tutor_rating_summary()` · `tutor_rating_categories()` ·
-`tutor_dashboard_summary()` · `tutor_submit_verification()` ·
-`ensure_tutor_record()` · `tutor_start_conversation()` · `my_conversations()` ·
-`raise_dispute()` · `admin_resolve_dispute()` · `admin_dashboard_summary()` ·
+`tutor_start_conversation()` · `my_conversations()` · `raise_dispute()` ·
+`admin_resolve_dispute()` · `admin_dashboard_summary()` ·
 `admin_report_summary()` · `admin_invite_create/redeem/revoke()` ·
 `admin_request_action()` · `admin_review_action()` · `admin_execute_action()` ·
 `admin_reject_payout()` · `clear_must_change_password()`
@@ -183,15 +180,33 @@ they cannot be forgotten by a caller, and they cannot be raced.
 
 ---
 
-## The rule that is not yet enforced by this API
+## Tutor verification
 
-**Tutor verification gating.** The database enforces it — the
-`enforce_tutor_verification_rules` trigger and the publicly-visible tutor
-functions both apply it, so an unverified tutor does not appear in search and
-cannot be booked. What does not exist yet is the _Tutor Verification module_:
-the endpoints for submitting documents, and for an admin to approve or reject.
-Until it is built, that workflow still runs through Supabase.
+The gate is enforced in the database: the `enforce_tutor_verification_rules`
+trigger and the `public_*` functions both apply it, so an unverified tutor does
+not appear in search and cannot be booked whichever client is asking. Verified
+end to end — a freshly created tutor returns zero rows from
+`public_tutor_cards()`.
 
-It is listed here rather than silently omitted because the brief asked
-specifically that this rule not be frontend-only. It is not — it is in the
-database — but this API does not yet expose the decision path.
+The **tutor side** is now built: steps, documents and submission under
+`/api/tutors/me/verification`. `tutor_submit_verification()` decides whether a
+submission is complete, so "ready for review" has one definition.
+
+The **admin side** — approve and reject — is not. It belongs with the admin
+module, and until then those decisions still run through Supabase.
+
+One guard worth recording: `storagePath` is caller-supplied, and the
+`tutor_documents` RLS policy checks `tutor_id`, not the path inside it. Without
+a namespace check a tutor could register a row pointing at another tutor's
+document and have a signed URL minted for it. `TutorVerificationService`
+requires the key to begin with the caller's own tutor id.
+
+## A binding trap worth knowing
+
+Prisma's `$queryRaw` binds a JavaScript array as a **PostgreSQL array literal**
+(`{a,b}`). That is right for `uuid[]` or `app_role[]`, and wrong for **jsonb**,
+where it fails with `invalid input syntax for type json`.
+
+`tutors.qualifications`, `tutors.languages` and `tutors.education` read like
+arrays but are jsonb columns, and need `JSON.stringify(...)::jsonb`. Check the
+column type before choosing — `src/database/sql-array.ts` documents both cases.

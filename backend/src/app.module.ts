@@ -127,12 +127,12 @@ import { UsersModule } from './users/users.module';
     NotificationsModule,
     PaymentsModule,
     BookingsModule,
+    TutorsModule,
+    StudentsModule,
+    ParentsModule,
 
     // Boundaries still to be filled. Each module's header names what it will
     // own and what it replaces.
-    ParentsModule,
-    StudentsModule,
-    TutorsModule,
     AgenciesModule,
     FilesModule,
   ],
