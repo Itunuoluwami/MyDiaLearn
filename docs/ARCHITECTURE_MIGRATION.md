@@ -817,17 +817,16 @@ the file is untracked. Rules 17/18.
 Rules 15 and 16 require every step to be independently testable and reversible.
 Neither is achievable today. Phase 0 must complete first.
 
-**BLOCKER-4 — The logo lives on Lovable's CDN, not in this repo.**
-`src/lib/brand.ts` points `BRAND.logoUrl` at
-`/__l5e/assets-v1/<uuid>/dialearn-logo.png`, a path served only by the Lovable
-editor. `src/assets/dialearn-logo.png.asset.json` is a manifest naming an R2
-key; the PNG itself (1.1 MB) is not in the repository. The image is rendered by
-all six portal shells and all four auth routes, so **every page of the
-application shows a broken image and falls back to alt text** outside Lovable —
-confirmed against the dev server. This predates the migration work; leaving
-Lovable is what exposes it. Recover the file from the Lovable editor while the
-project is still reachable, commit it to `public/`, and repoint `brand.ts`.
-Nothing else can be deployed from this repo until that is done.
+**BLOCKER-4 — RESOLVED 2026-09-23.** The logo was supplied and is committed at
+`public/dialearn-logo.png`; `brand.ts` points at it and the Lovable asset
+manifest is deleted. No `__l5e` reference remains.
+
+**DATABASE — RESOLVED 2026-09-23.** The external PostgreSQL was not missing.
+PostgreSQL folds unquoted identifiers to lowercase, so the hosting panel shows
+`DB_AC20BA_dialearn` while the server holds `db_ac20ba_dialearn`. Connecting
+through PgBouncer on 6432 obscured it further: the pooler caches a failed login
+and replays the original error after the cause is gone. Now connected —
+PostgreSQL 18.4, **0 public tables**. See §18.
 
 **BLOCKER-3 — Supabase CLI access.**
 Regenerating `types.ts` needs either `supabase link` against the hosted project
@@ -878,6 +877,73 @@ vite wrapper cannot be removed. If no, when does the sync stop?
   or is this a fresh database? Changes Phase 1 entirely.
 - **Q7 — Auth cutover.** Force all users to re-login at cutover, or run dual-token
   acceptance? Affects R5 and the Phase 2 timeline.
+
+---
+
+## 18. Going Supabase-free: what the schema costs
+
+_Added 2026-09-23, after the external PostgreSQL 18.4 database came online empty._
+
+The stated goal is to run without Supabase. The 35 files in `supabase/migrations`
+cannot simply be replayed into the new database, because a large part of them is
+written against Supabase's own schemas and roles.
+
+### Measured coupling
+
+| Construct                  | Occurrences | Files (of 35) |
+| -------------------------- | ----------- | ------------- |
+| `auth.uid()`               | 124         | 19            |
+| `auth.users` (FK targets)  | 10          | 5             |
+| `storage.objects` policies | 21          | 2             |
+| `GRANT … TO authenticated` | 198         | 25            |
+| `GRANT … TO service_role`  | 38          | 16            |
+| `GRANT … TO anon`          | 44          | —             |
+
+`auth.uid()` is the load-bearing one. 52 of its uses are inside RLS policy
+predicates; the rest sit inside `SECURITY DEFINER` functions. Vanilla PostgreSQL
+has no such function, no `auth` schema and no `authenticated` / `anon` /
+`service_role` roles.
+
+### The three things that must be decided
+
+**1. Identity.** `profiles.id` and `user_roles.user_id` are foreign keys into
+`auth.users`, which will not exist. A `users` table owned by `AuthModule`
+replaces it, and those FKs re-point. This is unavoidable and is Phase 2's first
+task.
+
+**2. `auth.uid()`.** Two options:
+(a) Provide a compatibility shim — create the roles, and define
+`auth.uid()` reading `current_setting('request.jwt.claims')`, set per
+transaction by the backend. The 124 call sites and 130 policies then work
+unchanged, and RLS survives as defence in depth. This is DECISION-1(b), and
+the pg driver adapter chosen in Phase 1 exists to make it reachable.
+(b) Strip RLS entirely and enforce every predicate in repositories. Simpler
+SQL, but 130 policies become 130 things that must be re-implemented correctly
+and can fail silently.
+
+_Recommendation: (a)._ It is less work, it preserves a security net during the
+riskiest phase, and it can be removed later per-domain rather than all at once.
+
+**3. Storage policies.** The 21 `storage.objects` policies have no target in a
+plain database — there is no `storage` schema. They are dropped, and their logic
+moves into the files module ahead of minting a signed URL, which is what
+`StorageProvider` was shaped for.
+
+### Suggested route to a populated database
+
+1. Dump the current Supabase schema (`pg_dump --schema-only`) as the true
+   starting point — the migrations are a history, not a snapshot, and one
+   migration already drops a table another created.
+2. Apply the compatibility layer first: `auth` schema, the three roles, and an
+   `auth.uid()` reading the transaction-local JWT claim.
+3. Load the schema dump into `db_ac20ba_dialearn`, minus the storage policies.
+4. Verify object counts match: 41 tables, 70 functions, 130 policies, 51
+   triggers, 15 enums.
+5. `prisma db pull` to introspect the real schema into the Prisma models.
+6. Migrate data separately, once the schema is proven (question Q6).
+
+Step 1 needs the Supabase database password or CLI access — the same credential
+gap as BLOCKER-3.
 
 ---
 
