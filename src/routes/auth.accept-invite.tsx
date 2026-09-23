@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowLeft, Loader2 } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { BRAND } from "@/lib/brand";
 import { useAuth } from "@/hooks/use-auth";
 import { clearAdminContextCache } from "@/lib/admin-guard";
@@ -56,13 +56,13 @@ function AcceptInvitePage() {
     // The invite link carries a token the Supabase client exchanges for a
     // session on load. Same shape as the recovery flow: either the session is
     // already there, or SIGNED_IN lands shortly after.
-    supabase.auth.getSession().then(({ data }) => {
+    authClient.getSession().then(({ data }) => {
       if (!active || !data.session) return;
       setEmail(data.session.user.email ?? "");
       setState("ready");
     });
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: subscription } = authClient.onAuthStateChange((event, session) => {
       if (!active) return;
       if (
         (event === "SIGNED_IN" || event === "PASSWORD_RECOVERY" || event === "USER_UPDATED") &&

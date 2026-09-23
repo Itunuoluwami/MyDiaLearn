@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Loader2 } from "lucide-react";
 import type { z } from "zod";
 
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { FORGOT_PASSWORD_SCHEMA } from "@/lib/auth-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,7 @@ export function ForgotPasswordForm({ onSubmitted }: { onSubmitted: (email: strin
     setFormError(null);
     const email = values.email.trim().toLowerCase();
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await authClient.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
     });
 

@@ -20,7 +20,7 @@ import type {
   RateLimitConfig,
 } from './config/configuration';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';

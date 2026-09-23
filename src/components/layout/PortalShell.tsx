@@ -5,7 +5,7 @@ import { LayoutDashboard, LogOut, Menu, Settings, User as UserIcon, Users } from
 import { toast } from "sonner";
 
 import { BRAND } from "@/lib/brand";
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { portalHome } from "@/lib/portal-home";
 import { Button } from "@/components/ui/button";
@@ -95,7 +95,7 @@ export function PortalShell({
   async function handleSignOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
+    await authClient.signOut();
     toast.success("Signed out");
     navigate({ to: "/auth", replace: true });
   }

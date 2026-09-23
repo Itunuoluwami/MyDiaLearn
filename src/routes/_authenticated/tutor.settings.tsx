@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Clock3, KeyRound, Loader2, Save, ShieldCheck, Wallet } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { TutorShell } from "@/components/tutor/TutorShell";
 import { SectionCard } from "@/components/parent/ui";
@@ -103,7 +104,7 @@ function TutorSettingsPage() {
   const resetPassword = useMutation({
     mutationFn: async () => {
       if (!profile?.email) throw new Error("No email on this account.");
-      const { error } = await supabase.auth.resetPasswordForEmail(profile.email, {
+      const { error } = await authClient.resetPasswordForEmail(profile.email, {
         redirectTo: `${window.location.origin}/auth`,
       });
       if (error) throw error;

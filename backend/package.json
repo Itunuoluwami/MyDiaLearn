@@ -23,7 +23,8 @@
     "db:seed": "ts-node prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:schema:dryrun": "node scripts/build-schema.mjs --strip-roles",
-    "db:schema:apply": "node scripts/build-schema.mjs --strip-roles --apply"
+    "db:schema:apply": "node scripts/build-schema.mjs --strip-roles --apply",
+    "db:schema:extras": "node scripts/build-schema.mjs --apply --extras-only"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -33,16 +34,21 @@
     "@nestjs/config": "^4",
     "@nestjs/core": "^11",
     "@nestjs/jwt": "^11",
+    "@nestjs/passport": "^12.0.0",
     "@nestjs/platform-express": "^11",
     "@nestjs/throttler": "^6",
+    "@node-rs/argon2": "^2.2.1",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "cookie-parser": "^1.4.7",
     "helmet": "^8.3.0",
     "joi": "^18.2.9",
     "nestjs-pino": "^5.2.0",
     "nodemailer": "^10.0.10",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
     "pg": "^8.23.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
@@ -54,10 +60,12 @@
     "@nestjs/cli": "^11",
     "@nestjs/schematics": "^11",
     "@nestjs/testing": "^11",
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.6.2",
     "@types/nodemailer": "^8.0.2",
+    "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.23.1",
     "@types/supertest": "^7.2.1",
     "dotenv": "^18.0.3",
@@ -97,6 +105,9 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/$1"
-    }
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(@nestjs/passport|passport|passport-jwt)/)"
+    ]
   }
 }

@@ -28,6 +28,18 @@ export const jwtConfig = registerAs('jwt', () => ({
   refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN as string,
 }));
 
+export const authConfig = registerAs('auth', () => ({
+  appUrl: process.env.APP_URL as string,
+  emailVerificationRequired: process.env.EMAIL_VERIFICATION_REQUIRED !== 'false',
+  emailVerificationTtlHours: parseInt(process.env.EMAIL_VERIFICATION_TTL_HOURS as string, 10),
+  passwordResetTtlMinutes: parseInt(process.env.PASSWORD_RESET_TTL_MINUTES as string, 10),
+  lockoutThreshold: parseInt(process.env.AUTH_LOCKOUT_THRESHOLD as string, 10),
+  lockoutMinutes: parseInt(process.env.AUTH_LOCKOUT_MINUTES as string, 10),
+  cookieDomain: process.env.COOKIE_DOMAIN || undefined,
+  cookieSameSite: process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none',
+  cookieSecure: process.env.APP_ENV === 'production',
+}));
+
 export const smtpConfig = registerAs('smtp', () => ({
   host: process.env.SMTP_HOST ?? '',
   port: parseInt(process.env.SMTP_PORT as string, 10),
@@ -54,6 +66,7 @@ export const configurations = [
   appConfig,
   databaseConfig,
   jwtConfig,
+  authConfig,
   smtpConfig,
   integrationsConfig,
   rateLimitConfig,
@@ -62,6 +75,7 @@ export const configurations = [
 export type AppConfig = ReturnType<typeof appConfig>;
 export type DatabaseConfig = ReturnType<typeof databaseConfig>;
 export type JwtConfig = ReturnType<typeof jwtConfig>;
+export type AuthConfig = ReturnType<typeof authConfig>;
 export type SmtpConfig = ReturnType<typeof smtpConfig>;
 export type IntegrationsConfig = ReturnType<typeof integrationsConfig>;
 export type RateLimitConfig = ReturnType<typeof rateLimitConfig>;

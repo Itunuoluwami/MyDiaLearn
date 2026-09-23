@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ArrowLeft, MailCheck } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { BRAND } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
 import { AuthSidePanel } from "@/components/auth/AuthSidePanel";
@@ -27,7 +27,7 @@ function ForgotPasswordPage() {
 
   async function handleResend() {
     if (!sentTo) return;
-    const { error } = await supabase.auth.resetPasswordForEmail(sentTo, {
+    const { error } = await authClient.resetPasswordForEmail(sentTo, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
     });
     // Supabase deliberately doesn't reveal whether an address is registered,

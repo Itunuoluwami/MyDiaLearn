@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowLeft, Loader2 } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { BRAND } from "@/lib/brand";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -50,11 +50,11 @@ function ResetPasswordPage() {
 
     // The Supabase client parses the recovery link's token on load and, once
     // it does, either a session already exists or it fires PASSWORD_RECOVERY.
-    supabase.auth.getSession().then(({ data }) => {
+    authClient.getSession().then(({ data }) => {
       if (active && data.session) setState("ready");
     });
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: subscription } = authClient.onAuthStateChange((event, session) => {
       if (!active) return;
       if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
         setState("ready");

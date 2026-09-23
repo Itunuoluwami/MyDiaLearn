@@ -25,10 +25,18 @@ import pg from 'pg';
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '..', '..');
 const migrationsDir = join(repoRoot, 'supabase', 'migrations');
-const compatPath = join(here, '..', 'prisma', 'sql', '000_compat.sql');
+const sqlDir = join(here, '..', 'prisma', 'sql');
+const compatPath = join(sqlDir, '000_compat.sql');
 
 const STRIP_ROLES = process.argv.includes('--strip-roles');
 const APPLY = process.argv.includes('--apply');
+/**
+ * Applies only the numbered backend SQL (100+), skipping the compat layer and
+ * the 35 historical migrations. This is the normal path once the database is
+ * built: those files are idempotent but re-running them produces pages of
+ * "already exists" noise that hides a real failure.
+ */
+const EXTRAS_ONLY = process.argv.includes('--extras-only');
 
 /**
  * We are not superuser and cannot CREATE ROLE, so `GRANT ... TO authenticated`
@@ -76,10 +84,10 @@ if (APPLY) {
     `select count(*)::int n from information_schema.tables
      where table_schema = 'public' and table_type = 'BASE TABLE'`,
   );
-  if (rows[0].n > 0) {
+  if (rows[0].n > 0 && !EXTRAS_ONLY) {
     console.error(
       `Refusing to apply: public schema already holds ${rows[0].n} table(s). ` +
-        'This script only builds an empty database.',
+        'Use --extras-only to apply just the backend-owned SQL.',
     );
     await client.end();
     process.exit(1);
@@ -101,12 +109,16 @@ if (APPLY) {
 }
 
 try {
-  await client.query(readFileSync(compatPath, 'utf8'));
-  console.log(`compat layer:      applied  (strip-roles=${STRIP_ROLES})\n`);
+  if (!EXTRAS_ONLY) {
+    await client.query(readFileSync(compatPath, 'utf8'));
+    console.log(`compat layer:      applied  (strip-roles=${STRIP_ROLES})`);
+  }
 
-  const files = readdirSync(migrationsDir)
-    .filter((f) => f.endsWith('.sql'))
-    .sort();
+  const files = EXTRAS_ONLY
+    ? []
+    : readdirSync(migrationsDir)
+        .filter((f) => f.endsWith('.sql'))
+        .sort();
 
   for (const file of files) {
     const sql = rewriteRoles(readFileSync(join(migrationsDir, file), 'utf8'));
@@ -130,7 +142,26 @@ try {
     }
   }
 
-  console.log(`\napplied ${applied}/${files.length} migrations`);
+  if (!EXTRAS_ONLY) console.log(`\napplied ${applied}/${files.length} migrations`);
+
+  // Backend-owned additive SQL, applied after the historical migrations.
+  // Numbered 100+ so ordering against 000_compat is explicit.
+  const extras = readdirSync(sqlDir)
+    .filter((f) => /^\d{3}_/.test(f) && !f.startsWith('000_'))
+    .sort();
+  for (const file of extras) {
+    const sql = readFileSync(join(sqlDir, file), 'utf8');
+    try {
+      await client.query(APPLY ? 'BEGIN' : 'SAVEPOINT m');
+      await client.query(sql);
+      await client.query(APPLY ? 'COMMIT' : 'RELEASE SAVEPOINT m');
+      console.log(`  ok    sql/${file}`);
+    } catch (error) {
+      await client.query(APPLY ? 'ROLLBACK' : 'ROLLBACK TO SAVEPOINT m');
+      failures.push({ file, code: error.code, message: error.message.split('\n')[0] });
+      console.log(`  FAIL  sql/${file}  [${error.code}] ${error.message.split('\n')[0].slice(0, 90)}`);
+    }
+  }
 
   const counts = await client.query(`
     select

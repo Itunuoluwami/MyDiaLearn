@@ -41,6 +41,23 @@ export const envValidationSchema = Joi.object({
   JWT_REFRESH_SECRET: Joi.string().min(32).allow('').optional(),
   JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
 
+  // --- Authentication behaviour ----------------------------------------------
+  // Public origin of the frontend, used to build links in verification and
+  // password-reset emails. Must match what the user actually browses to.
+  APP_URL: Joi.string().uri().default('http://localhost:8080'),
+  // Supabase required email confirmation before sign-in; default matches.
+  EMAIL_VERIFICATION_REQUIRED: Joi.boolean().default(true),
+  EMAIL_VERIFICATION_TTL_HOURS: Joi.number().positive().default(24),
+  PASSWORD_RESET_TTL_MINUTES: Joi.number().positive().default(60),
+  // Account-level lockout, on top of the IP-level throttler. Both are needed:
+  // the throttler stops one host hammering many accounts, this stops many
+  // hosts hammering one account.
+  AUTH_LOCKOUT_THRESHOLD: Joi.number().positive().default(10),
+  AUTH_LOCKOUT_MINUTES: Joi.number().positive().default(15),
+  // Cookie flags. Secure is forced on in production regardless.
+  COOKIE_DOMAIN: Joi.string().allow('').optional(),
+  COOKIE_SAME_SITE: Joi.string().valid('lax', 'strict', 'none').default('lax'),
+
   // --- SMTP ----------------------------------------------------------------
   // Optional as a group: with EMAIL_PROVIDER=log the app runs without a mail
   // server, which is what local development and CI want.

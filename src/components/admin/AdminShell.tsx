@@ -23,7 +23,7 @@ import {
 import { toast } from "sonner";
 
 import { BRAND } from "@/lib/brand";
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { clearAdminContextCache } from "@/lib/admin-guard";
 import { Button } from "@/components/ui/button";
@@ -174,7 +174,7 @@ export function AdminShell({
     await queryClient.cancelQueries();
     queryClient.clear();
     clearAdminContextCache();
-    await supabase.auth.signOut();
+    await authClient.signOut();
     toast.success("Signed out");
     navigate({ to: "/auth", replace: true });
   }

@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Check, Loader2 } from "lucide-react";
 import type { z } from "zod";
 
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { PASSWORD_RULES, RESET_PASSWORD_SCHEMA, passwordStrength } from "@/lib/auth-validation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -32,7 +32,7 @@ export function ResetPasswordForm({ onSuccess }: { onSuccess: () => void }) {
 
   async function onSubmit(values: ResetPasswordValues) {
     setFormError(null);
-    const { error } = await supabase.auth.updateUser({ password: values.password });
+    const { error } = await authClient.updateUser({ password: values.password });
 
     if (error) {
       const raw = (error.message || "").toLowerCase();

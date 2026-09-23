@@ -439,18 +439,177 @@ replacing it.
 
 ---
 
-## 12. What comes next
+## 12. Authentication
 
-Per the audit's migration order, Phase 2 is identity:
+_Phase 2, 2026-09-23. NestJS owns authentication. Supabase remains available
+behind a configuration switch and is still the default._
 
-1. ~~Create the database~~ — done.
-2. ~~Introspect the schema~~ — done; `prisma/schema.prisma` now has 43 models.
-3. `AuthModule`: login, refresh, logout, reset, `/auth/me`, writing to
-   `auth.users`. The Supabase type regeneration that used to block this is moot
-   — the frontend's Supabase calls are being replaced, not retyped.
-4. Frontend API client, swapping `use-auth.tsx` behind an **unchanged**
-   `AuthContextValue` — that shape is what makes the cutover a one-file change
-   instead of a 49-route change.
-5. Dual-accept Supabase and NestJS tokens during the window.
+### Endpoints
 
-Supabase stays live and revertible throughout (rule 7).
+| Method | Path                        | Auth         | Purpose                             |
+| ------ | --------------------------- | ------------ | ----------------------------------- |
+| POST   | `/api/auth/register`        | public       | Create an account                   |
+| POST   | `/api/auth/login`           | public       | Issue a session                     |
+| POST   | `/api/auth/refresh`         | public       | Rotate tokens                       |
+| POST   | `/api/auth/logout`          | public       | Revoke the session                  |
+| GET    | `/api/auth/me`              | **required** | Current account, roles, permissions |
+| POST   | `/api/auth/password/forgot` | public       | Send a reset link                   |
+| POST   | `/api/auth/password/reset`  | public       | Consume a reset token               |
+| POST   | `/api/auth/password/change` | **required** | Change a known password             |
+| POST   | `/api/auth/email/verify`    | public       | Consume a verification token        |
+| POST   | `/api/auth/email/resend`    | public       | Re-send verification                |
+
+They sit under `API_PREFIX`, so with the default they are `/api/auth/...`. Set
+`API_PREFIX=` for bare `/auth/...`.
+
+### Token strategy
+
+|               | Where it lives                                        | Lifetime |
+| ------------- | ----------------------------------------------------- | -------- |
+| Access token  | Response body, held in memory by the frontend adapter | 15 min   |
+| Refresh token | httpOnly `SameSite` cookie                            | 7 days   |
+
+This is the one place the migration deliberately improves on the incumbent.
+Supabase keeps the whole session in `localStorage`, where any XSS can read it.
+Here the access token never touches storage and the refresh token is a cookie
+the page cannot read, so stealing a long-lived session takes more than reading
+`localStorage`.
+
+The user-visible behaviour is unchanged: a reload still lands you signed in,
+because the adapter calls `/auth/refresh` on boot and the browser sends the
+cookie automatically.
+
+**Rotation with reuse detection.** Every refresh issues a new token and revokes
+the presented one, both tagged with a shared `family_id`. Presenting an already
+revoked token means it was captured and replayed, so the **entire family** is
+revoked. The legitimate holder is signed out too — deliberately, because there
+is no way to tell which of the two presenters is genuine. Verified end to end.
+
+Only SHA-256 hashes are stored. A leaked database must not hand over usable
+sessions.
+
+### Password handling
+
+argon2id at the library's OWASP-recommended parameters (m=19456 KiB, t=2, p=1),
+chosen over bcrypt because it is memory-hard, which is what makes GPU cracking
+expensive rather than merely slow.
+
+The DTO reproduces `src/lib/auth-validation.ts` exactly — 8-72 characters,
+upper, lower, digit, symbol. A backend that accepted a weaker password than the
+form offers would quietly lower the policy for anyone calling the API directly.
+
+Login deliberately does **not** apply that policy: an account created before a
+policy change still has to be able to sign in.
+
+### Not leaking account existence
+
+An unknown address, a wrong password and a locked account all produce the same
+401 with the same message. Three supporting details:
+
+- `dummyVerify()` burns comparable time when no account matches, so latency does
+  not distinguish a missing address from a wrong password.
+- Lockout is never announced. Saying "locked" confirms the address exists and
+  tells an attacker their guessing is working.
+- `password/forgot` returns 202 whether or not the address is registered.
+
+An unverified email is the one deliberate exception: it answers 403 distinctly,
+which is safe because the password was correct, so the caller already knows the
+account exists.
+
+Two independent brute-force defences: `ThrottlerGuard` per IP (10 logins/min),
+and a per-account counter that locks after `AUTH_LOCKOUT_THRESHOLD` failures.
+Both are needed — the throttler stops one host hammering many accounts, the
+counter stops many hosts hammering one.
+
+### Registration reuses the existing trigger
+
+`register` writes `auth.users` and lets `on_auth_user_created` fire
+`handle_new_user()`, which creates the `profiles` and `user_roles` rows from
+`raw_user_meta_data`. So signup behaviour — including the rule that nobody can
+self-grant an `admin` role — keeps living where it already lived rather than
+being restated in TypeScript. A unit test pins the metadata keys, because
+renaming one would silently stop profiles being created.
+
+Two independent guards on privilege escalation: the DTO's role enum omits
+`admin`/`super_admin`, and `handle_new_user()` downgrades them anyway.
+
+### RBAC
+
+Permissions are **not** reimplemented. `findAuthorization()` calls the existing
+`my_permissions()`, which already encodes role grants, per-user overrides,
+denials beating grants, and `super_admin` implicitly holding everything. A
+second copy in TypeScript would drift from it without anyone noticing.
+
+That function reads `auth.uid()`, so the caller is established with
+`SET LOCAL request.jwt.claims` — the same mechanism the compatibility layer
+gives the 123 RLS policies, and the reason `PrismaService` uses the pg driver
+adapter. Verified: a parent account resolves to `bookings.cancel`,
+`bookings.create`, `bookings.view_own`, `payments.manage`, `ratings.create`,
+`students.manage`, `tutors.search`.
+
+Claims are embedded in the access token, so authorization costs no database
+round trip. They are rebuilt on every refresh, so a grant or revocation takes
+effect within one access-token lifetime.
+
+### Audit logging
+
+Eleven event types land in the existing `public.audit_logs`: `auth.login`,
+`auth.login_failed`, `auth.login_blocked`, `auth.logout`, `auth.register`,
+`auth.token_refreshed`, `auth.token_reuse_detected`,
+`auth.password_reset_requested`, `auth.password_reset_completed`,
+`auth.password_changed`, `auth.email_verified`.
+
+Written directly rather than through `log_audit()`, which resolves the actor
+from `auth.uid()` — exactly what is unavailable for the events most worth
+recording. Every write is best-effort: refusing to sign a user in because an
+audit insert failed would be a worse outcome than a missing row.
+
+### The frontend switch
+
+`VITE_AUTH_PROVIDER` selects `supabase` (default) or `nestjs`.
+`src/lib/auth/` holds an interface shaped like `supabase.auth` and two
+implementations. Twenty call sites changed one import each; **no screen
+changed**.
+
+The NestJS adapter maps API errors into the vocabulary the existing forms
+already parse — "invalid login", "confirm", "already registered", "rate limit",
+"network". Those mappings are pinned by tests, so tidying a message fails the
+build rather than silently degrading to a generic error in front of a user.
+
+Selecting `nestjs` without `VITE_API_BASE_URL` throws at startup rather than
+falling back, because falling back silently would leave someone testing
+Supabase while believing they were testing the new stack.
+
+### Verified
+
+Registration, the profile trigger, verification gating, single-use tokens,
+login, `/auth/me`, rotation, reuse detection killing the family, failed-login
+counting, the audit trail — all exercised against the live database. Then the
+whole flow through the real UI with `VITE_AUTH_PROVIDER=nestjs`: signed in and
+landed on the parent dashboard, with the role supplied by NestJS driving the
+redirect. The test account was removed afterwards.
+
+### Known gap
+
+Under `nestjs`, `use-auth` sources roles and permissions from the session, but
+`profile` is null — the `profiles` table has not migrated, so the account screen
+renders empty fields. Phase 3 (users domain) closes this. It is why the default
+remains `supabase`.
+
+---
+
+## 13. What comes next
+
+Phase 2 is done. Phase 3 is the users domain, and it is what closes the gap that
+keeps `supabase` the default:
+
+1. `profiles` read/write endpoints, so `use-auth` has a profile under the
+   `nestjs` provider and the account screen fills in.
+2. `user_roles`, `permissions` and the governance surface (invitations,
+   maker-checker, audit reads).
+3. Then flip `VITE_AUTH_PROVIDER=nestjs` per environment, verify, and only then
+   remove the Supabase adapter — migration rule 7.
+
+Supabase stays live and revertible throughout. The coupling ratchet in
+`test/contract/supabase-coupling.test.ts` still reports 45 RPCs and 35 tables;
+authentication moved, data access did not.

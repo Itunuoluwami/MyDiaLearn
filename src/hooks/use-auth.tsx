@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { governanceRpc } from "@/integrations/supabase/governance-types";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -41,11 +42,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadIdentity = useCallback(async (userId: string | undefined) => {
+  const loadIdentity = useCallback(async (session: Session | null) => {
+    const userId = session?.user.id;
     if (!userId) {
       setProfile(null);
       setRoles([]);
       setPermissions([]);
+      return;
+    }
+
+    // When the NestJS provider is active it has already resolved roles and
+    // permissions server-side — through the same my_permissions() the browser
+    // used to call — and carries them on the session. Trusting that avoids a
+    // second round trip and, more importantly, avoids reading user_roles from
+    // Supabase for an account that only exists in DiaLearn's own database.
+    const claims = session?.user.user_metadata as
+      { roles?: string[]; permissions?: string[] } | undefined;
+
+    if (authClient.provider === "nestjs") {
+      setRoles((claims?.roles ?? []) as AppRole[]);
+      setPermissions(claims?.permissions ?? []);
+      // The profiles table has not migrated yet, so there is no row to read
+      // here. Phase 3 (users domain) provides it; until then the account
+      // screen renders empty fields under this provider.
+      setProfile(null);
       return;
     }
 
@@ -83,14 +103,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getSession().then(async ({ data }) => {
+    authClient.getSession().then(async ({ data }) => {
       if (!active) return;
       setSession(data.session);
-      await loadIdentity(data.session?.user.id);
+      await loadIdentity(data.session);
       if (active) setLoading(false);
     });
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
+    const { data: subscription } = authClient.onAuthStateChange((event, nextSession) => {
       if (!active) return;
       setSession(nextSession);
       if (event === "SIGNED_OUT") {
@@ -99,8 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPermissions([]);
         return;
       }
-      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
-        void loadIdentity(nextSession?.user.id);
+      if (event === "SIGNED_IN" || event === "USER_UPDATED" || event === "INITIAL_SESSION") {
+        void loadIdentity(nextSession);
       }
     });
 
@@ -111,9 +131,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadIdentity]);
 
   const refresh = useCallback(async () => {
-    const { data } = await supabase.auth.getSession();
+    const { data } = await authClient.getSession();
     setSession(data.session);
-    await loadIdentity(data.session?.user.id);
+    await loadIdentity(data.session);
   }, [loadIdentity]);
 
   const value = useMemo<AuthContextValue>(
@@ -131,7 +151,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin: roles.includes("admin") || roles.includes("super_admin"),
       mustChangePassword:
         (profile as (Profile & { must_change_password?: boolean }) | null)?.must_change_password ===
-        true,
+          true ||
+        (session?.user.user_metadata as { must_change_password?: boolean } | undefined)
+          ?.must_change_password === true,
       refresh,
     }),
     [session, profile, roles, permissions, loading, refresh],

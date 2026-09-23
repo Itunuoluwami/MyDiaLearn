@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { governanceRpc } from "@/integrations/supabase/governance-types";
 import type { Database } from "@/integrations/supabase/types";
 import type { AppRole as AuthAppRole } from "@/hooks/use-auth";
@@ -194,7 +195,7 @@ export function useReviewVerificationStep() {
     }) => {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await authClient.getUser();
 
       if (input.progressId) {
         const { error } = await supabase
@@ -235,7 +236,7 @@ export function useReviewTutorDocument() {
     }) => {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await authClient.getUser();
       const { error } = await supabase
         .from("tutor_documents")
         .update({

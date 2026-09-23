@@ -9,7 +9,7 @@ import {
 import { toast } from "sonner";
 import { ArrowLeft, MailCheck } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { BRAND } from "@/lib/brand";
 import { useAuth } from "@/hooks/use-auth";
 import { portalHome } from "@/lib/portal-home";
@@ -68,7 +68,7 @@ function AuthPage() {
 
   async function handleResend() {
     if (!pendingEmail) return;
-    const { error } = await supabase.auth.resend({ type: "signup", email: pendingEmail });
+    const { error } = await authClient.resend({ type: "signup", email: pendingEmail });
     if (error) {
       toast.error("We couldn't resend the email right now. Please try again shortly.");
       return;

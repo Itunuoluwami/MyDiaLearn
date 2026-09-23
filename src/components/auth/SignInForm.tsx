@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { AlertCircle, Loader2 } from "lucide-react";
 import type { z } from "zod";
 
-import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { SIGNIN_SCHEMA } from "@/lib/auth-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,7 @@ export function SignInForm({
 
   async function onSubmit(values: SignInValues) {
     setFormError(null);
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await authClient.signInWithPassword({
       email: values.email.trim().toLowerCase(),
       password: values.password,
     });

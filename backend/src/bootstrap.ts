@@ -1,4 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 
 import { appConfig, type AppConfig } from './config/configuration';
@@ -14,6 +15,10 @@ import { createValidationPipe } from './common/pipes/validation.pipe';
  */
 export function configureApp(app: INestApplication): AppConfig {
   const config = app.get<AppConfig>(appConfig.KEY);
+
+  // The refresh token travels as an httpOnly cookie, so it has to be parsed
+  // before any controller reads it.
+  app.use(cookieParser());
 
   app.use(
     helmet({

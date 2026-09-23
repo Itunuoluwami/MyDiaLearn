@@ -51,24 +51,49 @@ create table if not exists auth.users (
 -- matching everything.
 create or replace function auth.uid()
 returns uuid
-language sql
+language plpgsql
 stable
 as $$
-  select nullif(
-    current_setting('request.jwt.claims', true)::jsonb ->> 'sub',
-    ''
-  )::uuid;
+declare
+  raw text;
+begin
+  raw := current_setting('request.jwt.claims', true);
+  if raw is null or raw = '' then
+    return null;
+  end if;
+  -- Defensive on purpose. current_setting returns an empty string once a
+  -- SET LOCAL has been rolled back, and ''::jsonb raises rather than returning
+  -- null. Left unguarded, any query touching an RLS policy outside a claims
+  -- transaction would ERROR instead of simply denying — turning a missing
+  -- caller into a 500 rather than a 403.
+  begin
+    return nullif(raw::jsonb ->> 'sub', '')::uuid;
+  exception
+    when others then
+      return null;
+  end;
+end;
 $$;
 
 create or replace function auth.role()
 returns text
-language sql
+language plpgsql
 stable
 as $$
-  select coalesce(
-    current_setting('request.jwt.claims', true)::jsonb ->> 'role',
-    'authenticated'
-  );
+declare
+  raw text;
+begin
+  raw := current_setting('request.jwt.claims', true);
+  if raw is null or raw = '' then
+    return 'authenticated';
+  end if;
+  begin
+    return coalesce(nullif(raw::jsonb ->> 'role', ''), 'authenticated');
+  exception
+    when others then
+      return 'authenticated';
+  end;
+end;
 $$;
 
 -- ---------------------------------------------------------------------------

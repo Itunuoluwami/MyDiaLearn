@@ -177,6 +177,107 @@ describe('Application foundation (e2e)', () => {
     });
   });
 
+  describe('auth endpoints', () => {
+    // These exercise the layers in front of the database — routing, the global
+    // guard and DTO validation — so they run without one.
+
+    it('protects /auth/me', async () => {
+      await request(app.getHttpServer()).get('/api/auth/me').expect(401);
+    });
+
+    it('exposes login and register without authentication', async () => {
+      for (const path of ['/api/auth/login', '/api/auth/register']) {
+        const response = await request(app.getHttpServer()).post(path).send({});
+        // 401 would mean the global guard is wrongly in front of them. 400
+        // means they are reachable and the empty body was rejected.
+        expect(response.status).toBe(400);
+      }
+    });
+
+    it('answers refresh without a cookie as a spent session, not a guard refusal', async () => {
+      // Both are 401, so the status alone does not distinguish them. The
+      // message does, and it matters: one means "sign in again", the other
+      // would mean the endpoint had been accidentally put behind the guard.
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/refresh')
+        .send({})
+        .expect(401);
+
+      expect(response.body.message).toMatch(/session has expired/i);
+      expect(response.body.message).not.toMatch(/access token/i);
+    });
+
+    it('rejects a login without credentials, naming both fields', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({})
+        .expect(400);
+
+      expect(response.body.code).toBe('VALIDATION_FAILED');
+      expect(JSON.stringify(response.body.details)).toMatch(/email/);
+      expect(JSON.stringify(response.body.details)).toMatch(/password/);
+    });
+
+    it('does not apply the password policy to login', async () => {
+      // An account created before a policy change still has to be able to sign
+      // in, so `password` is only checked for presence here.
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email: 'ada@example.com', password: 'x' });
+
+      expect(response.status).not.toBe(400);
+    });
+
+    it('enforces the password policy on registration', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          email: 'ada@example.com',
+          password: 'weak',
+          fullName: 'Ada Lovelace',
+          role: 'parent',
+        })
+        .expect(400);
+
+      expect(JSON.stringify(response.body.details)).toMatch(/at least 8 characters/);
+    });
+
+    it('refuses an elevated role at registration', async () => {
+      // Self-service signup cannot mint an admin. handle_new_user() downgrades
+      // one too, so this is the outer of two independent guards.
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/register')
+        .send({
+          email: 'ada@example.com',
+          password: 'Str0ng!Passw0rd',
+          fullName: 'Ada Lovelace',
+          role: 'super_admin',
+        })
+        .expect(400);
+
+      expect(JSON.stringify(response.body.details)).toMatch(/valid role/);
+    });
+
+    it('strips properties the DTO does not declare', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email: 'ada@example.com', password: 'x', isAdmin: true })
+        .expect(400);
+
+      expect(JSON.stringify(response.body.details)).toMatch(/isAdmin/);
+    });
+
+    it('normalises the email before validating it', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email: '  ADA@Example.COM  ', password: 'x' });
+
+      // Trimmed and lowercased by the DTO transform, so this is not a
+      // validation failure.
+      expect(response.status).not.toBe(400);
+    });
+  });
+
   describe('security headers', () => {
     it('does not advertise the framework', async () => {
       const response = await request(app.getHttpServer()).get('/health').expect(200);

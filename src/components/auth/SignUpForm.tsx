@@ -16,6 +16,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { validateSignup } from "@/lib/signup.functions";
 import {
   makeSignupSchema,
@@ -177,7 +178,7 @@ export function SignUpForm({
     }
 
     const { normalized } = check;
-    const { error } = await supabase.auth.signUp({
+    const { error } = await authClient.signUp({
       email: normalized.email,
       password: values.password,
       options: {

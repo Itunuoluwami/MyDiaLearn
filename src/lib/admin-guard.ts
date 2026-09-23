@@ -1,6 +1,7 @@
 import { redirect } from "@tanstack/react-router";
 
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/lib/auth";
 import { portalHome } from "@/lib/portal-home";
 import type { AppRole } from "@/hooks/use-auth";
 
@@ -48,7 +49,7 @@ export function clearAdminContextCache() {
 async function loadAdminContext(): Promise<AdminContext | null> {
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await authClient.getUser();
   if (!user) return null;
 
   if (cache && cache.key === user.id && Date.now() - cache.at < CACHE_TTL_MS) {

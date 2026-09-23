@@ -1,22 +1,43 @@
 import { Module } from '@nestjs/common';
+import { PassportModule } from '@nestjs/passport';
+
+import {
+  RefreshTokenRepository,
+} from '../database/repositories/refresh-token.repository';
+import { UserRepository } from '../database/repositories/user.repository';
+import {
+  VerificationTokenRepository,
+} from '../database/repositories/verification-token.repository';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { AuthAuditService } from './services/auth-audit.service';
+import { PasswordService } from './services/password.service';
+import { TokenService } from './services/token.service';
 
 /**
- * Authentication and session issuance.
+ * Authentication, replacing Supabase GoTrue.
  *
- * Replaces Supabase GoTrue: signInWithPassword, signUp, signOut, getSession,
- * getUser, resetPasswordForEmail, updateUser, resend, plus the privileged
- * auth.admin.inviteUserByEmail / updateUserById used by admin invitations.
- *
- * Also takes over what GoTrue provided for free and this backend must now build:
- * refresh-token rotation, revocation and device sessions. The profiles.
- * must_change_password flag and clear_must_change_password() move here too.
- *
- * Frontend contract: src/hooks/use-auth.tsx must keep exporting the same
- * AuthContextValue shape. Preserving it is what makes the cutover a one-file
- * change rather than a 49-route change.
- *
- * Foundation phase: boundary only. No controllers or services yet — migration
- * rule 7 keeps Supabase serving this domain until a verified replacement exists.
+ * Repositories are declared here rather than in DatabaseModule because they
+ * belong to this domain: nothing outside auth has any business reading
+ * auth.refresh_tokens. JwtModule is registered globally in AppModule, so it is
+ * not re-imported.
  */
-@Module({})
+@Module({
+  imports: [PassportModule.register({ defaultStrategy: 'jwt', session: false })],
+  controllers: [AuthController],
+  providers: [
+    AuthService,
+    TokenService,
+    PasswordService,
+    AuthAuditService,
+    JwtStrategy,
+    JwtAuthGuard,
+    UserRepository,
+    RefreshTokenRepository,
+    VerificationTokenRepository,
+  ],
+  exports: [AuthService, TokenService, PasswordService],
+})
 export class AuthModule {}
