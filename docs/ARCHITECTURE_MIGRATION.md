@@ -817,6 +817,18 @@ the file is untracked. Rules 17/18.
 Rules 15 and 16 require every step to be independently testable and reversible.
 Neither is achievable today. Phase 0 must complete first.
 
+**BLOCKER-4 — The logo lives on Lovable's CDN, not in this repo.**
+`src/lib/brand.ts` points `BRAND.logoUrl` at
+`/__l5e/assets-v1/<uuid>/dialearn-logo.png`, a path served only by the Lovable
+editor. `src/assets/dialearn-logo.png.asset.json` is a manifest naming an R2
+key; the PNG itself (1.1 MB) is not in the repository. The image is rendered by
+all six portal shells and all four auth routes, so **every page of the
+application shows a broken image and falls back to alt text** outside Lovable —
+confirmed against the dev server. This predates the migration work; leaving
+Lovable is what exposes it. Recover the file from the Lovable editor while the
+project is still reachable, commit it to `public/`, and repoint `brand.ts`.
+Nothing else can be deployed from this repo until that is done.
+
 **BLOCKER-3 — Supabase CLI access.**
 Regenerating `types.ts` needs either `supabase link` against the hosted project
 (requires CLI login — user action) or `supabase gen types --local` (requires Docker).
