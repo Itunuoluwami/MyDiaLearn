@@ -81,6 +81,7 @@ export class BookingsRepository extends BaseRepository {
           hourly_rate: string;
           total_amount: string;
           commission_rule_id: string | null;
+          cancellation_policy_id: string | null;
         }[]
       >`select * from public.booking_quote(${input.tutorId}::uuid, ${input.durationMinutes})`;
 
@@ -93,13 +94,15 @@ export class BookingsRepository extends BaseRepository {
         insert into public.bookings (
           student_id, tutor_id, booked_by, subject_id, education_level_id,
           starts_at, ends_at, duration_minutes, booking_timezone,
-          hourly_rate, currency, total_amount, commission_rule_id, student_notes
+          hourly_rate, currency, total_amount, commission_rule_id,
+          cancellation_policy_id, student_notes
         ) values (
           ${input.studentId}::uuid, ${input.tutorId}::uuid, ${callerId}::uuid,
           ${input.subjectId ?? null}::uuid, ${input.educationLevelId ?? null}::uuid,
           ${input.startsAt}, ${endsAt}, ${input.durationMinutes}, ${input.timezone},
           ${quote.hourly_rate}::numeric, ${quote.currency}, ${quote.total_amount}::numeric,
-          ${quote.commission_rule_id}::uuid, ${input.studentNotes ?? null}
+          ${quote.commission_rule_id}::uuid, ${quote.cancellation_policy_id}::uuid,
+          ${input.studentNotes ?? null}
         )
         returning id, student_id, tutor_id, booked_by, subject_id, education_level_id,
                   starts_at, ends_at, duration_minutes, booking_timezone, hourly_rate,

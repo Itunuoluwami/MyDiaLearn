@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { AuditService, type AuditContext } from '../common/audit/audit.service';
 import { NotFoundError } from '../common/exceptions/app.exception';
+import { translateDatabaseError } from '../common/exceptions/database-errors';
 import { paginate, type Paginated, type PaginationQueryDto } from '../shared/query.dto';
 import type { PaymentResponse, PayoutResponse } from './dto/payment.dto';
 import { PaymentsRepository, type PaymentRow, type PayoutRow } from './payments.repository';
@@ -49,7 +50,13 @@ export class PaymentsService {
     bookingId: string,
     context: AuditContext,
   ): Promise<PaymentResponse> {
-    const payment = await this.repository.payForBooking(payerId, bookingId);
+    let payment;
+    try {
+      payment = await this.repository.payForBooking(payerId, bookingId);
+    } catch (error) {
+      // Without this, paying twice reports a 500 rather than "already paid".
+      throw translateDatabaseError(error, 'We could not complete that payment.');
+    }
 
     await this.audit.record('payment.created', {
       actorId: payerId,
@@ -105,7 +112,12 @@ export class PaymentsService {
     // than a raised database exception.
     await this.settlement.assertPayoutAllowed(amount);
 
-    const id = await this.repository.requestPayout(tutorUserId, amount);
+    let id: string;
+    try {
+      id = await this.repository.requestPayout(tutorUserId, amount);
+    } catch (error) {
+      throw translateDatabaseError(error, 'We could not request that payout.');
+    }
 
     await this.audit.record('payout.requested', {
       actorId: tutorUserId,

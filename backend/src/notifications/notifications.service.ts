@@ -42,7 +42,7 @@ export function toResponse(row: NotificationRow): NotificationResponse {
     id: row.id,
     triggerKey: row.trigger_key,
     channel: row.channel,
-    subject: row.subject,
+    subject: row.title,
     body: row.body,
     link: row.link,
     read: row.read_at !== null,

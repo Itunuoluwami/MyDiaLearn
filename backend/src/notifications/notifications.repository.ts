@@ -9,7 +9,8 @@ export interface NotificationRow {
   user_id: string;
   trigger_key: string | null;
   channel: string;
-  subject: string | null;
+  /** The column is `title`; the template calls the same thing a subject. */
+  title: string | null;
   body: string | null;
   link: string | null;
   read_at: Date | null;
@@ -45,7 +46,7 @@ export class NotificationsRepository extends BaseRepository {
   ): Promise<{ rows: NotificationRow[]; total: number }> {
     return this.prisma.withUser(userId, async (tx) => {
       const rows = await tx.$queryRaw<NotificationRow[]>`
-        select id, user_id, trigger_key, channel::text, subject, body, link, read_at, created_at
+        select id, user_id, trigger_key, channel::text, title, body, link, read_at, created_at
         from public.notifications
         where user_id = ${userId}::uuid
         order by created_at desc

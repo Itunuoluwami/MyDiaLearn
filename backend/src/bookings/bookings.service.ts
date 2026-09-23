@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { AuditService, type AuditContext } from '../common/audit/audit.service';
 import { AppException, ErrorCode, NotFoundError } from '../common/exceptions/app.exception';
+import { translateDatabaseError } from '../common/exceptions/database-errors';
 import { PlatformSettingsService } from '../platform-settings/platform-settings.service';
 import { paginate, type Paginated, type PaginationQueryDto } from '../shared/query.dto';
 import type {
@@ -101,20 +102,48 @@ export class BookingsService {
     return toResponse(row);
   }
 
+  /**
+   * Bookable slots.
+   *
+   * tutor_available_slots() reports when the tutor is *free*, which is not the
+   * same as when a lesson may be *booked*: it knows nothing about the minimum
+   * notice period or the booking horizon, both of which are admin settings.
+   * Left unfiltered it offers slots that create() then refuses, which shows a
+   * user a time they can select and cannot have.
+   *
+   * Filtering here rather than in the SQL keeps one definition of the window —
+   * the same `assertBookableWindow` that guards creation.
+   */
   async availableSlots(
     callerId: string,
     input: { tutorId: string; from?: string; days: number; durationMinutes: number },
   ): Promise<AvailableSlotResponse[]> {
+    const [minNoticeHours, maxAdvanceDays] = await Promise.all([
+      this.settings.minNoticeHours(),
+      this.settings.maxAdvanceDays(),
+    ]);
+
+    const earliest = Date.now() + minNoticeHours * 3_600_000;
+    const latest = Date.now() + maxAdvanceDays * 86_400_000;
+
     const slots = await this.repository.availableSlots(callerId, {
       tutorId: input.tutorId,
-      from: input.from ? new Date(input.from) : new Date(),
+      // Asking from the earliest bookable moment rather than now, so the
+      // function does not spend effort on slots that will be discarded.
+      from: input.from ? new Date(input.from) : new Date(earliest),
       days: input.days,
       durationMinutes: input.durationMinutes,
     });
-    return slots.map((slot) => ({
-      startsAt: slot.starts_at.toISOString(),
-      endsAt: slot.ends_at.toISOString(),
-    }));
+
+    return slots
+      .filter((slot) => {
+        const at = slot.starts_at.getTime();
+        return at >= earliest && at <= latest;
+      })
+      .map((slot) => ({
+        startsAt: slot.starts_at.toISOString(),
+        endsAt: slot.ends_at.toISOString(),
+      }));
   }
 
   async respond(
@@ -292,57 +321,7 @@ export function toResponse(row: BookingRow): BookingResponse {
   };
 }
 
-/**
- * Turns the database's raised exceptions into answers a caller can act on.
- *
- * The PL/pgSQL functions raise bare codes — NOT_AUTHORIZED, ALREADY_PAID — and
- * the exclusion constraints surface as 23P01. Without this the frontend would
- * show "An unexpected error occurred" for "that slot was just taken", which is
- * the single most likely thing to go wrong when booking.
- */
+/** Booking-flavoured wrapper around the shared translator. */
 export function translateBookingError(error: unknown): AppException {
-  const message = error instanceof Error ? error.message : String(error);
-
-  if (/23P01|exclusion constraint|no_tutor_overlap|no_student_overlap/i.test(message)) {
-    return new AppException(
-      ErrorCode.CONFLICT,
-      'That time is no longer available. Please choose another slot.',
-      409,
-    );
-  }
-  if (/NOT_AUTHORIZED/.test(message)) {
-    return new AppException(
-      ErrorCode.NOT_AUTHORIZED,
-      'You do not have access to this booking.',
-      403,
-    );
-  }
-  if (/NOT_A_TUTOR/.test(message)) {
-    return new AppException(ErrorCode.NOT_AUTHORIZED, 'This action is for tutors.', 403);
-  }
-  if (/BOOKING_NOT_FOUND/.test(message)) {
-    return new AppException(ErrorCode.NOT_FOUND, 'Booking not found.', 404);
-  }
-  if (/CLASS_NOT_READY/.test(message)) {
-    return new AppException(ErrorCode.CONFLICT, 'This class cannot be opened yet.', 409);
-  }
-  if (/ALREADY_PAID/.test(message)) {
-    return new AppException(ErrorCode.CONFLICT, 'This booking has already been paid.', 409);
-  }
-  if (/BOOKING_NOT_PAYABLE/.test(message)) {
-    return new AppException(
-      ErrorCode.CONFLICT,
-      'This booking can no longer be paid for.',
-      409,
-    );
-  }
-  if (/NO_QUOTE/.test(message)) {
-    return new AppException(ErrorCode.NOT_FOUND, 'No price is available for this tutor.', 404);
-  }
-
-  return new AppException(
-    ErrorCode.INTERNAL_ERROR,
-    'We could not complete that booking action.',
-    500,
-  );
+  return translateDatabaseError(error, 'We could not complete that booking action.');
 }

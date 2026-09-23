@@ -50,8 +50,15 @@ export class PaymentsRepository extends BaseRepository {
    */
   async payForBooking(payerId: string, bookingId: string): Promise<PaymentRow> {
     return this.prisma.withUser(payerId, async (tx) => {
+      // `select * from f()`, never `select (f()).*`.
+      //
+      // Expanding a composite with `(f()).*` makes PostgreSQL re-evaluate the
+      // function once per output column — 19 times for public.payments. The
+      // first call charged and the rest raised ALREADY_PAID, so the request
+      // 500'd on a payment that had in fact succeeded. With a real gateway
+      // instead of the simulated provider, that is 19 charges.
       const rows = await tx.$queryRaw<PaymentRow[]>`
-        select (public.pay_for_booking(${bookingId}::uuid)).*
+        select * from public.pay_for_booking(${bookingId}::uuid)
       `;
       return rows[0]!;
     });

@@ -10,10 +10,15 @@ export interface BookingQuote {
   durationMinutes: number;
   lessonAmount: string;
   platformFee: string;
+  processingFee: string;
   commissionAmount: string;
-  tutorPayout: string;
   totalAmount: string;
   commissionRuleId: string | null;
+  /**
+   * Captured onto the booking so the policy in force at booking time governs
+   * a later cancellation, even if an admin edits the policy in between.
+   */
+  cancellationPolicyId: string | null;
 }
 
 /**
@@ -69,10 +74,11 @@ export class PricingService {
             duration_minutes: number;
             lesson_amount: string;
             platform_fee: string;
+            processing_fee: string;
             commission_amount: string;
-            tutor_payout: string;
             total_amount: string;
             commission_rule_id: string | null;
+            cancellation_policy_id: string | null;
           }[]
         >`select * from public.booking_quote(${input.tutorId}::uuid, ${input.durationMinutes})`,
     );
@@ -92,10 +98,11 @@ export class PricingService {
       durationMinutes: row.duration_minutes,
       lessonAmount: String(row.lesson_amount),
       platformFee: String(row.platform_fee),
+      processingFee: String(row.processing_fee),
       commissionAmount: String(row.commission_amount),
-      tutorPayout: String(row.tutor_payout),
       totalAmount: String(row.total_amount),
       commissionRuleId: row.commission_rule_id,
+      cancellationPolicyId: row.cancellation_policy_id,
     };
   }
 }

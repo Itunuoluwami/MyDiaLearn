@@ -23,10 +23,11 @@ describe('PricingService', () => {
     duration_minutes: 60,
     lesson_amount: '12500.00',
     platform_fee: '625.00',
+    processing_fee: '0.00',
     commission_amount: '1875.00',
-    tutor_payout: '10000.00',
     total_amount: '12500.00',
     commission_rule_id: 'c0000000-0000-4000-8000-000000000001',
+    cancellation_policy_id: 'p0000000-0000-4000-8000-000000000001',
   };
 
   beforeEach(async () => {
@@ -57,10 +58,11 @@ describe('PricingService', () => {
       durationMinutes: 60,
       lessonAmount: '12500.00',
       platformFee: '625.00',
+      processingFee: '0.00',
       commissionAmount: '1875.00',
-      tutorPayout: '10000.00',
       totalAmount: '12500.00',
       commissionRuleId: 'c0000000-0000-4000-8000-000000000001',
+      cancellationPolicyId: 'p0000000-0000-4000-8000-000000000001',
     });
   });
 
@@ -72,8 +74,8 @@ describe('PricingService', () => {
       'hourlyRate',
       'lessonAmount',
       'platformFee',
+      'processingFee',
       'commissionAmount',
-      'tutorPayout',
       'totalAmount',
     ] as const) {
       expect(typeof quote[key]).toBe('string');
