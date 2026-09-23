@@ -1,31 +1,42 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
-import { EMAIL_SERVICE, type EmailService } from '../../integrations/email/email.interface';
+import { EmailService } from '../../integrations/email/email.service';
 import { NotificationsRepository } from '../notifications.repository';
 
 /**
- * Sends a notification for a trigger key.
+ * Raises a notification for a trigger key.
  *
- * **No service anywhere composes notification copy.** Subject and body come
- * from notification_templates, rendered by the database's render_template()
- * against the variables passed in. That is what lets an admin change wording
- * without a deploy, and it is why `dispatch` takes a trigger key and a
- * variables bag rather than a message.
+ * **No service anywhere composes notification copy.** Callers pass a trigger
+ * key and a variables bag; subject and body come from `notification_templates`.
+ * That is what lets an admin reword a notification without a deploy, and it is
+ * why `dispatch` takes a key rather than a message.
  *
- * In-app delivery goes through notify_user(), preserving the existing path.
- * Email delivery is new — notification_channel has always allowed 'email' but
- * notify_user() only ever wrote in-app rows — and goes through EmailService,
- * so this module never touches SMTP.
+ * In-app delivery goes through the database's notify_user(), preserving the
+ * existing path. Email goes through EmailService, so this module never touches
+ * SMTP and never renders a message itself.
  */
 @Injectable()
-export class NotificationDispatchService {
+export class NotificationDispatchService implements OnModuleInit {
   constructor(
     private readonly repository: NotificationsRepository,
-    @Inject(EMAIL_SERVICE) private readonly email: EmailService,
+    private readonly email: EmailService,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(NotificationDispatchService.name);
+  }
+
+  /**
+   * Gives EmailService its template source.
+   *
+   * Wired here rather than imported there, so the email module carries no
+   * database dependency and stays unit-testable without one.
+   */
+  onModuleInit(): void {
+    this.email.useTemplateSource(async (triggerKey) => {
+      const row = await this.repository.findTemplate(triggerKey, 'email');
+      return row ? { subject: row.subject, body: row.body } : null;
+    });
   }
 
   /** In-app notification, rendered from the template for `triggerKey`. */
@@ -45,12 +56,11 @@ export class NotificationDispatchService {
   }
 
   /**
-   * Email for the same trigger key, if a template exists for the channel.
+   * Email for the same trigger key, when an active email template exists.
    *
-   * Silently does nothing when no active email template is configured. That is
-   * the correct behaviour rather than an omission: which events also send
-   * email is an admin decision expressed by the presence of a template, not
-   * something a service should assume.
+   * Which events also send email is an admin decision expressed by the
+   * presence of a template, not something a service should assume — so a
+   * missing template is a no-op rather than a failure.
    */
   async dispatchEmail(input: {
     to: string;
@@ -66,26 +76,43 @@ export class NotificationDispatchService {
       return false;
     }
 
-    await this.email.send({
+    const result = await this.email.sendTemplate({
+      trigger: input.triggerKey,
       to: input.to,
-      subject: render(template.subject ?? '', input.vars),
-      text: render(template.body ?? '', input.vars),
+      vars: input.vars,
     });
-    return true;
+    return result !== null;
   }
-}
 
-/**
- * Mirrors the database's render_template(): `{{ key }}` substitution.
- *
- * Reimplemented here only because the email path renders outside a database
- * call. Unknown placeholders are left intact rather than blanked, so a missing
- * variable is visible in the output instead of producing a sentence with a
- * hole in it.
- */
-function render(template: string, vars: Record<string, unknown>): string {
-  return template.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, key: string) => {
-    const value = vars[key];
-    return value === undefined || value === null ? match : String(value);
-  });
+  /** Both channels for one event. Each is independent of the other's outcome. */
+  async dispatch(input: {
+    actorId: string;
+    userId: string;
+    email?: string;
+    triggerKey: string;
+    vars: Record<string, unknown>;
+    link?: string;
+  }): Promise<{ inApp: boolean; email: boolean }> {
+    let inApp = false;
+    try {
+      await this.dispatchInApp(input);
+      inApp = true;
+    } catch (error) {
+      // A failed notification must not fail the booking that caused it.
+      this.logger.error(
+        { err: error, triggerKey: input.triggerKey },
+        'In-app dispatch failed',
+      );
+    }
+
+    const email = input.email
+      ? await this.dispatchEmail({
+          to: input.email,
+          triggerKey: input.triggerKey,
+          vars: input.vars,
+        })
+      : false;
+
+    return { inApp, email };
+  }
 }

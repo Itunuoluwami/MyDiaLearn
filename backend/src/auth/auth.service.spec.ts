@@ -4,7 +4,7 @@ import { authConfig } from '../config/configuration';
 import { AppException } from '../common/exceptions/app.exception';
 import { UserRepository } from '../database/repositories/user.repository';
 import { VerificationTokenRepository } from '../database/repositories/verification-token.repository';
-import { EMAIL_SERVICE } from '../integrations/email/email.interface';
+import { EmailService } from '../integrations/email/email.service';
 import { AuthService } from './auth.service';
 import { AuditService } from '../common/audit/audit.service';
 import { PasswordService } from './services/password.service';
@@ -77,8 +77,9 @@ describe('AuthService', () => {
     };
     audit = { record: jest.fn() };
     email = {
-      send: jest.fn().mockResolvedValue({}),
-      isReady: jest.fn().mockReturnValue(true),
+      sendTemplate: jest.fn().mockResolvedValue({ messageId: 'm1' }),
+      send: jest.fn().mockResolvedValue({ messageId: 'm1' }),
+      isConfigured: jest.fn().mockReturnValue(true),
     };
     verification = { create: jest.fn(), consume: jest.fn() };
 
@@ -90,7 +91,7 @@ describe('AuthService', () => {
         { provide: PasswordService, useValue: passwords },
         { provide: TokenService, useValue: tokens },
         { provide: AuditService, useValue: audit },
-        { provide: EMAIL_SERVICE, useValue: email },
+        { provide: EmailService, useValue: email },
         { provide: authConfig.KEY, useValue: config },
       ],
     }).compile();
@@ -184,7 +185,7 @@ describe('AuthService', () => {
       ).resolves.toBeUndefined();
       // No email, no token — but no error either, so the endpoint cannot be
       // used to test whether an address is registered.
-      expect(email.send).not.toHaveBeenCalled();
+      expect(email.sendTemplate).not.toHaveBeenCalled();
       expect(verification.create).not.toHaveBeenCalled();
     });
 
@@ -195,8 +196,13 @@ describe('AuthService', () => {
       expect(verification.create).toHaveBeenCalledWith(
         expect.objectContaining({ purpose: 'password_reset' }),
       );
-      const sent = email.send.mock.calls[0][0] as { text: string };
-      expect(sent.text).toContain('/auth/reset-password?token=');
+      // The service passes a trigger key and variables; it never composes copy.
+      const sent = email.sendTemplate.mock.calls[0][0] as {
+        trigger: string;
+        vars: Record<string, string>;
+      };
+      expect(sent.trigger).toBe('account.password_reset');
+      expect(sent.vars.reset_url).toContain('/auth/reset-password?token=');
     });
 
     it('revokes every session when a reset completes', async () => {

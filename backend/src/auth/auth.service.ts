@@ -9,7 +9,7 @@ import {
 } from '../common/exceptions/app.exception';
 import { UserRepository, type AuthUserRow } from '../database/repositories/user.repository';
 import { VerificationTokenRepository } from '../database/repositories/verification-token.repository';
-import { EMAIL_SERVICE, type EmailService } from '../integrations/email/email.interface';
+import { EmailService } from '../integrations/email/email.service';
 import type { AppRole } from '../common/decorators/roles.decorator';
 import type {
   AuthSession,
@@ -49,7 +49,7 @@ export class AuthService {
     private readonly passwords: PasswordService,
     private readonly tokens: TokenService,
     private readonly audit: AuditService,
-    @Inject(EMAIL_SERVICE) private readonly email: EmailService,
+    private readonly email: EmailService,
     @Inject(authConfig.KEY) private readonly config: AuthConfig,
   ) {}
 
@@ -275,14 +275,15 @@ export class AuthService {
       expiresAt,
     });
 
-    const link = `${this.config.appUrl}/auth/reset-password?token=${token}`;
-    await this.email.send({
+    // Trigger key and variables only. Wording and layout belong to the email
+    // module; this service does not compose messages.
+    await this.email.sendTemplate({
+      trigger: 'account.password_reset',
       to: dto.email,
-      subject: 'Reset your DiaLearn password',
-      text:
-        `Someone asked to reset the password for this DiaLearn account.\n\n${link}\n\n` +
-        `This link expires in ${this.config.passwordResetTtlMinutes} minutes and can be ` +
-        `used once. If it wasn't you, nothing has changed and you can ignore this email.`,
+      vars: {
+        reset_url: `${this.config.appUrl}/auth/reset-password?token=${token}`,
+        expiry_minutes: this.config.passwordResetTtlMinutes,
+      },
     });
   }
 
@@ -381,14 +382,13 @@ export class AuthService {
       expiresAt,
     });
 
-    const link = `${this.config.appUrl}/auth?verify=${token}`;
-    await this.email.send({
+    await this.email.sendTemplate({
+      trigger: 'account.email_verification',
       to: email,
-      subject: 'Confirm your DiaLearn email address',
-      text:
-        `Welcome to DiaLearn. Confirm your email address to finish setting up your ` +
-        `account:\n\n${link}\n\nThis link expires in ` +
-        `${this.config.emailVerificationTtlHours} hours.`,
+      vars: {
+        verification_url: `${this.config.appUrl}/auth?verify=${token}`,
+        expiry_hours: this.config.emailVerificationTtlHours,
+      },
     });
 
     await this.audit.record('auth.email_verification_sent', {
