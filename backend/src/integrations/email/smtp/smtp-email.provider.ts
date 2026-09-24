@@ -71,6 +71,16 @@ export class SmtpEmailProvider implements EmailProvider, OnModuleDestroy {
     if (this.config.port === 465 && !this.config.secure) {
       warnings.push('SMTP_PORT=465 with SMTP_SECURE=false: port 465 expects implicit TLS.');
     }
+    if (
+      !this.config.secure &&
+      !this.config.requireTls &&
+      this.config.authMethod !== 'CRAM-MD5'
+    ) {
+      warnings.push(
+        'A non-TLS port (SMTP_REQUIRE_TLS=false) without SMTP_AUTH_METHOD=CRAM-MD5 sends the ' +
+          'password base64-encoded in clear. Prefer 587 with STARTTLS, or set CRAM-MD5.',
+      );
+    }
     return warnings;
   }
 
@@ -158,6 +168,10 @@ export class SmtpEmailProvider implements EmailProvider, OnModuleDestroy {
         host: this.config.host,
         port: this.config.port,
         secure: this.config.secure,
+        // Force STARTTLS on a non-secure port unless explicitly disabled (a
+        // plain submission port with no STARTTLS must set SMTP_REQUIRE_TLS=false).
+        ...(this.config.secure ? {} : { requireTLS: this.config.requireTls }),
+        ...(this.config.authMethod ? { authMethod: this.config.authMethod } : {}),
         // Pooled: a burst of booking confirmations should reuse one connection
         // rather than open one per message and trip a rate limit.
         pool: true,

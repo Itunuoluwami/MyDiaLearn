@@ -48,6 +48,8 @@ export const smtpConfig = registerAs('smtp', () => ({
   password: process.env.SMTP_PASSWORD ?? '',
   fromEmail: process.env.SMTP_FROM_EMAIL ?? '',
   fromName: process.env.SMTP_FROM_NAME as string,
+  requireTls: process.env.SMTP_REQUIRE_TLS !== 'false',
+  authMethod: (process.env.SMTP_AUTH_METHOD ?? '') as '' | 'LOGIN' | 'PLAIN' | 'CRAM-MD5',
 }));
 
 export const integrationsConfig = registerAs('integrations', () => ({

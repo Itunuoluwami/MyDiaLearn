@@ -68,6 +68,12 @@ export const envValidationSchema = Joi.object({
   SMTP_PASSWORD: Joi.string().allow('').optional(),
   SMTP_FROM_EMAIL: Joi.string().email().allow('').optional(),
   SMTP_FROM_NAME: Joi.string().allow('').default('DiaLearn'),
+  // Force STARTTLS on a non-secure port. True for 587 (STARTTLS submission);
+  // must be false for a plain submission port that offers no STARTTLS (8889).
+  SMTP_REQUIRE_TLS: Joi.boolean().default(true),
+  // Pin the SMTP auth mechanism. Empty = let nodemailer negotiate. Set to
+  // CRAM-MD5 on a non-TLS port so the password is not sent base64-in-clear.
+  SMTP_AUTH_METHOD: Joi.string().valid('', 'LOGIN', 'PLAIN', 'CRAM-MD5').default(''),
 
   // --- Integration provider selection --------------------------------------
   // Which adapter is bound to each port. See src/integrations/.
