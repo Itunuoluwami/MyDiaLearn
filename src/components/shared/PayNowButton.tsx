@@ -13,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ApiError } from "@/lib/api/client";
 import { formatMoney } from "@/lib/parent-data";
 import { usePayForBooking } from "@/lib/payments";
 
@@ -47,6 +48,12 @@ export function PayNowButton({
       if (message.includes("ALREADY_PAID")) {
         toast.info("This lesson is already paid for.");
         setOpen(false);
+        return;
+      }
+      // The API's 4xx messages are written for people ("This booking can no
+      // longer be paid for."); a server fault stays generic.
+      if (error instanceof ApiError && error.status < 500) {
+        toast.error(error.message);
         return;
       }
       toast.error("We couldn't process that payment. Please try again.");

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { CalendarDays, CheckCircle2, Clock, Globe2, Loader2, ShieldCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { apiPost, useApiData } from "@/lib/api/data-client";
 import { useAuth } from "@/hooks/use-auth";
 import { ParentShell } from "@/components/parent/ParentShell";
 import {
@@ -75,6 +76,7 @@ function BookClassPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const timezone = useViewerTimezone();
+  const viaApi = useApiData();
 
   const children = useChildren();
   const { tutor: tutorInfo } = useTutorCard(tutorId);
@@ -126,6 +128,24 @@ function BookClassPage() {
       if (!selectedSlot) throw new Error("Choose an available time slot.");
       const priced = quote.data;
       if (!priced) throw new Error("We couldn't price this lesson. Please try again.");
+
+      if (viaApi) {
+        // The server prices the lesson from booking_quote() and records the
+        // commission rule; only the parent's choices are sent.
+        await apiPost("/bookings", {
+          studentId: childId,
+          tutorId,
+          ...(subjectId ? { subjectId } : {}),
+          ...(selectedChild?.education_level_id
+            ? { educationLevelId: selectedChild.education_level_id }
+            : {}),
+          startsAt: selectedSlot.starts_at,
+          durationMinutes: priced.duration_minutes,
+          timezone,
+          ...(notes.trim() ? { studentNotes: notes.trim() } : {}),
+        });
+        return;
+      }
 
       const { error } = await supabase.from("bookings").insert({
         student_id: childId,
