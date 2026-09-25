@@ -149,6 +149,10 @@ export interface BookingResponse {
   currency: string;
   totalAmount: string;
   status: string;
+  subjectName: string | null;
+  paid: boolean;
+  sessionMeetingUrl: string | null;
+  sessionStatus: string | null;
   studentNotes: string | null;
   tutorAcceptedAt: string | null;
   cancelledAt: string | null;

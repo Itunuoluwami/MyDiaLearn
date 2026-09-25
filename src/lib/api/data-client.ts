@@ -42,3 +42,25 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
 
 /** Re-exported so hooks can branch without importing three modules. */
 export { API_BASE_URL, supabase };
+
+export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
+  let accessToken: string | null = null;
+  try {
+    const { data } = await authClient.getSession();
+    accessToken = data.session?.access_token ?? null;
+  } catch {
+    /* public */
+  }
+  return apiRequest<T>(path, { method: "PATCH", body, ...(accessToken ? { accessToken } : {}) });
+}
+
+export async function apiDelete<T>(path: string): Promise<T> {
+  let accessToken: string | null = null;
+  try {
+    const { data } = await authClient.getSession();
+    accessToken = data.session?.access_token ?? null;
+  } catch {
+    /* public */
+  }
+  return apiRequest<T>(path, { method: "DELETE", ...(accessToken ? { accessToken } : {}) });
+}

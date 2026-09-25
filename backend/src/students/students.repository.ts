@@ -8,6 +8,8 @@ export interface StudentRow {
   id: string;
   profile_id: string | null;
   parent_id: string | null;
+  curriculum_name?: string | null;
+  education_level_name?: string | null;
   first_name: string;
   last_name: string | null;
   date_of_birth: Date | null;
@@ -74,8 +76,16 @@ export class StudentsRepository extends BaseRepository {
   ): Promise<{ rows: StudentRow[]; total: number }> {
     return this.prisma.withUser(userId, async (tx) => {
       const rows = await tx.$queryRawUnsafe<StudentRow[]>(
-        `select ${STUDENT_COLUMNS} from public.students
-         order by is_active desc, first_name
+        `select s.id, s.profile_id, s.parent_id, s.first_name, s.last_name,
+                s.date_of_birth, s.gender, s.curriculum_id, s.education_level_id,
+                s.school_name, s.learning_goals, s.special_needs, s.timezone,
+                s.avatar_url, s.can_self_login, s.can_book_lessons,
+                s.can_message_tutors, s.is_active, s.created_at,
+                cur.name as curriculum_name, el.name as education_level_name
+         from public.students s
+         left join public.curricula cur on cur.id = s.curriculum_id
+         left join public.education_levels el on el.id = s.education_level_id
+         order by s.is_active desc, s.first_name
          limit $1 offset $2`,
         query.limit,
         query.skip,

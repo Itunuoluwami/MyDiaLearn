@@ -6,6 +6,10 @@ import type { PaginationQueryDto } from '../shared/query.dto';
 
 export interface BookingRow {
   id: string;
+  subject_name?: string | null;
+  paid?: boolean;
+  session_meeting_url?: string | null;
+  session_status?: string | null;
   student_id: string;
   tutor_id: string;
   booked_by: string;
@@ -121,15 +125,20 @@ export class BookingsRepository extends BaseRepository {
   ): Promise<{ rows: BookingRow[]; total: number }> {
     return this.prisma.withUser(userId, async (tx) => {
       const rows = await tx.$queryRaw<BookingRow[]>`
-        select id, student_id, tutor_id, booked_by, subject_id, education_level_id,
-               starts_at, ends_at, duration_minutes, booking_timezone, hourly_rate,
-               currency, total_amount, status::text, student_notes, tutor_accepted_at,
-               cancelled_at, cancellation_reason, created_at
-        from public.bookings
-        where (${filters.status ?? null}::text is null or status::text = ${filters.status ?? null})
-          and (${filters.from ?? null}::timestamptz is null or starts_at >= ${filters.from ?? null})
-          and (${filters.to ?? null}::timestamptz is null or starts_at <= ${filters.to ?? null})
-        order by starts_at desc
+        select b.id, b.student_id, b.tutor_id, b.booked_by, b.subject_id, b.education_level_id,
+               b.starts_at, b.ends_at, b.duration_minutes, b.booking_timezone, b.hourly_rate,
+               b.currency, b.total_amount, b.status::text, b.student_notes, b.tutor_accepted_at,
+               b.cancelled_at, b.cancellation_reason, b.created_at,
+               sub.name as subject_name,
+               exists(select 1 from public.payments p where p.booking_id = b.id and p.status = 'paid') as paid,
+               cs.meeting_url as session_meeting_url, cs.status::text as session_status
+        from public.bookings b
+        left join public.subjects sub on sub.id = b.subject_id
+        left join public.class_sessions cs on cs.booking_id = b.id
+        where (${filters.status ?? null}::text is null or b.status::text = ${filters.status ?? null})
+          and (${filters.from ?? null}::timestamptz is null or b.starts_at >= ${filters.from ?? null})
+          and (${filters.to ?? null}::timestamptz is null or b.starts_at <= ${filters.to ?? null})
+        order by b.starts_at desc
         limit ${query.limit} offset ${query.skip}
       `;
       const counted = await tx.$queryRaw<{ n: bigint }[]>`

@@ -107,7 +107,9 @@ export interface StudentResponse {
   dateOfBirth: string | null;
   gender: string | null;
   curriculumId: string | null;
+  curriculumName: string | null;
   educationLevelId: string | null;
+  educationLevelName: string | null;
   schoolName: string | null;
   learningGoals: string | null;
   specialNeeds: string | null;

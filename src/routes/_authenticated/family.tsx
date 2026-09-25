@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Plus, Trash2, UserRound } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { apiPost, apiPatch, apiDelete, useApiData } from "@/lib/api/data-client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 import { useRedirectToPortalHome } from "@/hooks/use-portal-redirect";
@@ -69,6 +70,7 @@ function FamilyPage() {
   const { user, hasPermission } = useAuth();
 
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
 
@@ -119,6 +121,18 @@ function FamilyPage() {
   const createStudent = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not signed in");
+      if (viaApi) {
+        await apiPost("/students", {
+          firstName: form.first_name,
+          lastName: form.last_name || undefined,
+          dateOfBirth: form.date_of_birth || undefined,
+          curriculumId: form.curriculum_id || undefined,
+          educationLevelId: form.education_level_id || undefined,
+          schoolName: form.school_name || undefined,
+          learningGoals: form.learning_goals || undefined,
+        });
+        return;
+      }
       const { error } = await supabase.from("students").insert({
         parent_id: user.id,
         first_name: form.first_name,
@@ -153,6 +167,14 @@ function FamilyPage() {
         >
       >;
     }) => {
+      if (viaApi) {
+        await apiPatch(`/students/${id}`, {
+          canSelfLogin: patch.can_self_login,
+          canBookLessons: patch.can_book_lessons,
+          canMessageTutors: patch.can_message_tutors,
+        });
+        return;
+      }
       const { error } = await supabase.from("students").update(patch).eq("id", id);
       if (error) throw error;
     },
@@ -164,6 +186,10 @@ function FamilyPage() {
 
   const removeStudent = useMutation({
     mutationFn: async (id: string) => {
+      if (viaApi) {
+        await apiDelete(`/students/${id}`);
+        return;
+      }
       const { error } = await supabase.from("students").delete().eq("id", id);
       if (error) throw error;
     },
