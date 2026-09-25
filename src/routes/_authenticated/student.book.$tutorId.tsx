@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   CalendarDays,
@@ -18,9 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useStudentRecord } from "@/lib/student-data";
+import { useCreateStudentBooking, useStudentRecord } from "@/lib/student-data";
 import {
   formatDayInZone,
   formatMoney,
@@ -50,7 +49,6 @@ export const Route = createFileRoute("/_authenticated/student/book/$tutorId")({
 function StudentBookPage() {
   const { tutorId } = Route.useParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
   const timezone = useViewerTimezone();
 
@@ -92,6 +90,7 @@ function StudentBookPage() {
 
   const selectedSlot = (slots.data ?? []).find((slot) => slot.starts_at === slotStart);
 
+  const requestBooking = useCreateStudentBooking();
   const createBooking = useMutation({
     mutationFn: async () => {
       if (!user || !student) throw new Error("You need to be signed in.");
@@ -99,28 +98,17 @@ function StudentBookPage() {
       const priced = quote.data;
       if (!priced) throw new Error("We couldn't price this lesson. Please try again.");
 
-      const { error } = await supabase.from("bookings").insert({
-        student_id: student.id,
-        tutor_id: tutorId,
-        booked_by: user.id,
-        subject_id: subjectId ?? null,
-        education_level_id: student.education_level_id ?? null,
-        starts_at: selectedSlot.starts_at,
-        ends_at: selectedSlot.ends_at,
-        duration_minutes: priced.duration_minutes,
-        booking_timezone: timezone,
-        hourly_rate: priced.hourly_rate,
-        currency: priced.currency,
-        total_amount: priced.total_amount,
-        commission_rule_id: priced.commission_rule_id ?? null,
-        cancellation_policy_id: priced.cancellation_policy_id ?? null,
-        student_notes: notes.trim() || null,
+      await requestBooking.mutateAsync({
+        tutorId,
+        subjectId: subjectId ?? null,
+        startsAt: selectedSlot.starts_at,
+        endsAt: selectedSlot.ends_at,
+        timezone,
+        notes: notes.trim() || null,
+        quote: priced,
       });
-      if (error) throw error;
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["student-bookings"] });
-      await queryClient.invalidateQueries({ queryKey: ["tutor-slots"] });
+    onSuccess: () => {
       toast.success("Class requested! 🎉 Pay now to confirm it — find it under Awaiting Payment.");
       navigate({ to: "/student/history" });
     },

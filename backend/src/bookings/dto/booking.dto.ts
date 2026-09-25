@@ -72,6 +72,19 @@ export class RespondBookingDto {
   accept!: boolean;
 }
 
+export class RateBookingDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  score!: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  comment?: string;
+}
+
 export class EndClassDto {
   @IsBoolean()
   studentAttended!: boolean;
@@ -174,6 +187,12 @@ export interface BookingResponse {
   paid: boolean;
   sessionMeetingUrl: string | null;
   sessionStatus: string | null;
+  /** Session and tutor details are filled by the list query only. */
+  sessionId: string | null;
+  sessionTutorNotes: string | null;
+  sessionHomework: string | null;
+  tutorName: string | null;
+  tutorAvatarUrl: string | null;
   studentNotes: string | null;
   tutorAcceptedAt: string | null;
   cancelledAt: string | null;

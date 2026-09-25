@@ -26,6 +26,7 @@ import {
   CreateBookingDto,
   EndClassDto,
   ListBookingsQueryDto,
+  RateBookingDto,
   RespondBookingDto,
   TutorScheduleQueryDto,
   type AvailableSlotResponse,
@@ -89,6 +90,17 @@ export class BookingsController {
     @Req() request: Request,
   ): Promise<{ status: string }> {
     return this.bookings.respond(user.id, id, dto.accept, auditContextOf(request));
+  }
+
+  /** A family rates a completed lesson, once. */
+  @Post(':id/rating')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async rate(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: RateBookingDto,
+  ): Promise<void> {
+    await this.bookings.rate(user.id, id, dto);
   }
 
   @Post(':id/class/open')

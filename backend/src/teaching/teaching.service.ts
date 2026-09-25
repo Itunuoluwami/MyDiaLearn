@@ -140,8 +140,11 @@ export function toAssignment(row: AssignmentRow): AssignmentResponse {
   return {
     id: row.id,
     studentId: row.student_id,
+    tutorId: row.tutor_id,
+    tutorName: row.tutor_name ?? null,
     bookingId: row.booking_id,
     subjectId: row.subject_id,
+    subjectName: row.subject_name ?? null,
     title: row.title,
     instructions: row.instructions,
     submissionRequirements: row.submission_requirements,
@@ -166,6 +169,8 @@ export function toResource(row: LearningResourceRow): ResourceResponse {
     subjectId: row.subject_id,
     studentId: row.student_id,
     isShared: row.is_shared,
+    tutorId: row.tutor_id,
+    tutorName: row.tutor_name ?? null,
     createdAt: row.created_at.toISOString(),
   };
 }

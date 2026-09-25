@@ -35,6 +35,9 @@ export interface AssignmentRow {
   feedback: string | null;
   reviewed_at: Date | null;
   created_at: Date;
+  /** Filled by the list query only. */
+  tutor_name?: string | null;
+  subject_name?: string | null;
 }
 
 export interface LearningResourceRow {
@@ -51,6 +54,8 @@ export interface LearningResourceRow {
   size_bytes: number | null;
   is_shared: boolean;
   created_at: Date;
+  /** Filled by the list query only. */
+  tutor_name?: string | null;
 }
 
 /**
@@ -70,8 +75,10 @@ export class TeachingRepository extends BaseRepository {
   // --- Lesson notes ----------------------------------------------------------
 
   async lessonNotesForBooking(userId: string, bookingId: string): Promise<LessonNoteRow[]> {
-    return this.prisma.withUser(userId, async (tx) =>
-      tx.$queryRaw<LessonNoteRow[]>`
+    return this.prisma.withUser(
+      userId,
+      async (tx) =>
+        tx.$queryRaw<LessonNoteRow[]>`
         select id, booking_id, tutor_id, covered, understanding, improvements,
                next_steps, created_at, updated_at
         from public.lesson_notes where booking_id = ${bookingId}::uuid
@@ -144,7 +151,10 @@ export class TeachingRepository extends BaseRepository {
       const rows = await tx.$queryRaw<AssignmentRow[]>`
         select id, tutor_id, student_id, booking_id, subject_id, title, instructions,
                submission_requirements, due_at, resource_id, status::text, assigned_at,
-               submission_text, submission_path, submitted_at, feedback, reviewed_at, created_at
+               submission_text, submission_path, submitted_at, feedback, reviewed_at, created_at,
+               (select tp.full_name from public.tutors t join public.profiles tp on tp.id = t.profile_id
+                 where t.id = assignments.tutor_id) as tutor_name,
+               (select name from public.subjects where id = assignments.subject_id) as subject_name
         from public.assignments
         where (${filters.studentId ?? null}::uuid is null or student_id = ${filters.studentId ?? null}::uuid)
           and (${filters.status ?? null}::text is null or status::text = ${filters.status ?? null})
@@ -258,7 +268,9 @@ export class TeachingRepository extends BaseRepository {
     return this.prisma.withUser(userId, async (tx) => {
       const rows = await tx.$queryRaw<LearningResourceRow[]>`
         select id, tutor_id, title, description, resource_type::text, storage_path,
-               external_url, subject_id, student_id, mime_type, size_bytes, is_shared, created_at
+               external_url, subject_id, student_id, mime_type, size_bytes, is_shared, created_at,
+               (select tp.full_name from public.tutors t join public.profiles tp on tp.id = t.profile_id
+                 where t.id = learning_resources.tutor_id) as tutor_name
         from public.learning_resources
         where (${filters.studentId ?? null}::uuid is null or student_id = ${filters.studentId ?? null}::uuid)
           and (${filters.subjectId ?? null}::uuid is null or subject_id = ${filters.subjectId ?? null}::uuid)

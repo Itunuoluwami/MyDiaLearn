@@ -108,6 +108,57 @@ export class StudentsRepository extends BaseRepository {
   }
 
   /**
+   * The caller's own learner record — for a student with their own login.
+   *
+   * The signup trigger provisions profiles and user_roles but not a students
+   * row, so a self-registered student gets one on first visit (built from their
+   * profile). `create` is false for callers without the student role: a parent
+   * or tutor asking has no record, and must not be given one.
+   *
+   * profile_id carries no unique index, so a transaction advisory lock keyed
+   * on the user stops two first visits from creating two rows.
+   */
+  async findOrCreateOwn(userId: string, create: boolean): Promise<StudentRow | null> {
+    return this.prisma.withUser(userId, async (tx) => {
+      const select = () =>
+        tx.$queryRaw<StudentRow[]>`
+          select s.id, s.profile_id, s.parent_id, s.first_name, s.last_name,
+                 s.date_of_birth, s.gender, s.curriculum_id, s.education_level_id,
+                 s.school_name, s.learning_goals, s.special_needs, s.timezone,
+                 s.avatar_url, s.can_self_login, s.can_book_lessons,
+                 s.can_message_tutors, s.is_active, s.created_at,
+                 cur.name as curriculum_name, el.name as education_level_name
+          from public.students s
+          left join public.curricula cur on cur.id = s.curriculum_id
+          left join public.education_levels el on el.id = s.education_level_id
+          where s.profile_id = ${userId}::uuid
+          order by s.created_at
+          limit 1
+        `;
+
+      const existing = await select();
+      if (existing[0] || !create) return existing[0] ?? null;
+
+      await tx.$executeRaw`select pg_advisory_xact_lock(hashtext(${`student-self:${userId}`}))`;
+      const again = await select();
+      if (again[0]) return again[0];
+
+      await tx.$executeRaw`
+        insert into public.students (profile_id, first_name, last_name, timezone, can_self_login)
+        select p.id,
+               coalesce(nullif(split_part(btrim(coalesce(p.full_name, '')), ' ', 1), ''), 'Student'),
+               nullif(btrim(substr(btrim(coalesce(p.full_name, '')),
+                                   length(split_part(btrim(coalesce(p.full_name, '')), ' ', 1)) + 1)), ''),
+               coalesce(nullif(p.timezone, ''), 'UTC'),
+               true
+        from public.profiles p
+        where p.id = ${userId}::uuid
+      `;
+      return (await select())[0] ?? null;
+    });
+  }
+
+  /**
    * Creates a learner owned by the caller.
    *
    * `parent_id` is taken from the caller, never from the request. Accepting it

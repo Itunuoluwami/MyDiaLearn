@@ -26,6 +26,16 @@ export class StudentsService {
     return paginate(rows.map(toResponse), total, query);
   }
 
+  /**
+   * The caller's own learner record, created on first visit for a
+   * self-registered student. Anyone else without a record gets a 404.
+   */
+  async me(userId: string, roles: readonly string[]): Promise<StudentResponse> {
+    const row = await this.repository.findOrCreateOwn(userId, roles.includes('student'));
+    if (!row) throw new NotFoundError('Student');
+    return toResponse(row);
+  }
+
   async findOne(userId: string, id: string): Promise<StudentResponse> {
     const row = await this.repository.findById(userId, id);
     if (!row) throw new NotFoundError('Student');

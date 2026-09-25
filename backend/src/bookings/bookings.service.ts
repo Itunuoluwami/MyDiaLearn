@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
 import { AuditService, type AuditContext } from '../common/audit/audit.service';
-import { AppException, ErrorCode, NotFoundError } from '../common/exceptions/app.exception';
+import {
+  AppException,
+  ConflictError,
+  ErrorCode,
+  NotFoundError,
+} from '../common/exceptions/app.exception';
 import { translateDatabaseError } from '../common/exceptions/database-errors';
 import { PlatformSettingsService } from '../platform-settings/platform-settings.service';
 import { paginate, type Paginated, type PaginationQueryDto } from '../shared/query.dto';
@@ -170,6 +175,28 @@ export class BookingsService {
     return { status };
   }
 
+  async rate(
+    userId: string,
+    bookingId: string,
+    input: { score: number; comment?: string | undefined },
+  ): Promise<void> {
+    let outcome: Awaited<ReturnType<BookingsRepository['rate']>>;
+    try {
+      outcome = await this.repository.rate(userId, bookingId, input);
+    } catch (error) {
+      // ratings_booking_id_key: one rating per lesson.
+      const message = error instanceof Error ? error.message : String(error);
+      if (/23505|ratings_booking_id_key|duplicate key/i.test(message)) {
+        throw new ConflictError('This lesson has already been rated.');
+      }
+      throw translateDatabaseError(error, 'We could not save that rating.');
+    }
+    if (outcome === 'not_found') throw new NotFoundError('Booking');
+    if (outcome === 'not_completed') {
+      throw new ConflictError('Only a completed lesson can be rated.');
+    }
+  }
+
   async tutorSchedule(
     tutorUserId: string,
     input: { from?: string; to?: string; statuses?: string[] },
@@ -317,6 +344,11 @@ export function toResponse(row: BookingRow): BookingResponse {
     paid: row.paid ?? false,
     sessionMeetingUrl: row.session_meeting_url ?? null,
     sessionStatus: row.session_status ?? null,
+    sessionId: row.session_id ?? null,
+    sessionTutorNotes: row.session_tutor_notes ?? null,
+    sessionHomework: row.session_homework ?? null,
+    tutorName: row.tutor_name ?? null,
+    tutorAvatarUrl: row.tutor_avatar_url ?? null,
     studentNotes: row.student_notes,
     tutorAcceptedAt: row.tutor_accepted_at ? row.tutor_accepted_at.toISOString() : null,
     cancelledAt: row.cancelled_at ? row.cancelled_at.toISOString() : null,

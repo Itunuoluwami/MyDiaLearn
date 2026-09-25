@@ -186,8 +186,12 @@ export interface LessonNoteResponse {
 export interface AssignmentResponse {
   id: string;
   studentId: string;
+  tutorId: string;
+  /** Filled on list responses only. */
+  tutorName: string | null;
   bookingId: string | null;
   subjectId: string | null;
+  subjectName: string | null;
   title: string;
   instructions: string | null;
   submissionRequirements: string | null;
@@ -218,5 +222,8 @@ export interface ResourceResponse {
   subjectId: string | null;
   studentId: string | null;
   isShared: boolean;
+  tutorId: string;
+  /** Filled on list responses only. */
+  tutorName: string | null;
   createdAt: string;
 }

@@ -10,6 +10,11 @@ export interface BookingRow {
   paid?: boolean;
   session_meeting_url?: string | null;
   session_status?: string | null;
+  session_id?: string | null;
+  session_tutor_notes?: string | null;
+  session_homework?: string | null;
+  tutor_name?: string | null;
+  tutor_avatar_url?: string | null;
   student_id: string;
   tutor_id: string;
   booked_by: string;
@@ -131,10 +136,15 @@ export class BookingsRepository extends BaseRepository {
                b.cancelled_at, b.cancellation_reason, b.created_at,
                sub.name as subject_name,
                exists(select 1 from public.payments p where p.booking_id = b.id and p.status = 'paid') as paid,
-               cs.meeting_url as session_meeting_url, cs.status::text as session_status
+               cs.meeting_url as session_meeting_url, cs.status::text as session_status,
+               cs.id as session_id, cs.tutor_notes as session_tutor_notes,
+               cs.homework as session_homework,
+               tp.full_name as tutor_name, tp.avatar_url as tutor_avatar_url
         from public.bookings b
         left join public.subjects sub on sub.id = b.subject_id
         left join public.class_sessions cs on cs.booking_id = b.id
+        left join public.tutors t on t.id = b.tutor_id
+        left join public.profiles tp on tp.id = t.profile_id
         where (${filters.status ?? null}::text is null or b.status::text = ${filters.status ?? null})
           and (${filters.from ?? null}::timestamptz is null or b.starts_at >= ${filters.from ?? null})
           and (${filters.to ?? null}::timestamptz is null or b.starts_at <= ${filters.to ?? null})
@@ -179,6 +189,35 @@ export class BookingsRepository extends BaseRepository {
         )
       `,
     );
+  }
+
+  /**
+   * Rates a lesson. The tutor and student come from the booking, read under
+   * the caller's claims — so a booking the caller cannot see cannot be rated,
+   * and the request cannot point a rating at a different tutor.
+   */
+  async rate(
+    userId: string,
+    bookingId: string,
+    input: { score: number; comment?: string | undefined },
+  ): Promise<'rated' | 'not_found' | 'not_completed'> {
+    return this.prisma.withUser(userId, async (tx) => {
+      const found = await tx.$queryRaw<
+        { tutor_id: string; student_id: string; status: string }[]
+      >`
+        select tutor_id, student_id, status::text from public.bookings where id = ${bookingId}::uuid
+      `;
+      const booking = found[0];
+      if (!booking) return 'not_found';
+      if (booking.status !== 'completed') return 'not_completed';
+
+      await tx.$executeRaw`
+        insert into public.ratings (booking_id, tutor_id, student_id, rater_id, score, comment)
+        values (${bookingId}::uuid, ${booking.tutor_id}::uuid, ${booking.student_id}::uuid,
+                ${userId}::uuid, ${input.score}, ${input.comment ?? null})
+      `;
+      return 'rated';
+    });
   }
 
   /** Accept or decline, via tutor_respond_booking(). Returns the new status. */

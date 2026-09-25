@@ -60,6 +60,12 @@ export class StudentsController {
     return this.students.create(user.id, dto, auditContextOf(request));
   }
 
+  /** Declared before `:id` so "me" is not parsed as a UUID. */
+  @Get('me')
+  me(@CurrentUser() user: AuthenticatedUser): Promise<StudentResponse> {
+    return this.students.me(user.id, user.roles);
+  }
+
   @Get(':id')
   findOne(
     @CurrentUser() user: AuthenticatedUser,

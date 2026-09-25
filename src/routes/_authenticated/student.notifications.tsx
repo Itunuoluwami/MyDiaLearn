@@ -1,13 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Bell, BellOff, CheckCheck } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { StudentShell } from "@/components/student/StudentShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useStudentNotifications } from "@/lib/student-data";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useMarkAllStudentNotificationsRead, useStudentNotifications } from "@/lib/student-data";
 import { formatRelative } from "@/lib/parent-data";
 import { cn } from "@/lib/utils";
 
@@ -21,23 +18,6 @@ export const Route = createFileRoute("/_authenticated/student/notifications")({
   component: StudentNotificationsPage,
 });
 
-function useMarkAllRead() {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      if (!user?.id) return;
-      await supabase
-        .from("notifications")
-        .update({ read_at: new Date().toISOString() })
-        .is("read_at", null);
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["student-notifications"] });
-    },
-  });
-}
-
 const EMOJI: Record<string, string> = {
   booking_confirmed: "✅",
   booking_cancelled: "❌",
@@ -50,7 +30,7 @@ const EMOJI: Record<string, string> = {
 
 function StudentNotificationsPage() {
   const notifications = useStudentNotifications();
-  const markAll = useMarkAllRead();
+  const markAll = useMarkAllStudentNotificationsRead();
 
   const items = notifications.data ?? [];
   const unreadCount = items.filter((n) => !n.read_at).length;

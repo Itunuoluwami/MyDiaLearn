@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import type { Database } from "@/integrations/supabase/types";
+import { apiGet, apiPost, useApiData } from "@/lib/api/data-client";
 import { useTutorRecord } from "@/lib/tutor-data";
 
 export type ResourceType = Database["public"]["Enums"]["resource_type"];
@@ -423,12 +424,35 @@ export function useTutorReviews(limit = 20) {
 /* Messaging                                                           */
 /* ------------------------------------------------------------------ */
 
+export type ConversationRow =
+  Database["public"]["Functions"]["my_conversations"]["Returns"][number];
+export type MessageRow = Pick<
+  Database["public"]["Tables"]["messages"]["Row"],
+  "id" | "body" | "sender_id" | "created_at" | "attachment_path" | "attachment_name"
+>;
+
+interface ApiMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  body: string;
+  attachmentName: string | null;
+  isHidden: boolean;
+  createdAt: string;
+}
+
 export function useConversations() {
   const { user } = useAuth();
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["conversations", user?.id],
     enabled: Boolean(user?.id),
-    queryFn: async () => {
+    queryFn: async (): Promise<ConversationRow[]> => {
+      if (viaApi) {
+        // my_conversations() rows, snake_case; only the unread count is numeric.
+        const rows = await apiGet<ConversationRow[]>("/conversations");
+        return rows.map((row) => ({ ...row, unread_count: Number(row.unread_count ?? 0) }));
+      }
       const { data, error } = await supabase.rpc("my_conversations");
       if (error) throw error;
       return data ?? [];
@@ -436,13 +460,29 @@ export function useConversations() {
   });
 }
 
-export type ConversationRow = NonNullable<ReturnType<typeof useConversations>["data"]>[number];
-
 export function useMessages(conversationId: string | undefined, limit = 100) {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["messages", conversationId, limit],
     enabled: Boolean(conversationId),
-    queryFn: async () => {
+    queryFn: async (): Promise<MessageRow[]> => {
+      if (viaApi) {
+        const page = await apiGet<{ data: ApiMessage[] }>(
+          `/conversations/${conversationId}/messages?limit=${Math.min(limit, 100)}`,
+        );
+        // Moderated messages are left out, as the Supabase path does.
+        return page.data
+          .filter((m) => !m.isHidden)
+          .map((m) => ({
+            id: m.id,
+            body: m.body,
+            sender_id: m.senderId,
+            created_at: m.createdAt,
+            // The API does not expose storage keys; the name is enough to show.
+            attachment_path: null,
+            attachment_name: m.attachmentName,
+          }));
+      }
       const { data, error } = await supabase
         .from("messages")
         .select("id, body, sender_id, created_at, attachment_path, attachment_name")
@@ -456,14 +496,17 @@ export function useMessages(conversationId: string | undefined, limit = 100) {
   });
 }
 
-export type MessageRow = NonNullable<ReturnType<typeof useMessages>["data"]>[number];
-
 export function useSendMessage(conversationId: string | undefined) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (body: string) => {
       if (!conversationId || !user?.id) throw new Error("Conversation is not ready yet.");
+      if (viaApi) {
+        await apiPost(`/conversations/${conversationId}/messages`, { body });
+        return;
+      }
       const { error } = await supabase
         .from("messages")
         .insert({ conversation_id: conversationId, sender_id: user.id, body });
@@ -479,9 +522,14 @@ export function useSendMessage(conversationId: string | undefined) {
 export function useMarkConversationRead() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (conversationId: string) => {
       if (!user?.id) return;
+      if (viaApi) {
+        await apiPost(`/conversations/${conversationId}/read`, {});
+        return;
+      }
       const { error } = await supabase
         .from("conversation_participants")
         .update({ last_read_at: new Date().toISOString() })

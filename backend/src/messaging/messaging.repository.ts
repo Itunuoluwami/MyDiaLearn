@@ -64,13 +64,18 @@ export class MessagingRepository extends BaseRepository {
     query: PaginationQueryDto,
   ): Promise<{ rows: MessageRow[]; total: number }> {
     return this.prisma.withUser(userId, async (tx) => {
+      // Page 1 is the most recent messages (a thread opens at its end), still
+      // returned oldest-first so the page reads top to bottom.
       const rows = await tx.$queryRaw<MessageRow[]>`
-        select id, conversation_id, sender_id, body, attachment_path, attachment_name,
-               is_hidden, hidden_reason, created_at
-        from public.messages
-        where conversation_id = ${conversationId}::uuid
+        select * from (
+          select id, conversation_id, sender_id, body, attachment_path, attachment_name,
+                 is_hidden, hidden_reason, created_at
+          from public.messages
+          where conversation_id = ${conversationId}::uuid
+          order by created_at desc
+          limit ${query.limit} offset ${query.skip}
+        ) recent
         order by created_at asc
-        limit ${query.limit} offset ${query.skip}
       `;
       const counted = await tx.$queryRaw<{ n: bigint }[]>`
         select count(*)::bigint n from public.messages
