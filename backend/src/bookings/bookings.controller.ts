@@ -27,6 +27,7 @@ import {
   EndClassDto,
   ListBookingsQueryDto,
   RespondBookingDto,
+  TutorScheduleQueryDto,
   type AvailableSlotResponse,
   type BookingResponse,
 } from './dto/booking.dto';
@@ -47,7 +48,7 @@ export class BookingsController {
   @Roles('tutor')
   async tutorSchedule(
     @CurrentUser() user: AuthenticatedUser,
-    @Query() query: ListBookingsQueryDto,
+    @Query() query: TutorScheduleQueryDto,
   ): Promise<Record<string, unknown>[]> {
     return this.bookings.tutorSchedule(user.id, query);
   }

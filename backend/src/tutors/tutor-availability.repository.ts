@@ -69,6 +69,47 @@ export class TutorAvailabilityRepository extends BaseRepository {
     );
   }
 
+  async addAvailabilityWindow(
+    userId: string,
+    tutorId: string,
+    input: { dayOfWeek: number; startTime: string; endTime: string; timezone: string },
+  ): Promise<AvailabilityWindowRow> {
+    return this.prisma.withUser(userId, async (tx) => {
+      const rows = await tx.$queryRaw<AvailabilityWindowRow[]>`
+        insert into public.availability_windows (tutor_id, day_of_week, start_time, end_time, timezone)
+        values (${tutorId}::uuid, ${input.dayOfWeek}, ${input.startTime}::time,
+                ${input.endTime}::time, ${input.timezone})
+        returning id, tutor_id, day_of_week, start_time::text, end_time::text, timezone, is_active
+      `;
+      return rows[0]!;
+    });
+  }
+
+  async updateAvailabilityWindow(
+    userId: string,
+    id: string,
+    isActive: boolean,
+  ): Promise<boolean> {
+    const n = await this.prisma.withUser(
+      userId,
+      async (tx) =>
+        tx.$executeRaw`
+        update public.availability_windows set is_active = ${isActive}, updated_at = now()
+        where id = ${id}::uuid
+      `,
+    );
+    return n > 0;
+  }
+
+  async deleteAvailabilityWindow(userId: string, id: string): Promise<boolean> {
+    const n = await this.prisma.withUser(
+      userId,
+      async (tx) =>
+        tx.$executeRaw`delete from public.availability_windows where id = ${id}::uuid`,
+    );
+    return n > 0;
+  }
+
   /**
    * Replaces the whole week atomically.
    *

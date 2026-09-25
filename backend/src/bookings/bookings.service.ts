@@ -172,12 +172,12 @@ export class BookingsService {
 
   async tutorSchedule(
     tutorUserId: string,
-    input: { from?: string; to?: string; status?: string },
+    input: { from?: string; to?: string; statuses?: string[] },
   ): Promise<Record<string, unknown>[]> {
     return this.repository.tutorSchedule(tutorUserId, {
       from: input.from ? new Date(input.from) : undefined,
       to: input.to ? new Date(input.to) : undefined,
-      status: input.status,
+      statuses: input.statuses?.length ? input.statuses : undefined,
     });
   }
 

@@ -113,6 +113,27 @@ export class ListBookingsQueryDto extends PaginationQueryDto {
   to?: string;
 }
 
+/**
+ * The tutor schedule filters by a set of statuses (tutor_bookings takes a
+ * booking_status[]), sent as `?statuses=pending,confirmed`.
+ */
+export class TutorScheduleQueryDto {
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.split(',').filter(Boolean) : value,
+  )
+  @IsIn(BOOKING_STATUSES, { each: true })
+  statuses?: (typeof BOOKING_STATUSES)[number][];
+
+  @IsOptional()
+  @IsDateString()
+  from?: string;
+
+  @IsOptional()
+  @IsDateString()
+  to?: string;
+}
+
 export class AdminCancelBookingDto {
   @IsString()
   @MaxLength(500)

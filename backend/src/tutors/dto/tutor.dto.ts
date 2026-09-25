@@ -17,6 +17,9 @@ import {
 
 import { PaginationQueryDto } from '../../shared/query.dto';
 
+/** HH:MM or HH:MM:SS, so the value can be cast straight to `time`. */
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
+
 /**
  * Self-service tutor profile edits.
  *
@@ -89,6 +92,14 @@ export class UpdateTutorProfileDto {
   @Min(1)
   @Max(7)
   onboardingStep?: number;
+
+  /**
+   * Accepted from anyone, but enforce_tutor_verification_rules forces it back
+   * to false unless the tutor is verified, so only a verified tutor can list.
+   */
+  @IsOptional()
+  @IsBoolean()
+  isListed?: boolean;
 }
 
 export class TutorSubjectEntryDto {
@@ -100,6 +111,34 @@ export class TutorSubjectEntryDto {
   educationLevelId?: string;
 }
 
+export class AddTutorSubjectDto {
+  @IsUUID('4')
+  subjectId!: string;
+
+  @IsOptional()
+  @IsUUID('4')
+  educationLevelId?: string;
+}
+
+export class SetWindowActiveDto {
+  @IsBoolean()
+  isActive!: boolean;
+}
+
+export class AddAvailabilityWindowDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(6)
+  dayOfWeek!: number;
+
+  @Matches(TIME_PATTERN, { message: 'startTime must be HH:MM or HH:MM:SS.' })
+  startTime!: string;
+
+  @Matches(TIME_PATTERN, { message: 'endTime must be HH:MM or HH:MM:SS.' })
+  endTime!: string;
+}
+
 export class ReplaceTutorSubjectsDto {
   @IsArray()
   @ArrayMaxSize(50)
@@ -107,9 +146,6 @@ export class ReplaceTutorSubjectsDto {
   @Type(() => TutorSubjectEntryDto)
   subjects!: TutorSubjectEntryDto[];
 }
-
-/** HH:MM or HH:MM:SS, so the value can be cast straight to `time`. */
-const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
 
 export class AvailabilityWindowDto {
   /** 0 = Sunday, matching PostgreSQL's extract(dow). */

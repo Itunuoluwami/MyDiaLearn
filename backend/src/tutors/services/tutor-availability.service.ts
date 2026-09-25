@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { AppException, ErrorCode } from '../../common/exceptions/app.exception';
+import { AppException, ErrorCode, NotFoundError } from '../../common/exceptions/app.exception';
 import type { AvailabilityWindowDto, AvailabilityWindowResponse } from '../dto/tutor.dto';
 import {
   TutorAvailabilityRepository,
@@ -34,6 +34,30 @@ export class TutorAvailabilityService {
   async listPublic(tutorId: string): Promise<AvailabilityWindowResponse[]> {
     const rows = await this.repository.listPublic(tutorId);
     return rows.map(toResponse);
+  }
+
+  async addWindow(
+    userId: string,
+    input: { dayOfWeek: number; startTime: string; endTime: string },
+  ): Promise<AvailabilityWindowResponse> {
+    assertOrdered({ ...input, timezone: '' });
+    const tutor = await this.tutors.ensureOwn(userId);
+    const row = await this.repository.addAvailabilityWindow(userId, tutor.id, {
+      ...input,
+      // Windows inherit the tutor's timezone, matching the previous behaviour.
+      timezone: tutor.timezone,
+    });
+    return toResponse(row);
+  }
+
+  async setWindowActive(userId: string, id: string, isActive: boolean): Promise<void> {
+    const ok = await this.repository.updateAvailabilityWindow(userId, id, isActive);
+    if (!ok) throw new NotFoundError('Availability window');
+  }
+
+  async deleteWindow(userId: string, id: string): Promise<void> {
+    const ok = await this.repository.deleteAvailabilityWindow(userId, id);
+    if (!ok) throw new NotFoundError('Availability window');
   }
 
   async replaceOwn(

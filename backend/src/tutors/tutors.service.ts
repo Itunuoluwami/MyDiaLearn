@@ -77,6 +77,34 @@ export class TutorsService {
     return rows.map(toSubjectResponse);
   }
 
+  async addSubject(
+    userId: string,
+    subjectId: string,
+    educationLevelId: string | undefined,
+    context: AuditContext,
+  ): Promise<TutorSubjectResponse> {
+    const tutor = await this.repository.ensureOwn(userId);
+    const row = await this.repository.addSubject(
+      userId,
+      tutor.id,
+      subjectId,
+      educationLevelId,
+    );
+    await this.audit.record('user.profile_updated', {
+      actorId: userId,
+      entityType: 'tutor',
+      entityId: tutor.id,
+      context,
+      metadata: { scope: 'tutor_subject_added', subjectId },
+    });
+    return toSubjectResponse(row);
+  }
+
+  async removeSubject(userId: string, id: string): Promise<void> {
+    const ok = await this.repository.removeSubject(userId, id);
+    if (!ok) throw new NotFoundError('Tutor subject');
+  }
+
   async dashboard(userId: string): Promise<Record<string, unknown> | null> {
     return this.repository.dashboardSummary(userId);
   }

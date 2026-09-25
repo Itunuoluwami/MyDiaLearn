@@ -44,18 +44,23 @@ export interface TutorSubjectRow {
  * request that always fails at the database — a worse experience than not
  * offering it. Rate changes go through the admin module.
  */
+/**
+ * `undefined` leaves a column alone; `null` clears it (for the columns that
+ * are nullable — the portal clears a headline by sending null).
+ */
 export interface UpdateTutorInput {
-  headline?: string | undefined;
-  biography?: string | undefined;
+  headline?: string | null | undefined;
+  biography?: string | null | undefined;
   qualifications?: string[] | undefined;
   languages?: string[] | undefined;
   education?: string[] | undefined;
-  yearsExperience?: number | undefined;
-  introVideoUrl?: string | undefined;
+  yearsExperience?: number | null | undefined;
+  introVideoUrl?: string | null | undefined;
   timezone?: string | undefined;
-  methodology?: string | undefined;
-  teachingContext?: string | undefined;
+  methodology?: string | null | undefined;
+  teachingContext?: string | null | undefined;
   onboardingStep?: number | undefined;
+  isListed?: boolean | undefined;
 }
 
 const TUTOR_COLUMNS = `
@@ -111,22 +116,26 @@ export class TutorsRepository extends BaseRepository {
     const languages = input.languages ? JSON.stringify(input.languages) : null;
     const education = input.education ? JSON.stringify(input.education) : null;
 
+    // Nullable text columns: an omitted field is left alone (a PATCH that
+    // blanked a biography because the client did not resend it is data loss),
+    // while an explicit null clears it.
+    const has = (key: keyof UpdateTutorInput): boolean => input[key] !== undefined;
+
     return this.prisma.withUser(userId, async (tx) => {
-      // COALESCE throughout: an omitted field is left alone. A PATCH that
-      // blanked a biography because the client did not resend it is data loss.
       const rows = await tx.$queryRaw<TutorRow[]>`
         update public.tutors set
-          headline         = coalesce(${input.headline ?? null}, headline),
-          biography        = coalesce(${input.biography ?? null}, biography),
+          headline         = case when ${has('headline')} then ${input.headline ?? null}::text else headline end,
+          biography        = case when ${has('biography')} then ${input.biography ?? null}::text else biography end,
           qualifications   = coalesce(${qualifications}::jsonb, qualifications),
           languages        = coalesce(${languages}::jsonb, languages),
           education        = coalesce(${education}::jsonb, education),
-          years_experience = coalesce(${input.yearsExperience ?? null}, years_experience),
-          intro_video_url  = coalesce(${input.introVideoUrl ?? null}, intro_video_url),
+          years_experience = case when ${has('yearsExperience')} then ${input.yearsExperience ?? null}::int else years_experience end,
+          intro_video_url  = case when ${has('introVideoUrl')} then ${input.introVideoUrl ?? null}::text else intro_video_url end,
           timezone         = coalesce(${input.timezone ?? null}, timezone),
-          methodology      = coalesce(${input.methodology ?? null}, methodology),
-          teaching_context = coalesce(${input.teachingContext ?? null}, teaching_context),
-          onboarding_step  = coalesce(${input.onboardingStep ?? null}, onboarding_step),
+          methodology      = case when ${has('methodology')} then ${input.methodology ?? null}::text else methodology end,
+          teaching_context = case when ${has('teachingContext')} then ${input.teachingContext ?? null}::text else teaching_context end,
+          onboarding_step  = coalesce(${input.onboardingStep ?? null}::int, onboarding_step),
+          is_listed        = coalesce(${input.isListed ?? null}::boolean, is_listed),
           updated_at       = now()
         where profile_id = ${userId}::uuid
         returning id, profile_id, agency_id, headline, biography, qualifications, languages,
@@ -189,6 +198,39 @@ export class TutorsRepository extends BaseRepository {
         order by s.name
       `;
     });
+  }
+
+  async addSubject(
+    userId: string,
+    tutorId: string,
+    subjectId: string,
+    educationLevelId?: string | undefined,
+  ): Promise<TutorSubjectRow> {
+    return this.prisma.withUser(userId, async (tx) => {
+      await tx.$executeRaw`
+        insert into public.tutor_subjects (tutor_id, subject_id, education_level_id)
+        values (${tutorId}::uuid, ${subjectId}::uuid, ${educationLevelId ?? null}::uuid)
+        on conflict do nothing
+      `;
+      const rows = await tx.$queryRaw<TutorSubjectRow[]>`
+        select ts.id, ts.subject_id, ts.education_level_id,
+               s.name as subject_name, el.name as level_name
+        from public.tutor_subjects ts
+        join public.subjects s on s.id = ts.subject_id
+        left join public.education_levels el on el.id = ts.education_level_id
+        where ts.tutor_id = ${tutorId}::uuid and ts.subject_id = ${subjectId}::uuid
+        limit 1
+      `;
+      return rows[0]!;
+    });
+  }
+
+  async removeSubject(userId: string, id: string): Promise<boolean> {
+    const n = await this.prisma.withUser(
+      userId,
+      async (tx) => tx.$executeRaw`delete from public.tutor_subjects where id = ${id}::uuid`,
+    );
+    return n > 0;
   }
 
   // --- Dashboard, students, reviews ------------------------------------------

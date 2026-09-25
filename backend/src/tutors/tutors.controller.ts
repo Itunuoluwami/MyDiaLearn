@@ -23,7 +23,10 @@ import {
 import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import {
+  AddAvailabilityWindowDto,
   AddTutorDocumentDto,
+  AddTutorSubjectDto,
+  SetWindowActiveDto,
   ReplaceAvailabilityDto,
   ReplaceTutorSubjectsDto,
   TutorListQueryDto,
@@ -83,6 +86,32 @@ export class TutorsController {
     return this.tutors.subjects(user.id);
   }
 
+  @Post('me/subjects')
+  @Roles('tutor')
+  @HttpCode(HttpStatus.CREATED)
+  addSubject(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: AddTutorSubjectDto,
+    @Req() request: Request,
+  ): Promise<TutorSubjectResponse> {
+    return this.tutors.addSubject(
+      user.id,
+      dto.subjectId,
+      dto.educationLevelId,
+      auditContextOf(request),
+    );
+  }
+
+  @Delete('me/subjects/:id')
+  @Roles('tutor')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeSubject(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<void> {
+    await this.tutors.removeSubject(user.id, id);
+  }
+
   /** PUT, not POST: the editor submits the whole set and it is replaced. */
   @Put('me/subjects')
   @Roles('tutor')
@@ -102,6 +131,37 @@ export class TutorsController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<AvailabilityWindowResponse[]> {
     return this.availability.listOwn(user.id);
+  }
+
+  @Post('me/availability/window')
+  @Roles('tutor')
+  @HttpCode(HttpStatus.CREATED)
+  addWindow(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: AddAvailabilityWindowDto,
+  ): Promise<AvailabilityWindowResponse> {
+    return this.availability.addWindow(user.id, dto);
+  }
+
+  @Patch('me/availability/:id')
+  @Roles('tutor')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async setWindowActive(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: SetWindowActiveDto,
+  ): Promise<void> {
+    await this.availability.setWindowActive(user.id, id, dto.isActive);
+  }
+
+  @Delete('me/availability/:id')
+  @Roles('tutor')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteWindow(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<void> {
+    await this.availability.deleteWindow(user.id, id);
   }
 
   @Put('me/availability')

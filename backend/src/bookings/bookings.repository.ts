@@ -194,7 +194,7 @@ export class BookingsRepository extends BaseRepository {
   /** The tutor's own schedule, via tutor_bookings(). */
   async tutorSchedule(
     tutorUserId: string,
-    input: { from?: Date | undefined; to?: Date | undefined; status?: string | undefined },
+    input: { from?: Date | undefined; to?: Date | undefined; statuses?: string[] | undefined },
   ): Promise<Record<string, unknown>[]> {
     return this.prisma.withUser(
       tutorUserId,
@@ -203,7 +203,7 @@ export class BookingsRepository extends BaseRepository {
         select * from public.tutor_bookings(
           ${input.from ?? null}::timestamptz,
           ${input.to ?? null}::timestamptz,
-          ${input.status ?? null}::text
+          ${input.statuses ?? null}::public.booking_status[]
         )
       `,
     );

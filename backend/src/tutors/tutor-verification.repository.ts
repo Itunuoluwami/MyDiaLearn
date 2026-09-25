@@ -63,7 +63,7 @@ export class TutorVerificationRepository extends BaseRepository {
         from public.verification_steps vs
         left join public.tutor_verification_progress tvp
           on tvp.step_id = vs.id and tvp.tutor_id = ${tutorId}::uuid
-        where vs.is_active
+        where vs.is_active and vs.applies_to = 'tutor'
         order by vs.sort_order, vs.name
       `,
     );
