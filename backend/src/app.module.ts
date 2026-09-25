@@ -38,6 +38,8 @@ import { AgenciesModule } from './agencies/agencies.module';
 import { AuthModule } from './auth/auth.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { CatalogueModule } from './catalogue/catalogue.module';
+import { MessagingModule } from './messaging/messaging.module';
+import { TeachingModule } from './teaching/teaching.module';
 import { FilesModule } from './files/files.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ParentsModule } from './parents/parents.module';
@@ -130,6 +132,8 @@ import { UsersModule } from './users/users.module';
     TutorsModule,
     StudentsModule,
     ParentsModule,
+    MessagingModule,
+    TeachingModule,
 
     // Boundaries still to be filled. Each module's header names what it will
     // own and what it replaces.

@@ -65,6 +65,15 @@ export interface AuthClient {
 
   resend(input: { type: "signup"; email: string }): Promise<AuthResult>;
 
+  /**
+   * Confirms an email address from a verification token.
+   *
+   * Only the NestJS provider receives a token in the app URL (`?verify=`).
+   * Supabase confirms on its own hosted page, so under that provider this is a
+   * no-op and the app never calls it with a token.
+   */
+  verifyEmail(token: string): Promise<AuthResult>;
+
   onAuthStateChange(callback: (event: AuthChangeEvent, session: Session | null) => void): {
     data: AuthSubscription;
   };

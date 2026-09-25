@@ -57,6 +57,35 @@ function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
+  /**
+   * Consume an email-verification token when the confirmation link lands here.
+   *
+   * The NestJS provider emails a link to `/auth?verify=<token>`; the app has to
+   * complete verification by calling the API. (Under the Supabase provider no
+   * such param arrives — it confirms on its own hosted page — so this stays
+   * inert there.) Runs once on mount; the token is stripped from the URL so a
+   * reload or a shared address cannot replay it.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("verify");
+    if (!token) return;
+
+    // Clear it immediately, before the await, so a double-render or a
+    // back-navigation cannot fire a second attempt against a spent token.
+    params.delete("verify");
+    const qs = params.toString();
+    window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
+
+    void authClient.verifyEmail(token).then(({ error }) => {
+      if (error) {
+        toast.error("This verification link has expired. Please sign in to request a new one.");
+      } else {
+        toast.success("Your email is verified. You can sign in now.");
+      }
+    });
+  }, []);
+
   useEffect(() => {
     // Children own their own page. Accept-invite in particular arrives WITH a
     // session — the invite link establishes one — so redirecting on a session

@@ -86,6 +86,12 @@ export const supabaseAuthClient: AuthClient = {
     return { data: undefined, error: toAuthError(error ?? null) };
   },
 
+  async verifyEmail(): Promise<AuthResult> {
+    // Supabase confirms via its own hosted link and detectSessionInUrl; the app
+    // never receives a ?verify= token under this provider, so nothing to do.
+    return { data: undefined, error: null };
+  },
+
   async resend(input): Promise<AuthResult> {
     const { error } = await supabase.auth.resend({ type: input.type, email: input.email });
     return { data: undefined, error: toAuthError(error ?? null) };

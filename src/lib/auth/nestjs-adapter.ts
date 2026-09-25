@@ -307,6 +307,15 @@ export const nestAuthClient: AuthClient = {
     }
   },
 
+  async verifyEmail(token: string): Promise<AuthResult> {
+    try {
+      await apiRequest("/auth/email/verify", { method: "POST", body: { token } });
+      return { data: undefined, error: null };
+    } catch (error) {
+      return { data: undefined, error: toAuthError(error) };
+    }
+  },
+
   async resend(input): Promise<AuthResult> {
     try {
       await apiRequest("/auth/email/resend", {

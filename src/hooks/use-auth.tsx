@@ -33,6 +33,62 @@ export interface AuthContextValue {
   refresh: () => Promise<void>;
 }
 
+/**
+ * Reads the caller's identity from the NestJS API.
+ *
+ * Shapes the response into the same `Profile` the Supabase path produces, so
+ * every consumer of AuthContext — the account screen, the portal guards — works
+ * unchanged whichever provider is active.
+ */
+const API_BASE = (import.meta.env["VITE_API_BASE_URL"] ?? "").replace(/\/+$/, "");
+
+interface ApiCurrentUser {
+  id: string;
+  email: string | null;
+  fullName: string | null;
+  phone: string | null;
+  avatarUrl: string | null;
+  countryCode: string | null;
+  timezone: string;
+  preferredCurrency: string;
+  primaryRole: string;
+  onboardingCompleted: boolean;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  roles: string[];
+  permissions: string[];
+}
+
+async function fetchCurrentUser(
+  session: Session | null,
+): Promise<{ profile: Profile; roles: AppRole[]; permissions: string[] }> {
+  const token = session?.access_token;
+  const response = await fetch(`${API_BASE}/users/me`, {
+    credentials: "include",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) throw new Error(`users/me returned ${response.status}`);
+  const me = (await response.json()) as ApiCurrentUser;
+
+  // Map the API's camelCase onto the snake_case Profile row shape the UI reads.
+  const profile = {
+    id: me.id,
+    email: me.email,
+    full_name: me.fullName,
+    phone: me.phone,
+    avatar_url: me.avatarUrl,
+    country_code: me.countryCode,
+    timezone: me.timezone,
+    preferred_currency: me.preferredCurrency,
+    primary_role: me.primaryRole,
+    onboarding_completed: me.onboardingCompleted,
+    is_active: me.isActive,
+    must_change_password: me.mustChangePassword,
+  } as unknown as Profile;
+
+  return { profile, roles: me.roles as AppRole[], permissions: me.permissions };
+}
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -60,12 +116,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       { roles?: string[]; permissions?: string[] } | undefined;
 
     if (authClient.provider === "nestjs") {
-      setRoles((claims?.roles ?? []) as AppRole[]);
-      setPermissions(claims?.permissions ?? []);
-      // The profiles table has not migrated yet, so there is no row to read
-      // here. Phase 3 (users domain) provides it; until then the account
-      // screen renders empty fields under this provider.
-      setProfile(null);
+      // Fetch the profile, roles and permissions from the API in one call.
+      // /users/me resolves permissions through the same my_permissions() the
+      // Supabase path used, so the two providers produce the same identity —
+      // and the account screen renders real fields rather than blanks.
+      try {
+        const me = await fetchCurrentUser(session);
+        setProfile(me.profile);
+        setRoles(me.roles);
+        setPermissions(me.permissions);
+      } catch {
+        // Fall back to the token claims, so a transient API blip degrades to a
+        // usable session (correct roles, empty profile) rather than a logout.
+        setProfile(null);
+        setRoles((claims?.roles ?? []) as AppRole[]);
+        setPermissions(claims?.permissions ?? []);
+      }
       return;
     }
 
