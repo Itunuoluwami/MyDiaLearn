@@ -127,6 +127,47 @@ export class CatalogueRepository extends BaseRepository {
     );
   }
 
+  async publicSettings(): Promise<Record<string, unknown>> {
+    const rows = await this.prisma.asAnonymous(async (tx) =>
+      tx.$queryRaw<{ key: string; value: unknown }[]>`
+        select key, value from public.platform_settings where is_public
+      `,
+    );
+    // Flatten to a single map, which is how the frontend consumes settings.
+    return Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  }
+
+  async cancellationPolicies(): Promise<Record<string, unknown>[]> {
+    return this.prisma.asAnonymous(async (tx) =>
+      tx.$queryRaw<Record<string, unknown>[]>`
+        select id, name, description, hours_before, refund_percentage
+        from public.cancellation_policies order by hours_before nulls last
+      `,
+    );
+  }
+
+  async verificationSteps(): Promise<Record<string, unknown>[]> {
+    return this.prisma.asAnonymous(async (tx) =>
+      tx.$queryRaw<Record<string, unknown>[]>`
+        select id, name, code, description, applies_to::text, is_required, sort_order
+        from public.verification_steps where is_active order by sort_order, name
+      `,
+    );
+  }
+
+  async commissionExample(): Promise<Record<string, unknown> | null> {
+    // A single representative active rule, for the pricing explainer page.
+    const rows = await this.prisma.asAnonymous(async (tx) =>
+      tx.$queryRaw<Record<string, unknown>[]>`
+        select model::text, percentage, platform_fee_percentage, platform_fee_fixed, currency
+        from public.commission_rules
+        where is_active and tutor_id is null and agency_id is null and subject_id is null
+        order by priority asc limit 1
+      `,
+    );
+    return rows[0] ?? null;
+  }
+
   async tutorCards(ids: string[]): Promise<Record<string, unknown>[]> {
     return this.prisma.asAnonymous(
       async (tx) =>

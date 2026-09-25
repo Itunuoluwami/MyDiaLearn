@@ -80,6 +80,22 @@ export class CatalogueService {
     return this.repository.tutorReviews(tutorId, limit);
   }
 
+  publicSettings(): Promise<Record<string, unknown>> {
+    return this.repository.publicSettings();
+  }
+
+  cancellationPolicies(): Promise<Record<string, unknown>[]> {
+    return this.repository.cancellationPolicies();
+  }
+
+  verificationSteps(): Promise<Record<string, unknown>[]> {
+    return this.repository.verificationSteps();
+  }
+
+  commissionExample(): Promise<Record<string, unknown> | null> {
+    return this.repository.commissionExample();
+  }
+
   tutorCards(ids: string[]): Promise<Record<string, unknown>[]> {
     if (!ids.length) return Promise.resolve([]);
     return this.repository.tutorCards(ids);

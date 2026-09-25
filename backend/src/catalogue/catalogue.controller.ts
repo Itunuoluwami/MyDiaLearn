@@ -51,6 +51,26 @@ export class CatalogueController {
     return this.catalogue.educationLevels();
   }
 
+  @Get('settings')
+  settings(): Promise<Record<string, unknown>> {
+    return this.catalogue.publicSettings();
+  }
+
+  @Get('cancellation-policies')
+  cancellationPolicies(): Promise<Record<string, unknown>[]> {
+    return this.catalogue.cancellationPolicies();
+  }
+
+  @Get('verification-steps')
+  verificationSteps(): Promise<Record<string, unknown>[]> {
+    return this.catalogue.verificationSteps();
+  }
+
+  @Get('commission-example')
+  commissionExample(): Promise<Record<string, unknown> | null> {
+    return this.catalogue.commissionExample();
+  }
+
   @Get('currencies')
   currencies(): Promise<Record<string, unknown>[]> {
     return this.catalogue.currencies();
