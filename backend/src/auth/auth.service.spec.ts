@@ -54,6 +54,7 @@ describe('AuthService', () => {
       findById: jest.fn(),
       create: jest.fn(),
       setPassword: jest.fn(),
+      clearMustChangePassword: jest.fn(),
       markEmailConfirmed: jest.fn(),
       recordSuccessfulLogin: jest.fn(),
       recordFailedLogin: jest.fn().mockResolvedValue(1),

@@ -329,6 +329,7 @@ export class AuthService {
     }
 
     await this.users.setPassword(userId, await this.passwords.hash(dto.newPassword));
+    await this.users.clearMustChangePassword(userId);
     await this.tokens.revokeAllForUser(userId, 'password_changed');
 
     await this.audit.record('auth.password_changed', { actorId: userId, context });

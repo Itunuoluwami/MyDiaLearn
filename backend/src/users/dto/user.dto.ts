@@ -46,6 +46,11 @@ export class UpdateProfileDto {
   @IsUrl({ require_tld: false })
   @MaxLength(500)
   avatarUrl?: string;
+
+  /** The account page marks onboarding done when a profile is first saved. */
+  @IsOptional()
+  @IsBoolean()
+  onboardingCompleted?: boolean;
 }
 
 export class SearchUsersQueryDto extends PaginationQueryDto {

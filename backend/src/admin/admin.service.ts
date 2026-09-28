@@ -311,4 +311,45 @@ export class AdminService {
       throw translateAdminError(error, 'We could not submit that request.');
     }
   }
+
+  // --- Moderation and reports ---------------------------------------------------
+
+  async reviews(
+    adminId: string,
+    published: boolean | null,
+  ): Promise<Record<string, unknown>[]> {
+    return this.repository.listReviews(adminId, published);
+  }
+
+  async setReviewPublished(adminId: string, id: string, isPublished: boolean): Promise<void> {
+    if (!(await this.repository.setReviewPublished(adminId, id, isPublished))) {
+      throw new NotFoundError('Review');
+    }
+  }
+
+  async messages(adminId: string, search: string): Promise<Record<string, unknown>[]> {
+    return this.repository.searchMessages(adminId, search.trim());
+  }
+
+  async setMessageHidden(
+    adminId: string,
+    id: string,
+    input: { isHidden: boolean; reason?: string | undefined },
+  ): Promise<void> {
+    const found = await this.repository.setMessageHidden(
+      adminId,
+      id,
+      input.isHidden,
+      input.reason?.trim() || null,
+    );
+    if (!found) throw new NotFoundError('Message');
+  }
+
+  async report(
+    adminId: string,
+    from: string,
+    to: string,
+  ): Promise<Record<string, unknown> | null> {
+    return this.repository.reportSummary(adminId, new Date(from), new Date(to));
+  }
 }

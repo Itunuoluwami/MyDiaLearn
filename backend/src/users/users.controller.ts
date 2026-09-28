@@ -59,6 +59,14 @@ export class UsersController {
     return this.users.search(user.id, query);
   }
 
+  /** Declared before `:id` so the literal path is not parsed as a UUID. */
+  @Get('permissions/catalog')
+  permissionCatalog(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<Record<string, unknown>[]> {
+    return this.users.permissionCatalog(user.id);
+  }
+
   @Get(':id')
   async findOne(
     @CurrentUser() user: AuthenticatedUser,

@@ -10,6 +10,7 @@ import {
   Max,
   MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
 
 /** Mirrors the app_role enum, including super_admin. */
@@ -214,4 +215,43 @@ export class ResolveDisputeDto {
   @IsString()
   @MaxLength(2000)
   notes?: string;
+}
+
+// --- Moderation and reports ---------------------------------------------------
+
+export class ModerationReviewsQueryDto {
+  /** "true" or "false" to filter; omitted lists all. */
+  @IsOptional()
+  @IsIn(['true', 'false'])
+  published?: 'true' | 'false';
+}
+
+export class SetReviewPublishedDto {
+  @IsBoolean()
+  isPublished!: boolean;
+}
+
+export class ModerationMessagesQueryDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(200)
+  search!: string;
+}
+
+export class SetMessageHiddenDto {
+  @IsBoolean()
+  isHidden!: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
+}
+
+export class ReportQueryDto {
+  @IsDateString()
+  from!: string;
+
+  @IsDateString()
+  to!: string;
 }

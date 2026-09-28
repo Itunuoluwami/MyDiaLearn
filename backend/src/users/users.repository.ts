@@ -28,6 +28,7 @@ export interface UpdateProfileInput {
   timezone?: string | undefined;
   preferredCurrency?: string | undefined;
   avatarUrl?: string | undefined;
+  onboardingCompleted?: boolean | undefined;
 }
 
 @Injectable()
@@ -68,6 +69,7 @@ export class UsersRepository extends BaseRepository {
           timezone           = coalesce(${input.timezone ?? null}, timezone),
           preferred_currency = coalesce(${input.preferredCurrency ?? null}, preferred_currency),
           avatar_url         = coalesce(${input.avatarUrl ?? null}, avatar_url),
+          onboarding_completed = coalesce(${input.onboardingCompleted ?? null}::boolean, onboarding_completed),
           updated_at         = now()
         where id = ${userId}::uuid
         returning id, email, full_name, phone, avatar_url, country_code, timezone,
@@ -76,6 +78,17 @@ export class UsersRepository extends BaseRepository {
       `;
       return rows[0] ?? null;
     });
+  }
+
+  /** Labels for permission keys; the catalogue is not sensitive. */
+  async permissionCatalog(userId: string): Promise<Record<string, unknown>[]> {
+    return this.prisma.withUser(
+      userId,
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select key, label, category from public.permissions order by category, key
+      `,
+    );
   }
 
   async findRoles(callerId: string, userId: string): Promise<string[]> {

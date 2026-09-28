@@ -361,4 +361,89 @@ export class AdminRepository extends BaseRepository {
       `;
     });
   }
+
+  // --- Moderation and reports ---------------------------------------------------
+
+  async listReviews(
+    adminId: string,
+    published: boolean | null,
+  ): Promise<Record<string, unknown>[]> {
+    return this.prisma.withUser(
+      adminId,
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select r.id, r.score, r.comment, r.is_published, r.created_at, r.tutor_id,
+               tp.full_name as tutor_name, rp.full_name as rater_name
+        from public.ratings r
+        left join public.tutors t on t.id = r.tutor_id
+        left join public.profiles tp on tp.id = t.profile_id
+        left join public.profiles rp on rp.id = r.rater_id
+        where ${published}::boolean is null or r.is_published = ${published}::boolean
+        order by r.created_at desc
+        limit 200
+      `,
+    );
+  }
+
+  async setReviewPublished(
+    adminId: string,
+    id: string,
+    isPublished: boolean,
+  ): Promise<boolean> {
+    return this.prisma.withUser(adminId, async (tx) => {
+      const changed = await tx.$executeRaw`
+        update public.ratings set is_published = ${isPublished}, updated_at = now()
+        where id = ${id}::uuid
+      `;
+      return changed > 0;
+    });
+  }
+
+  async searchMessages(adminId: string, search: string): Promise<Record<string, unknown>[]> {
+    const pattern = `%${search}%`;
+    return this.prisma.withUser(
+      adminId,
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select m.id, m.body, m.sender_id, m.is_hidden, m.created_at, m.conversation_id,
+               sp.full_name as sender_name
+        from public.messages m
+        left join public.profiles sp on sp.id = m.sender_id
+        where m.body ilike ${pattern}
+        order by m.created_at desc
+        limit 100
+      `,
+    );
+  }
+
+  async setMessageHidden(
+    adminId: string,
+    id: string,
+    isHidden: boolean,
+    reason: string | null,
+  ): Promise<boolean> {
+    return this.prisma.withUser(adminId, async (tx) => {
+      const changed = await tx.$executeRaw`
+        update public.messages
+        set is_hidden = ${isHidden}, hidden_reason = case when ${isHidden} then ${reason}::text end
+        where id = ${id}::uuid
+      `;
+      return changed > 0;
+    });
+  }
+
+  async reportSummary(
+    adminId: string,
+    from: Date,
+    to: Date,
+  ): Promise<Record<string, unknown> | null> {
+    const rows = await this.prisma.withUser(
+      adminId,
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select * from public.admin_report_summary(${from}::timestamptz, ${to}::timestamptz)
+      `,
+    );
+    return rows[0] ?? null;
+  }
 }

@@ -20,6 +20,11 @@ import { escapeHtml, type LayoutInput } from './email-layout';
  *   account.password_reset    reset link
  *   account.email_verification  confirmation link
  *
+ * And one from the admin invitation flow, which GoTrue's invite mail used to
+ * carry (the code was rendered from user metadata, never a templates row):
+ *
+ *   admin.invitation          one-time code and accept link
+ *
  * Adding a key here without a corresponding flow would be inventing a
  * workflow. Don't.
  */
@@ -33,6 +38,7 @@ export const EMAIL_TRIGGERS = [
   'payment.succeeded',
   'payout.sent',
   'tutor.verification_updated',
+  'admin.invitation',
 ] as const;
 
 export type EmailTrigger = (typeof EMAIL_TRIGGERS)[number];
@@ -143,6 +149,19 @@ export const TEMPLATE_FALLBACKS: Record<EmailTrigger, TemplateDefinition> = {
     paragraphs: ['Your verification status is now <strong>{{status}}</strong>.'],
     action: { label: 'View your profile', urlVar: 'profile_url' },
     variables: ['status'],
+  },
+
+  'admin.invitation': {
+    subject: "You've been invited to administer DiaLearn",
+    heading: 'Admin invitation',
+    paragraphs: [
+      'You have been invited to join DiaLearn as <strong>{{role}}</strong>.',
+      'Your one-time code is <strong>{{otp}}</strong>. It expires on {{expires_at}}.',
+      'Sign in or create an account with this email address, then enter the code to accept.',
+    ],
+    action: { label: 'Accept invitation', urlVar: 'accept_url' },
+    footerNote: "If you weren't expecting this, you can ignore this email.",
+    variables: ['role', 'otp', 'expires_at', 'accept_url'],
   },
 };
 

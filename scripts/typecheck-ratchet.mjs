@@ -12,7 +12,7 @@
  */
 import { spawnSync } from "node:child_process";
 
-const BASELINE = 59;
+const BASELINE = 32;
 
 const result = spawnSync("npx", ["tsc", "--noEmit"], { encoding: "utf8" });
 const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;

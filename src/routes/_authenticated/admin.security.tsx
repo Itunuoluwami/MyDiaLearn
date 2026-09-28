@@ -9,6 +9,7 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { adminBeforeLoad } from "@/lib/admin-guard";
 import { clearAdminContextCache } from "@/lib/admin-guard";
 import { useChangeOwnPassword, friendlyAdminError } from "@/lib/admin-governance";
+import { useApiData } from "@/lib/api/data-client";
 import { CHANGE_PASSWORD_SCHEMA, PASSWORD_RULES, passwordStrength } from "@/lib/auth-validation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -40,6 +41,9 @@ function AdminSecurityPage() {
   const navigate = useNavigate();
   const changePassword = useChangeOwnPassword();
 
+  // Under the API a password change needs the current one (see useChangeOwnPassword).
+  const needsCurrent = useApiData();
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -60,9 +64,17 @@ function AdminSecurityPage() {
       setErrors(next);
       return;
     }
+    if (needsCurrent && !currentPassword) {
+      setErrors({ currentPassword: "Enter your current password." });
+      return;
+    }
 
-    changePassword.mutate(password, {
+    const input = needsCurrent
+      ? { password, currentPassword, email: profile?.email ?? "" }
+      : password;
+    changePassword.mutate(input, {
       onSuccess: async () => {
+        setCurrentPassword("");
         setPassword("");
         setConfirmPassword("");
         clearAdminContextCache();
@@ -72,6 +84,10 @@ function AdminSecurityPage() {
       },
       onError: (error) => {
         const raw = String((error as Error)?.message ?? "").toLowerCase();
+        if (raw.includes("current password is incorrect")) {
+          setErrors({ currentPassword: "Your current password is incorrect." });
+          return;
+        }
         if (raw.includes("same") || raw.includes("different from the old")) {
           setErrors({ password: "Please choose a password different from your current one." });
           return;
@@ -113,6 +129,32 @@ function AdminSecurityPage() {
             </p>
 
             <form className="mt-5 space-y-5" onSubmit={handleSubmit} noValidate>
+              {needsCurrent ? (
+                <div className="space-y-2">
+                  <Label htmlFor="current-password">Current password</Label>
+                  <PasswordInput
+                    id="current-password"
+                    autoComplete="current-password"
+                    value={currentPassword}
+                    onChange={(event) => setCurrentPassword(event.target.value)}
+                    aria-invalid={Boolean(errors["currentPassword"])}
+                    aria-describedby={
+                      errors["currentPassword"] ? "current-password-error" : undefined
+                    }
+                    className={cn(errors["currentPassword"] && "border-destructive")}
+                  />
+                  {errors["currentPassword"] ? (
+                    <p
+                      id="current-password-error"
+                      role="alert"
+                      className="text-xs text-destructive"
+                    >
+                      {errors["currentPassword"]}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
               <div className="space-y-2">
                 <Label htmlFor="new-password">New password</Label>
                 <PasswordInput

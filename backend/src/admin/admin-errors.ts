@@ -28,6 +28,9 @@ const ADMIN_REFUSALS: Record<string, number> = {
   PAYOUT_NOT_SETTLEABLE: 409,
   PAYOUT_NOT_REJECTABLE: 409,
   UNKNOWN_ACTION: 400,
+  // Raised by the settings service for unique / foreign-key violations.
+  ALREADY_EXISTS: 409,
+  IN_USE: 409,
   NOT_AUTHORIZED: 403,
 };
 

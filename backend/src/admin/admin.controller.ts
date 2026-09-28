@@ -28,12 +28,17 @@ import {
   AdminPayoutsQueryDto,
   AdminUsersQueryDto,
   CancelBookingRequestDto,
+  ModerationMessagesQueryDto,
+  ModerationReviewsQueryDto,
   OverrideBookingStatusDto,
   RefundRequestDto,
   RejectPayoutDto,
   ResolveDisputeDto,
   RejectTutorDto,
+  ReportQueryDto,
   ReviewVerificationDto,
+  SetMessageHiddenDto,
+  SetReviewPublishedDto,
   SetHourlyRateDto,
   SuspendUserDto,
   VerificationQueueQueryDto,
@@ -269,5 +274,57 @@ export class AdminController {
     @Req() request: Request,
   ): Promise<void> {
     await this.admin.resolveDispute(user.id, id, dto, auditContextOf(request));
+  }
+
+  // --- Moderation and reports ---------------------------------------------------
+
+  @Get('moderation/reviews')
+  @RequirePermission('admin.moderation')
+  reviews(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: ModerationReviewsQueryDto,
+  ): Promise<Record<string, unknown>[]> {
+    const published = query.published === undefined ? null : query.published === 'true';
+    return this.admin.reviews(user.id, published);
+  }
+
+  @Patch('moderation/reviews/:id')
+  @RequirePermission('admin.moderation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async setReviewPublished(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) id: string,
+    @Body() dto: SetReviewPublishedDto,
+  ): Promise<void> {
+    await this.admin.setReviewPublished(user.id, id, dto.isPublished);
+  }
+
+  @Get('moderation/messages')
+  @RequirePermission('admin.moderation')
+  messages(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: ModerationMessagesQueryDto,
+  ): Promise<Record<string, unknown>[]> {
+    return this.admin.messages(user.id, query.search);
+  }
+
+  @Patch('moderation/messages/:id')
+  @RequirePermission('admin.moderation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async setMessageHidden(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) id: string,
+    @Body() dto: SetMessageHiddenDto,
+  ): Promise<void> {
+    await this.admin.setMessageHidden(user.id, id, dto);
+  }
+
+  /** The reports page is open to any admin, as the portal has it. */
+  @Get('reports/summary')
+  report(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: ReportQueryDto,
+  ): Promise<Record<string, unknown> | null> {
+    return this.admin.report(user.id, query.from, query.to);
   }
 }

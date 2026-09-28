@@ -36,6 +36,10 @@ export class UsersService {
     return { ...toResponse(profile), roles, permissions };
   }
 
+  permissionCatalog(userId: string): Promise<Record<string, unknown>[]> {
+    return this.repository.permissionCatalog(userId);
+  }
+
   async findOne(callerId: string, id: string): Promise<UserProfileResponse> {
     const profile = await this.repository.findById(callerId, id);
     // RLS decides visibility, so an invisible profile is indistinguishable

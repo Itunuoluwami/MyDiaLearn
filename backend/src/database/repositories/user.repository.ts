@@ -89,6 +89,17 @@ export class UserRepository extends BaseRepository {
     `;
   }
 
+  /**
+   * An invited admin must replace the password they arrived with; once they
+   * have set their own, the flag that holds them on the security page lifts.
+   */
+  async clearMustChangePassword(userId: string): Promise<void> {
+    await this.prisma.$executeRaw`
+      update public.profiles set must_change_password = false, updated_at = now()
+      where id = ${userId}::uuid and must_change_password
+    `;
+  }
+
   async markEmailConfirmed(userId: string): Promise<void> {
     await this.prisma.$executeRaw`
       update auth.users

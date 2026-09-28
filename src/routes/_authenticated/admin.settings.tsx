@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { Loader2, Plus, ShieldAlert, Trash2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { apiRequest } from "@/lib/api/client";
+import { apiDelete, apiGet, apiPatch, apiPost, useApiData } from "@/lib/api/data-client";
+import { authClient } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
@@ -46,6 +49,13 @@ export const Route = createFileRoute("/_authenticated/admin/settings")({
   component: AdminSettingsPage,
 });
 
+/** PUT with the session token; data-client has no apiPut. */
+async function apiPut<T>(path: string, body: unknown): Promise<T> {
+  const { data } = await authClient.getSession();
+  const accessToken = data.session?.access_token;
+  return apiRequest<T>(path, { method: "PUT", body, ...(accessToken ? { accessToken } : {}) });
+}
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -74,12 +84,15 @@ function Panel({
 
 function SubjectsTab() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
 
   const subjects = useQuery({
     queryKey: ["admin-subjects"],
     queryFn: async () => {
+      // Rows arrive in the shape the Supabase select below produces.
+      if (viaApi) return (await apiGet<unknown>("/admin/settings/subjects")) as never;
       const { data, error } = await supabase
         .from("subjects")
         .select("id, name, slug, category, is_active, sort_order")
@@ -91,6 +104,15 @@ function SubjectsTab() {
 
   const create = useMutation({
     mutationFn: async () => {
+      if (viaApi) {
+        await apiPost("/admin/settings/subjects", {
+          name,
+          slug: slugify(name),
+          ...(category ? { category } : {}),
+          sortOrder: (subjects.data?.length ?? 0) + 1,
+        });
+        return;
+      }
       const { error } = await supabase.from("subjects").insert({
         name,
         slug: slugify(name),
@@ -110,6 +132,10 @@ function SubjectsTab() {
 
   const toggle = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      if (viaApi) {
+        await apiPatch(`/admin/settings/subjects/${id}`, { isActive: is_active });
+        return;
+      }
       const { error } = await supabase.from("subjects").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
@@ -119,6 +145,10 @@ function SubjectsTab() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
+      if (viaApi) {
+        await apiDelete(`/admin/settings/subjects/${id}`);
+        return;
+      }
       const { error } = await supabase.from("subjects").delete().eq("id", id);
       if (error) throw error;
     },
@@ -197,12 +227,14 @@ function SubjectsTab() {
 
 function CurriculaTab() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
 
   const curricula = useQuery({
     queryKey: ["admin-curricula"],
     queryFn: async () => {
+      if (viaApi) return (await apiGet<unknown>("/admin/settings/curricula")) as never;
       const { data, error } = await supabase
         .from("curricula")
         .select("id, name, code, country_code, is_active, education_levels(id, name)")
@@ -214,6 +246,15 @@ function CurriculaTab() {
 
   const create = useMutation({
     mutationFn: async () => {
+      if (viaApi) {
+        await apiPost("/admin/settings/curricula", {
+          name,
+          code: slugify(name),
+          ...(country ? { countryCode: country } : {}),
+          sortOrder: (curricula.data?.length ?? 0) + 1,
+        });
+        return;
+      }
       const { error } = await supabase.from("curricula").insert({
         name,
         code: slugify(name),
@@ -233,6 +274,10 @@ function CurriculaTab() {
 
   const toggle = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      if (viaApi) {
+        await apiPatch(`/admin/settings/curricula/${id}`, { isActive: is_active });
+        return;
+      }
       const { error } = await supabase.from("curricula").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
@@ -385,6 +430,7 @@ function TierEditor({ tiers, onChange }: { tiers: Tier[]; onChange: (tiers: Tier
 
 function CommissionTab() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   const [form, setForm] = useState({
     name: "",
     model: "percentage",
@@ -403,6 +449,18 @@ function CommissionTab() {
   const rules = useQuery({
     queryKey: ["admin-commission"],
     queryFn: async () => {
+      if (viaApi) {
+        // NUMERIC columns arrive as strings; the page reads numbers.
+        const rows = await apiGet<Record<string, unknown>[]>("/admin/settings/commission-rules");
+        const num = (v: unknown) => (v === null || v === undefined ? null : Number(v));
+        return rows.map((r) => ({
+          ...r,
+          percentage: num(r["percentage"]),
+          fixed_amount: num(r["fixed_amount"]),
+          platform_fee_percentage: num(r["platform_fee_percentage"]),
+          priority: num(r["priority"]),
+        })) as never;
+      }
       const { data, error } = await supabase
         .from("commission_rules")
         .select(
@@ -417,6 +475,15 @@ function CommissionTab() {
   const tutorOptions = useQuery({
     queryKey: ["admin-commission-tutors"],
     queryFn: async () => {
+      if (viaApi) {
+        const targets = await apiGet<{ tutors: { id: string; full_name: string | null }[] }>(
+          "/admin/settings/commission-targets",
+        );
+        return targets.tutors.map((t) => ({
+          id: t.id,
+          profiles: { full_name: t.full_name },
+        })) as never;
+      }
       const { data, error } = await supabase
         .from("tutors")
         .select("id, profiles(full_name)")
@@ -430,6 +497,12 @@ function CommissionTab() {
   const agencyOptions = useQuery({
     queryKey: ["admin-commission-agencies"],
     queryFn: async () => {
+      if (viaApi) {
+        const targets = await apiGet<{ agencies: { id: string; name: string }[] }>(
+          "/admin/settings/commission-targets",
+        );
+        return targets.agencies as never;
+      }
       const { data, error } = await supabase
         .from("tutor_agencies")
         .select("id, name")
@@ -441,6 +514,21 @@ function CommissionTab() {
 
   const create = useMutation({
     mutationFn: async () => {
+      if (viaApi) {
+        await apiPost("/admin/settings/commission-rules", {
+          name: form.name,
+          model: form.model,
+          ...(form.percentage ? { percentage: Number(form.percentage) } : {}),
+          ...(form.fixed_amount ? { fixedAmount: Number(form.fixed_amount) } : {}),
+          platformFeePercentage: Number(form.platform_fee_percentage || 0),
+          appliesTo: form.applies_to,
+          ...(form.tutor_id ? { tutorId: form.tutor_id } : {}),
+          ...(form.agency_id ? { agencyId: form.agency_id } : {}),
+          tiers: form.model === "tiered" ? tiers : [],
+          priority: (rules.data?.length ?? 0) + 1,
+        });
+        return;
+      }
       const { error } = await supabase.from("commission_rules").insert({
         name: form.name,
         model: form.model as "percentage" | "fixed" | "tiered",
@@ -465,6 +553,10 @@ function CommissionTab() {
 
   const toggle = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      if (viaApi) {
+        await apiPatch(`/admin/settings/commission-rules/${id}`, { isActive: is_active });
+        return;
+      }
       const { error } = await supabase.from("commission_rules").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
@@ -645,6 +737,7 @@ function CommissionTab() {
 
 function PricingTab() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   const [drafts, setDrafts] = useState<{
     processing_fee_percentage: string;
     processing_fee_fixed: string;
@@ -653,10 +746,17 @@ function PricingTab() {
   const settings = useQuery({
     queryKey: ["admin-pricing-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("platform_settings")
-        .select("key, value")
-        .in("key", ["payments.processing_fee_percentage", "payments.processing_fee_fixed"]);
+      const { data, error } = viaApi
+        ? {
+            data: await apiGet<{ key: string; value: unknown }[]>(
+              "/admin/settings/platform?scope=payments",
+            ),
+            error: null,
+          }
+        : await supabase
+            .from("platform_settings")
+            .select("key, value")
+            .in("key", ["payments.processing_fee_percentage", "payments.processing_fee_fixed"]);
       if (error) throw error;
       const byKey = Object.fromEntries((data ?? []).map((row) => [row.key, row.value]));
       return {
@@ -673,6 +773,29 @@ function PricingTab() {
       processing_fee_percentage: string;
       processing_fee_fixed: string;
     }) => {
+      if (viaApi) {
+        await apiPut("/admin/settings/platform", {
+          settings: [
+            {
+              key: "payments.processing_fee_percentage",
+              value: Number(values.processing_fee_percentage || 0),
+              label: "Payment processing fee (%)",
+              description:
+                "Percentage of the lesson amount charged as a payment processing fee at checkout.",
+              groupName: "payments",
+            },
+            {
+              key: "payments.processing_fee_fixed",
+              value: Number(values.processing_fee_fixed || 0),
+              label: "Payment processing fee (fixed)",
+              description:
+                "Flat payment processing fee added at checkout, in the tutor's listing currency.",
+              groupName: "payments",
+            },
+          ],
+        });
+        return;
+      }
       const { error } = await supabase.from("platform_settings").upsert(
         [
           {
@@ -773,6 +896,7 @@ function PricingTab() {
 
 function GeneralSettingsPanel() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [newRow, setNewRow] = useState({
     key: "",
@@ -785,6 +909,7 @@ function GeneralSettingsPanel() {
   const settings = useQuery({
     queryKey: ["admin-general-settings"],
     queryFn: async () => {
+      if (viaApi) return (await apiGet<unknown>("/admin/settings/platform?scope=general")) as never;
       const { data, error } = await supabase
         .from("platform_settings")
         .select("key, label, description, group_name, is_public, value")
@@ -798,6 +923,12 @@ function GeneralSettingsPanel() {
 
   const save = useMutation({
     mutationFn: async ({ key, value }: { key: string; value: string }) => {
+      if (viaApi) {
+        await apiPatch(`/admin/settings/platform/${encodeURIComponent(key)}`, {
+          value: JSON.parse(value) as unknown,
+        });
+        return;
+      }
       const { error } = await supabase
         .from("platform_settings")
         .update({ value: JSON.parse(value) })
@@ -823,6 +954,16 @@ function GeneralSettingsPanel() {
 
   const create = useMutation({
     mutationFn: async () => {
+      if (viaApi) {
+        await apiPost("/admin/settings/platform", {
+          key: newRow.key,
+          label: newRow.label || newRow.key,
+          ...(newRow.description ? { description: newRow.description } : {}),
+          groupName: newRow.group_name || "general",
+          value: JSON.parse(newRow.value || "null") as unknown,
+        });
+        return;
+      }
       const { error } = await supabase.from("platform_settings").insert({
         key: newRow.key,
         label: newRow.label || newRow.key,
@@ -1085,6 +1226,7 @@ function TemplateEditor({
 
 function NewTemplateForm({ onCreated }: { onCreated: () => void }) {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<TemplateDraft>({
     trigger_key: "",
@@ -1096,6 +1238,16 @@ function NewTemplateForm({ onCreated }: { onCreated: () => void }) {
 
   const create = useMutation({
     mutationFn: async () => {
+      if (viaApi) {
+        await apiPost("/admin/settings/templates", {
+          triggerKey: draft.trigger_key,
+          channel: draft.channel,
+          ...(draft.audience ? { audience: draft.audience } : {}),
+          ...(draft.subject ? { subject: draft.subject } : {}),
+          body: draft.body,
+        });
+        return;
+      }
       const { error } = await supabase.from("notification_templates").insert({
         trigger_key: draft.trigger_key,
         channel: draft.channel,
@@ -1151,11 +1303,13 @@ function NewTemplateForm({ onCreated }: { onCreated: () => void }) {
 
 function TemplatesTab() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const templates = useQuery({
     queryKey: ["admin-templates"],
     queryFn: async () => {
+      if (viaApi) return (await apiGet<unknown>("/admin/settings/templates")) as never;
       const { data, error } = await supabase
         .from("notification_templates")
         .select("id, trigger_key, channel, audience, subject, body, description, is_active")
@@ -1167,6 +1321,16 @@ function TemplatesTab() {
 
   const save = useMutation({
     mutationFn: async ({ id, draft }: { id: string; draft: TemplateDraft }) => {
+      if (viaApi) {
+        await apiPatch(`/admin/settings/templates/${id}`, {
+          triggerKey: draft.trigger_key,
+          channel: draft.channel,
+          audience: draft.audience || null,
+          subject: draft.subject || null,
+          body: draft.body,
+        });
+        return;
+      }
       const { error } = await supabase
         .from("notification_templates")
         .update({
@@ -1189,6 +1353,10 @@ function TemplatesTab() {
 
   const toggle = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      if (viaApi) {
+        await apiPatch(`/admin/settings/templates/${id}`, { isActive: is_active });
+        return;
+      }
       const { error } = await supabase
         .from("notification_templates")
         .update({ is_active })

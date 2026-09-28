@@ -30,7 +30,9 @@ import {
   useSetUserPermission,
   useUserPermissions,
   type AdminAccount,
+  inviteAdminViaApi,
 } from "@/lib/admin-governance";
+import { useApiData } from "@/lib/api/data-client";
 import type { PermissionRow } from "@/integrations/supabase/governance-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -92,6 +94,7 @@ export const Route = createFileRoute("/_authenticated/admin/admins")({
 
 function InviteDialog({ onClose }: { onClose: () => void }) {
   const send = useServerFn(inviteAdmin);
+  const viaApi = useApiData();
   const catalog = usePermissionCatalog();
 
   const [email, setEmail] = useState("");
@@ -120,14 +123,25 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
     setFormError(null);
     setPending(true);
 
-    const result = await send({
-      data: {
-        email,
-        role,
-        permissionKeys: [...selected],
-        origin: window.location.origin,
-      },
-    }).catch(() => null);
+    // Under the API the backend creates the invitation and emails the code;
+    // the Supabase path keeps its server function.
+    const result = viaApi
+      ? await inviteAdminViaApi({
+          email: email.trim().toLowerCase(),
+          role,
+          permissionKeys: [...selected],
+        }).then(
+          (created) => ({ ok: true as const, ...created }),
+          (error: unknown) => ({ ok: false as const, formError: friendlyAdminError(error) }),
+        )
+      : await send({
+          data: {
+            email,
+            role,
+            permissionKeys: [...selected],
+            origin: window.location.origin,
+          },
+        }).catch(() => null);
 
     setPending(false);
 
@@ -150,7 +164,8 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    // Existing account: GoTrue won't re-invite, so no mail went out.
+    // No mail went out (an existing account under Supabase, or email not
+    // configured on the API) — show the code once so it can be passed on.
     setIssuedOtp(result.otp ?? null);
   }
 

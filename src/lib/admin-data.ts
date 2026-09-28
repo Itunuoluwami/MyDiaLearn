@@ -1093,10 +1093,40 @@ export function useResolveDispute() {
 /* Content moderation (Phase 4B)                                         */
 /* ------------------------------------------------------------------ */
 
+export interface ModerationReview {
+  id: string;
+  score: number;
+  comment: string | null;
+  is_published: boolean;
+  created_at: string;
+  tutor_id: string;
+  tutors: { profiles: { full_name: string | null } | null } | null;
+  profiles: { full_name: string | null } | null;
+}
+
 export function useModerationReviews(params?: { onlyPublished?: boolean }) {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-moderation-reviews", params?.onlyPublished ?? "all"],
-    queryFn: async () => {
+    queryFn: async (): Promise<ModerationReview[]> => {
+      if (viaApi) {
+        const query =
+          params?.onlyPublished === undefined ? "" : `?published=${params.onlyPublished}`;
+        const rows = await apiGet<Record<string, unknown>[]>(`/admin/moderation/reviews${query}`);
+        return rows.map((row) => {
+          const r = row as Record<string, string | number | boolean | null>;
+          return {
+            id: r["id"] as string,
+            score: Number(r["score"]),
+            comment: r["comment"] as string | null,
+            is_published: r["is_published"] as boolean,
+            created_at: r["created_at"] as string,
+            tutor_id: r["tutor_id"] as string,
+            tutors: { profiles: { full_name: r["tutor_name"] as string | null } },
+            profiles: { full_name: r["rater_name"] as string | null },
+          };
+        });
+      }
       let query = supabase
         .from("ratings")
         .select(
@@ -1108,17 +1138,20 @@ export function useModerationReviews(params?: { onlyPublished?: boolean }) {
         query = query.eq("is_published", params.onlyPublished);
       const { data, error } = await query;
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as unknown as ModerationReview[];
     },
   });
 }
 
-export type ModerationReview = NonNullable<ReturnType<typeof useModerationReviews>["data"]>[number];
-
 export function useSetReviewPublished() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ id, isPublished }: { id: string; isPublished: boolean }) => {
+      if (viaApi) {
+        await apiPatch(`/admin/moderation/reviews/${id}`, { isPublished });
+        return;
+      }
       const { error } = await supabase
         .from("ratings")
         .update({ is_published: isPublished })
@@ -1129,12 +1162,40 @@ export function useSetReviewPublished() {
   });
 }
 
+export interface ModerationMessage {
+  id: string;
+  body: string;
+  sender_id: string;
+  is_hidden: boolean;
+  created_at: string;
+  conversation_id: string;
+  profiles: { full_name: string | null } | null;
+}
+
 export function useModerationMessages(search?: string) {
   const needle = search?.trim() ?? "";
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-moderation-messages", needle],
     enabled: needle.length > 1,
-    queryFn: async () => {
+    queryFn: async (): Promise<ModerationMessage[]> => {
+      if (viaApi) {
+        const rows = await apiGet<Record<string, unknown>[]>(
+          `/admin/moderation/messages?search=${encodeURIComponent(needle)}`,
+        );
+        return rows.map((row) => {
+          const r = row as Record<string, string | boolean | null>;
+          return {
+            id: r["id"] as string,
+            body: r["body"] as string,
+            sender_id: r["sender_id"] as string,
+            is_hidden: r["is_hidden"] as boolean,
+            created_at: r["created_at"] as string,
+            conversation_id: r["conversation_id"] as string,
+            profiles: { full_name: r["sender_name"] as string | null },
+          };
+        });
+      }
       const { data, error } = await supabase
         .from("messages")
         .select(
@@ -1144,17 +1205,14 @@ export function useModerationMessages(search?: string) {
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as unknown as ModerationMessage[];
     },
   });
 }
 
-export type ModerationMessage = NonNullable<
-  ReturnType<typeof useModerationMessages>["data"]
->[number];
-
 export function useSetMessageHidden() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({
       id,
@@ -1165,6 +1223,13 @@ export function useSetMessageHidden() {
       isHidden: boolean;
       reason?: string;
     }) => {
+      if (viaApi) {
+        await apiPatch(`/admin/moderation/messages/${id}`, {
+          isHidden,
+          ...(isHidden && reason ? { reason } : {}),
+        });
+        return;
+      }
       const { error } = await supabase
         .from("messages")
         .update({ is_hidden: isHidden, hidden_reason: isHidden ? (reason ?? null) : null })
@@ -1180,22 +1245,43 @@ export function useSetMessageHidden() {
 /* Reports (Phase 3)                                                     */
 /* ------------------------------------------------------------------ */
 
+/** admin_report_summary(), as the live function returns it. */
+export interface AdminReportSummary {
+  new_students: number;
+  new_parents: number;
+  new_tutors: number;
+  bookings_count: number;
+  completed_count: number;
+  cancelled_count: number;
+  no_show_count: number;
+  gmv: number;
+  gmv_currency: string | null;
+  commission_revenue: number;
+  avg_transaction_value: number | null;
+  active_users: number;
+  avg_tutor_rating: number | null;
+}
+
 export function useAdminReportSummary(from: string, to: string) {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-report-summary", from, to],
     enabled: Boolean(from && to),
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("admin_report_summary", {
+    queryFn: async (): Promise<AdminReportSummary | null> => {
+      if (viaApi) {
+        const row = await apiGet<Record<string, unknown> | null>(
+          `/admin/reports/summary?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+        );
+        return row ? numericRow<AdminReportSummary>(row, ["gmv_currency"]) : null;
+      }
+      const rows = await governanceRpc<AdminReportSummary[] | null>("admin_report_summary", {
         p_from: from,
         p_to: to,
       });
-      if (error) throw error;
-      return data?.[0] ?? null;
+      return rows?.[0] ?? null;
     },
   });
 }
-
-export type AdminReportSummary = NonNullable<ReturnType<typeof useAdminReportSummary>["data"]>;
 
 /* ------------------------------------------------------------------ */
 /* Presentation helpers                                                 */

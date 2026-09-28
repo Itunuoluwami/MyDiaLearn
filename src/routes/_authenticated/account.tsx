@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { apiGet, apiPatch, useApiData } from "@/lib/api/data-client";
 import { useAuth } from "@/hooks/use-auth";
 import { useRedirectToPortalHome } from "@/hooks/use-portal-redirect";
 
@@ -71,9 +72,15 @@ function AccountPage() {
     },
   });
 
+  const viaApi = useApiData();
   const { data: permissionCatalog } = useQuery({
     queryKey: ["permission-catalog"],
     queryFn: async () => {
+      if (viaApi) {
+        return apiGet<{ key: string; label: string; category: string }[]>(
+          "/users/permissions/catalog",
+        );
+      }
       const { data, error } = await supabase.from("permissions").select("key, label, category");
       if (error) throw error;
       return data;
@@ -83,6 +90,18 @@ function AccountPage() {
   const save = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not signed in");
+      if (viaApi) {
+        // PATCH leaves omitted fields alone, so only filled ones are sent.
+        await apiPatch("/users/me", {
+          ...(fullName ? { fullName } : {}),
+          ...(phone ? { phone } : {}),
+          ...(countryCode ? { countryCode } : {}),
+          timezone,
+          preferredCurrency: currency,
+          onboardingCompleted: true,
+        });
+        return;
+      }
       const { error } = await supabase
         .from("profiles")
         .update({

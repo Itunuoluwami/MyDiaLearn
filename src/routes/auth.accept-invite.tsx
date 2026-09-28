@@ -25,7 +25,7 @@ export const Route = createFileRoute("/auth/accept-invite")({
   component: AcceptInvitePage,
 });
 
-type LinkState = "checking" | "ready" | "invalid" | "done";
+type LinkState = "checking" | "ready" | "invalid" | "signin" | "done";
 
 /** Supabase puts link errors on the hash (implicit flow) or the query (PKCE). */
 function readLinkError(): string | null {
@@ -47,6 +47,24 @@ function AcceptInvitePage() {
 
   useEffect(() => {
     let active = true;
+
+    // Under the API there is no magic link: the invitee signs in (or signs up)
+    // with the invited address first, then redeems the emailed code here.
+    if (authClient.provider === "nestjs") {
+      authClient.getSession().then(({ data }) => {
+        if (!active) return;
+        if (data.session) {
+          setEmail(data.session.user.email ?? "");
+          setState("ready");
+        } else {
+          setEmail(new URLSearchParams(window.location.search).get("email") ?? "");
+          setState("signin");
+        }
+      });
+      return () => {
+        active = false;
+      };
+    }
 
     if (readLinkError()) {
       setState("invalid");
@@ -117,6 +135,24 @@ function AcceptInvitePage() {
                 <div className="flex flex-col items-center py-10 text-center">
                   <Loader2 className="size-8 animate-spin text-primary" aria-hidden="true" />
                   <p className="mt-4 text-sm text-muted-foreground">Checking your invitation…</p>
+                </div>
+              ) : state === "signin" ? (
+                <div className="flex flex-col items-center text-center">
+                  <h1 className="display-section text-2xl">Sign in to accept your invitation</h1>
+                  <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                    Sign in
+                    {email ? (
+                      <>
+                        {" "}
+                        as <span className="font-medium text-foreground">{email}</span>
+                      </>
+                    ) : null}{" "}
+                    — or create an account with that address — then come back to this page and enter
+                    the code from your invitation email.
+                  </p>
+                  <Button asChild variant="cta" className="mt-8 min-h-12 w-full max-w-sm">
+                    <Link to="/auth">Go to sign in</Link>
+                  </Button>
                 </div>
               ) : state === "invalid" ? (
                 <div className="flex flex-col items-center text-center">

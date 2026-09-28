@@ -6,7 +6,9 @@ import type { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
 import { governanceRpc } from "@/integrations/supabase/governance-types";
-import { friendlyAdminError } from "@/lib/admin-governance";
+import { friendlyAdminError, redeemInvitationViaApi } from "@/lib/admin-governance";
+import { apiPost, useApiData } from "@/lib/api/data-client";
+import { authClient } from "@/lib/auth";
 import { ACCEPT_INVITE_SCHEMA, PASSWORD_RULES, passwordStrength } from "@/lib/auth-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,9 +34,18 @@ const STRENGTH_TONE = [
  * is what actually grants the role — so a wrong code costs nothing and changes
  * nothing. Only once that succeeds do we set the password, and only then do we
  * clear the forced-change flag the redeem set.
+ *
+ * Under the API the invitee is already signed in with a password they chose at
+ * sign-up, so there is no generated password to replace — but the redeem still
+ * sets the forced-change flag, and the API only changes a password given the
+ * current one. So the form also asks for that, changes it, and signs back in
+ * (a password change ends every session); the API clears the flag itself.
  */
 export function AcceptInviteForm({ email, onSuccess }: { email: string; onSuccess: () => void }) {
   const [formError, setFormError] = useState<string | null>(null);
+  const viaApi = useApiData();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [currentError, setCurrentError] = useState<string | null>(null);
 
   const {
     register,
@@ -58,8 +69,15 @@ export function AcceptInviteForm({ email, onSuccess }: { email: string; onSucces
       .replace(/[\s-]/g, "")
       .toUpperCase();
 
+    if (viaApi && !currentPassword) {
+      setCurrentError("Enter the password you signed in with.");
+      return;
+    }
+    setCurrentError(null);
+
     try {
-      await governanceRpc<string>("admin_invite_redeem", { p_email: email, p_otp: otp });
+      if (viaApi) await redeemInvitationViaApi(email, otp);
+      else await governanceRpc<string>("admin_invite_redeem", { p_email: email, p_otp: otp });
     } catch (error) {
       const raw = String((error as { message?: string })?.message ?? "").toUpperCase();
       if (raw.includes("INVALID_OTP")) {
@@ -70,6 +88,30 @@ export function AcceptInviteForm({ email, onSuccess }: { email: string; onSucces
         return;
       }
       setFormError(friendlyAdminError(error));
+      return;
+    }
+
+    if (viaApi) {
+      try {
+        await apiPost("/auth/password/change", {
+          currentPassword,
+          newPassword: values.password,
+        });
+      } catch (error) {
+        const raw = String((error as { message?: string })?.message ?? "").toLowerCase();
+        setFormError(
+          raw.includes("current password is incorrect")
+            ? "Your admin access is set up, but the current password was wrong so the new one wasn't saved. Set it from Security."
+            : "Your admin access is set up, but we couldn't save that password. Set one from Security after signing in.",
+        );
+        return;
+      }
+      const { error } = await authClient.signInWithPassword({ email, password: values.password });
+      if (error) {
+        setFormError("Your password was changed. Please sign in again with the new one.");
+        return;
+      }
+      onSuccess();
       return;
     }
 
@@ -102,6 +144,26 @@ export function AcceptInviteForm({ email, onSuccess }: { email: string; onSucces
           <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
           {formError}
         </p>
+      ) : null}
+
+      {viaApi ? (
+        <div className="space-y-2">
+          <Label htmlFor="invite-current-password">Current password</Label>
+          <PasswordInput
+            id="invite-current-password"
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            aria-invalid={Boolean(currentError)}
+            aria-describedby={currentError ? "invite-current-password-error" : undefined}
+            className={cn("h-11", currentError && "border-destructive")}
+          />
+          {currentError ? (
+            <p id="invite-current-password-error" role="alert" className="text-xs text-destructive">
+              {currentError}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="space-y-2">
