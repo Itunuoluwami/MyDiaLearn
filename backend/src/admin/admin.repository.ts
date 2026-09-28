@@ -216,4 +216,149 @@ export class AdminRepository extends BaseRepository {
       return { previous: before[0].hourly_rate, currency: before[0].currency };
     });
   }
+
+  // --- Bookings ----------------------------------------------------------------
+
+  async listBookings(
+    adminId: string,
+    filters: { search?: string; status?: string; from?: Date; to?: Date },
+  ): Promise<Record<string, unknown>[]> {
+    const pattern = filters.search ? `%${filters.search}%` : null;
+    return this.prisma.withUser(
+      adminId,
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select b.id, b.student_id, b.tutor_id, b.booked_by, b.subject_id, b.starts_at, b.ends_at,
+               b.duration_minutes, b.status::text, b.currency, b.total_amount,
+               b.cancellation_policy_id, b.cancelled_at, b.cancellation_reason, b.created_at,
+               s.first_name as student_first_name, s.last_name as student_last_name,
+               tp.full_name as tutor_name, sub.name as subject_name
+        from public.bookings b
+        left join public.students s on s.id = b.student_id
+        left join public.tutors t on t.id = b.tutor_id
+        left join public.profiles tp on tp.id = t.profile_id
+        left join public.subjects sub on sub.id = b.subject_id
+        where (${filters.status ?? null}::text is null or b.status::text = ${filters.status ?? null})
+          and (${filters.from ?? null}::timestamptz is null or b.starts_at >= ${filters.from ?? null})
+          and (${filters.to ?? null}::timestamptz is null or b.starts_at <= ${filters.to ?? null})
+          and (${pattern}::text is null
+               or concat_ws(' ', s.first_name, s.last_name) ilike ${pattern}
+               or tp.full_name ilike ${pattern})
+        order by b.starts_at desc
+        limit 200
+      `,
+    );
+  }
+
+  async setBookingStatus(
+    adminId: string,
+    bookingId: string,
+    status: string,
+  ): Promise<boolean> {
+    return this.prisma.withUser(adminId, async (tx) => {
+      const changed = await tx.$executeRaw`
+        update public.bookings set status = ${status}::public.booking_status, updated_at = now()
+        where id = ${bookingId}::uuid
+      `;
+      return changed > 0;
+    });
+  }
+
+  // --- Payments and payouts -----------------------------------------------------
+
+  async listPayments(
+    adminId: string,
+    filters: { status?: string; from?: Date; to?: Date },
+  ): Promise<Record<string, unknown>[]> {
+    const status = filters.status ?? 'all';
+    return this.prisma.withUser(
+      adminId,
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select p.id, p.booking_id, p.tutor_id, p.payer_id, p.amount, p.currency,
+               p.status::text, p.provider, p.provider_reference, p.paid_at,
+               p.refunded_amount, p.created_at,
+               b.starts_at as booking_starts_at,
+               s.first_name as student_first_name, s.last_name as student_last_name,
+               tp.full_name as tutor_name
+        from public.payments p
+        left join public.bookings b on b.id = p.booking_id
+        left join public.students s on s.id = b.student_id
+        left join public.tutors t on t.id = p.tutor_id
+        left join public.profiles tp on tp.id = t.profile_id
+        where case ${status}
+                when 'all' then true
+                -- Not a stored column: failed, or pending/processing for over a day.
+                when 'flagged' then p.status = 'failed'
+                  or (p.status in ('pending', 'processing') and p.created_at < now() - interval '24 hours')
+                when 'refunded' then coalesce(p.refunded_amount, 0) > 0
+                else p.status::text = ${status}
+              end
+          and (${filters.from ?? null}::timestamptz is null or p.created_at >= ${filters.from ?? null})
+          and (${filters.to ?? null}::timestamptz is null or p.created_at <= ${filters.to ?? null})
+        order by p.created_at desc
+        limit 200
+      `,
+    );
+  }
+
+  async listPayouts(adminId: string, status: string): Promise<Record<string, unknown>[]> {
+    return this.prisma.withUser(
+      adminId,
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select po.id, po.tutor_id, po.amount, po.currency, po.status::text, po.reference,
+               po.notes, po.requested_at, po.settled_at, tp.full_name as tutor_name
+        from public.payouts po
+        left join public.tutors t on t.id = po.tutor_id
+        left join public.profiles tp on tp.id = t.profile_id
+        where ${status} = 'all' or po.status::text = ${status}
+        order by po.requested_at desc
+        limit 200
+      `,
+    );
+  }
+
+  /** Rejection moves no money, so admin_reject_payout() is single-step. */
+  async rejectPayout(adminId: string, payoutId: string, notes: string | null): Promise<void> {
+    await this.prisma.withUser(adminId, async (tx) => {
+      await tx.$executeRaw`select public.admin_reject_payout(${payoutId}::uuid, ${notes}::text)`;
+    });
+  }
+
+  // --- Disputes -----------------------------------------------------------------
+
+  async listDisputes(adminId: string, status: string): Promise<Record<string, unknown>[]> {
+    return this.prisma.withUser(
+      adminId,
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select d.id, d.booking_id, d.category::text, d.status::text, d.description,
+               d.resolution_notes, d.resolved_at, d.created_at,
+               rp.full_name as raised_by_name, ap.full_name as against_name,
+               b.starts_at as booking_starts_at, sub.name as subject_name
+        from public.disputes d
+        left join public.profiles rp on rp.id = d.raised_by
+        left join public.profiles ap on ap.id = d.against_profile_id
+        left join public.bookings b on b.id = d.booking_id
+        left join public.subjects sub on sub.id = b.subject_id
+        where ${status} = 'all' or d.status::text = ${status}
+        order by d.created_at desc
+        limit 200
+      `,
+    );
+  }
+
+  async resolveDispute(
+    adminId: string,
+    input: { disputeId: string; status: string; notes: string | null },
+  ): Promise<void> {
+    await this.prisma.withUser(adminId, async (tx) => {
+      await tx.$executeRaw`
+        select public.admin_resolve_dispute(
+          ${input.disputeId}::uuid, ${input.status}::public.dispute_status, ${input.notes}::text
+        )
+      `;
+    });
+  }
 }

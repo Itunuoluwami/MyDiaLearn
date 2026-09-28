@@ -17,7 +17,7 @@ bun run typecheck:ratchet
 bun run build
 ```
 
-`typecheck:ratchet` is not a plain `tsc`. The repo carries 83 known type errors
+`typecheck:ratchet` is not a plain `tsc`. The repo carries 59 known type errors
 caused by a stale generated `types.ts`; the script fails only if that count
 **rises**. When the types are regenerated, lower `BASELINE` in
 `scripts/typecheck-ratchet.mjs` to lock the gain in.

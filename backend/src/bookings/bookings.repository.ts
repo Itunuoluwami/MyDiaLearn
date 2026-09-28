@@ -278,18 +278,22 @@ export class BookingsRepository extends BaseRepository {
     });
   }
 
-  /** Admin cancellation with a refund percentage. */
-  async adminCancel(
-    adminId: string,
-    input: { bookingId: string; reason: string; refundPercentage: number },
-  ): Promise<Record<string, unknown> | null> {
-    return this.prisma.withUser(adminId, async (tx) => {
-      const rows = await tx.$queryRaw<Record<string, unknown>[]>`
-        select * from public.admin_cancel_booking(
-          ${input.bookingId}::uuid, ${input.reason}, ${input.refundPercentage}::numeric
-        )
+  /**
+   * raise_dispute() checks the caller is a party to the booking (booked_by,
+   * the student, their parent or the tutor) and fills in who it is against.
+   */
+  async raiseDispute(
+    userId: string,
+    bookingId: string,
+    input: { category: string; description: string },
+  ): Promise<string> {
+    return this.prisma.withUser(userId, async (tx) => {
+      const rows = await tx.$queryRaw<{ id: string }[]>`
+        select public.raise_dispute(
+          ${bookingId}::uuid, ${input.category}::public.dispute_category, ${input.description}
+        ) as id
       `;
-      return rows[0] ?? null;
+      return rows[0]!.id;
     });
   }
 }

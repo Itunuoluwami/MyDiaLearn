@@ -53,15 +53,10 @@ export class AdminService {
     profileId: string,
     isActive: boolean,
   ): Promise<{ requestId: string }> {
-    try {
-      const requestId = await this.repository.requestAction(adminId, 'profile.suspend', {
-        profile_id: profileId,
-        is_active: isActive,
-      });
-      return { requestId };
-    } catch (error) {
-      throw translateAdminError(error, 'We could not submit that request.');
-    }
+    return this.submit(adminId, 'profile.suspend', {
+      profile_id: profileId,
+      is_active: isActive,
+    });
   }
 
   async verificationQueue(
@@ -179,5 +174,141 @@ export class AdminService {
         currency: result.currency,
       },
     });
+  }
+
+  // --- Bookings ----------------------------------------------------------------
+
+  async bookings(
+    adminId: string,
+    query: { search?: string; status?: string; from?: string; to?: string },
+  ): Promise<Record<string, unknown>[]> {
+    return this.repository.listBookings(adminId, {
+      ...(query.search?.trim() ? { search: query.search.trim() } : {}),
+      ...(query.status && query.status !== 'all' ? { status: query.status } : {}),
+      ...(query.from ? { from: new Date(query.from) } : {}),
+      ...(query.to ? { to: new Date(query.to) } : {}),
+    });
+  }
+
+  async overrideBookingStatus(
+    adminId: string,
+    bookingId: string,
+    status: string,
+  ): Promise<void> {
+    let found: boolean;
+    try {
+      found = await this.repository.setBookingStatus(adminId, bookingId, status);
+    } catch (error) {
+      throw translateAdminError(error, 'We could not change that booking.');
+    }
+    if (!found) throw new NotFoundError('Booking');
+  }
+
+  /**
+   * Cancellation with a refund needs a second admin. This submits the request;
+   * admin_execute_action() runs admin_cancel_booking() once it is approved.
+   */
+  async requestCancellation(
+    adminId: string,
+    bookingId: string,
+    input: { reason: string; refundPercentage?: number | undefined },
+  ): Promise<{ requestId: string }> {
+    return this.submit(adminId, 'booking.cancel_with_refund', {
+      booking_id: bookingId,
+      reason: input.reason,
+      refund_percentage: input.refundPercentage ?? null,
+    });
+  }
+
+  // --- Payments and payouts -----------------------------------------------------
+
+  async payments(
+    adminId: string,
+    query: { status?: string; from?: string; to?: string },
+  ): Promise<Record<string, unknown>[]> {
+    return this.repository.listPayments(adminId, {
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.from ? { from: new Date(query.from) } : {}),
+      ...(query.to ? { to: new Date(query.to) } : {}),
+    });
+  }
+
+  /** The amount is clamped to the payment at execution time, not now. */
+  async requestRefund(
+    adminId: string,
+    paymentId: string,
+    input: { amount: number; reason?: string | undefined },
+  ): Promise<{ requestId: string }> {
+    return this.submit(adminId, 'payment.refund', {
+      payment_id: paymentId,
+      amount: input.amount,
+      reason: input.reason?.trim() || null,
+    });
+  }
+
+  async payouts(adminId: string, status: string): Promise<Record<string, unknown>[]> {
+    return this.repository.listPayouts(adminId, status);
+  }
+
+  /** Settling moves money out, so it needs a second approver. */
+  async requestPayoutSettlement(
+    adminId: string,
+    payoutId: string,
+  ): Promise<{ requestId: string }> {
+    return this.submit(adminId, 'payout.settle', { payout_id: payoutId });
+  }
+
+  async rejectPayout(
+    adminId: string,
+    payoutId: string,
+    notes: string | undefined,
+  ): Promise<void> {
+    try {
+      await this.repository.rejectPayout(adminId, payoutId, notes?.trim() || null);
+    } catch (error) {
+      throw translateAdminError(error, 'We could not reject that payout.');
+    }
+  }
+
+  // --- Disputes -----------------------------------------------------------------
+
+  async disputes(adminId: string, status: string): Promise<Record<string, unknown>[]> {
+    return this.repository.listDisputes(adminId, status);
+  }
+
+  async resolveDispute(
+    adminId: string,
+    disputeId: string,
+    input: { status: string; notes?: string | undefined },
+    context: AuditContext,
+  ): Promise<void> {
+    try {
+      await this.repository.resolveDispute(adminId, {
+        disputeId,
+        status: input.status,
+        notes: input.notes?.trim() || null,
+      });
+    } catch (error) {
+      throw translateAdminError(error, 'We could not update that dispute.');
+    }
+    await this.audit.record('dispute.resolved', {
+      actorId: adminId,
+      entityType: 'dispute',
+      entityId: disputeId,
+      context,
+      metadata: { status: input.status },
+    });
+  }
+
+  private async submit(
+    adminId: string,
+    action: string,
+    payload: Record<string, unknown>,
+  ): Promise<{ requestId: string }> {
+    try {
+      return { requestId: await this.repository.requestAction(adminId, action, payload) };
+    } catch (error) {
+      throw translateAdminError(error, 'We could not submit that request.');
+    }
   }
 }

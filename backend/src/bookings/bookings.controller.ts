@@ -17,15 +17,15 @@ import {
   CurrentUser,
   type AuthenticatedUser,
 } from '../common/decorators/current-user.decorator';
-import { RequirePermission, Roles } from '../common/decorators/roles.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
 import type { Paginated } from '../shared/query.dto';
 import { BookingsService } from './bookings.service';
 import {
-  AdminCancelBookingDto,
   AvailableSlotsQueryDto,
   CreateBookingDto,
   EndClassDto,
   ListBookingsQueryDto,
+  RaiseDisputeDto,
   RateBookingDto,
   RespondBookingDto,
   TutorScheduleQueryDto,
@@ -103,6 +103,18 @@ export class BookingsController {
     await this.bookings.rate(user.id, id, dto);
   }
 
+  /** Any party to the booking may raise a dispute; the database checks who. */
+  @Post(':id/disputes')
+  @HttpCode(HttpStatus.CREATED)
+  raiseDispute(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: RaiseDisputeDto,
+    @Req() request: Request,
+  ): Promise<{ id: string }> {
+    return this.bookings.raiseDispute(user.id, id, dto, auditContextOf(request));
+  }
+
   @Post(':id/class/open')
   @Roles('tutor')
   @HttpCode(HttpStatus.OK)
@@ -134,28 +146,5 @@ export class BookingsController {
     @Req() request: Request,
   ): Promise<void> {
     await this.bookings.endClass(user.id, id, dto.studentAttended, auditContextOf(request));
-  }
-
-  /**
-   * Admin cancellation with a refund.
-   *
-   * Gated by permission rather than role: `booking.cancel_with_refund` is one
-   * of the five maker-checker actions, and scoped admins may lack it.
-   */
-  @Post(':id/admin-cancel')
-  @Roles('admin')
-  @RequirePermission('admin.bookings')
-  @HttpCode(HttpStatus.OK)
-  async adminCancel(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @Body() dto: AdminCancelBookingDto,
-    @Req() request: Request,
-  ): Promise<Record<string, unknown>> {
-    return this.bookings.adminCancel(
-      user.id,
-      { bookingId: id, reason: dto.reason, refundPercentage: dto.refundPercentage },
-      auditContextOf(request),
-    );
   }
 }

@@ -58,7 +58,6 @@ describe('BookingsService', () => {
       openClass: jest.fn(),
       startClass: jest.fn(),
       endClass: jest.fn(),
-      adminCancel: jest.fn(),
     };
     audit = { record: jest.fn() };
     settings = {

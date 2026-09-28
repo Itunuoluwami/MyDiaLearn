@@ -22,7 +22,16 @@ import {
 import { RequirePermission, Roles } from '../common/decorators/roles.decorator';
 import { AdminService } from './admin.service';
 import {
+  AdminBookingsQueryDto,
+  AdminDisputesQueryDto,
+  AdminPaymentsQueryDto,
+  AdminPayoutsQueryDto,
   AdminUsersQueryDto,
+  CancelBookingRequestDto,
+  OverrideBookingStatusDto,
+  RefundRequestDto,
+  RejectPayoutDto,
+  ResolveDisputeDto,
   RejectTutorDto,
   ReviewVerificationDto,
   SetHourlyRateDto,
@@ -148,5 +157,117 @@ export class AdminController {
     @Req() request: Request,
   ): Promise<void> {
     await this.admin.setHourlyRate(user.id, tutorId, dto.hourlyRate, auditContextOf(request));
+  }
+
+  // --- Bookings ----------------------------------------------------------------
+
+  @Get('bookings')
+  @RequirePermission('admin.bookings')
+  bookings(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: AdminBookingsQueryDto,
+  ): Promise<Record<string, unknown>[]> {
+    return this.admin.bookings(user.id, query);
+  }
+
+  /** Non-financial overrides only; cancellation is the request below. */
+  @Patch('bookings/:id/status')
+  @RequirePermission('admin.bookings')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async overrideBookingStatus(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) id: string,
+    @Body() dto: OverrideBookingStatusDto,
+  ): Promise<void> {
+    await this.admin.overrideBookingStatus(user.id, id, dto.status);
+  }
+
+  /** Submits a cancel-with-refund request for approval; returns its id. */
+  @Post('bookings/:id/cancel')
+  @RequirePermission('admin.bookings')
+  @HttpCode(HttpStatus.ACCEPTED)
+  requestCancellation(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) id: string,
+    @Body() dto: CancelBookingRequestDto,
+  ): Promise<{ requestId: string }> {
+    return this.admin.requestCancellation(user.id, id, dto);
+  }
+
+  // --- Payments and payouts -----------------------------------------------------
+
+  @Get('payments')
+  @RequirePermission('admin.payments')
+  payments(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: AdminPaymentsQueryDto,
+  ): Promise<Record<string, unknown>[]> {
+    return this.admin.payments(user.id, query);
+  }
+
+  /** Submits a refund request for approval; returns its id. */
+  @Post('payments/:id/refund')
+  @RequirePermission('admin.payments')
+  @HttpCode(HttpStatus.ACCEPTED)
+  requestRefund(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) id: string,
+    @Body() dto: RefundRequestDto,
+  ): Promise<{ requestId: string }> {
+    return this.admin.requestRefund(user.id, id, dto);
+  }
+
+  @Get('payouts')
+  @RequirePermission('admin.payouts')
+  payouts(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: AdminPayoutsQueryDto,
+  ): Promise<Record<string, unknown>[]> {
+    return this.admin.payouts(user.id, query.status ?? 'all');
+  }
+
+  /** Submits a settlement request for approval; returns its id. */
+  @Post('payouts/:id/settle')
+  @RequirePermission('admin.payouts')
+  @HttpCode(HttpStatus.ACCEPTED)
+  requestSettlement(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) id: string,
+  ): Promise<{ requestId: string }> {
+    return this.admin.requestPayoutSettlement(user.id, id);
+  }
+
+  @Post('payouts/:id/reject')
+  @RequirePermission('admin.payouts')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async rejectPayout(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) id: string,
+    @Body() dto: RejectPayoutDto,
+  ): Promise<void> {
+    await this.admin.rejectPayout(user.id, id, dto.notes);
+  }
+
+  // --- Disputes -----------------------------------------------------------------
+
+  @Get('disputes')
+  @RequirePermission('admin.disputes')
+  disputes(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: AdminDisputesQueryDto,
+  ): Promise<Record<string, unknown>[]> {
+    return this.admin.disputes(user.id, query.status ?? 'open');
+  }
+
+  @Post('disputes/:id/resolve')
+  @RequirePermission('admin.disputes')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resolveDispute(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) id: string,
+    @Body() dto: ResolveDisputeDto,
+    @Req() request: Request,
+  ): Promise<void> {
+    await this.admin.resolveDispute(user.id, id, dto, auditContextOf(request));
   }
 }

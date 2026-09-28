@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { Reflector } from '@nestjs/core';
 
 import { PERMISSIONS_KEY, ROLES_KEY } from '../common/decorators/roles.decorator';
@@ -27,11 +30,27 @@ describe('AdminController access', () => {
     ['approve', 'admin.verification'],
     ['reject', 'admin.verification'],
     ['setHourlyRate', 'admin.verification'],
+    ['bookings', 'admin.bookings'],
+    ['overrideBookingStatus', 'admin.bookings'],
+    ['requestCancellation', 'admin.bookings'],
+    ['payments', 'admin.payments'],
+    ['requestRefund', 'admin.payments'],
+    ['payouts', 'admin.payouts'],
+    ['requestSettlement', 'admin.payouts'],
+    ['rejectPayout', 'admin.payouts'],
+    ['disputes', 'admin.disputes'],
+    ['resolveDispute', 'admin.disputes'],
   ])('%s requires %s', (method, permission) => {
     expect(permissionOf(method)).toEqual([permission]);
   });
 
   it('leaves the dashboard open to any admin, as the portal does', () => {
     expect(permissionOf('dashboard')).toBeUndefined();
+  });
+
+  it('has no route that cancels a booking without the approval queue', () => {
+    // admin_cancel_booking() refunds money; only admin_execute_action() may run it.
+    const source = readFileSync(join(__dirname, 'admin.repository.ts'), 'utf8');
+    expect(source).not.toMatch(/admin_cancel_booking|admin_execute_action/);
   });
 });

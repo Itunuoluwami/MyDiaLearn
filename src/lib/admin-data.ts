@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { apiRequest } from "@/lib/api/client";
 import { apiGet, apiPatch, apiPost, useApiData } from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
-import { governanceRpc } from "@/integrations/supabase/governance-types";
+import { governanceRpc, governanceTable } from "@/integrations/supabase/governance-types";
 import type { Database } from "@/integrations/supabase/types";
 import type { AppRole as AuthAppRole } from "@/hooks/use-auth";
 
@@ -558,8 +558,66 @@ export type BookingStatus = Database["public"]["Enums"]["booking_status"];
 export type PaymentStatus = Database["public"]["Enums"]["payment_status"];
 export type PayoutStatus = Database["public"]["Enums"]["payout_status"];
 
+type BookingRowDb = Database["public"]["Tables"]["bookings"]["Row"];
+
+export type AdminBooking = Pick<
+  BookingRowDb,
+  | "id"
+  | "student_id"
+  | "tutor_id"
+  | "booked_by"
+  | "subject_id"
+  | "starts_at"
+  | "ends_at"
+  | "duration_minutes"
+  | "status"
+  | "currency"
+  | "total_amount"
+  | "cancellation_policy_id"
+  | "cancelled_at"
+  | "cancellation_reason"
+  | "created_at"
+> & {
+  students: { first_name: string; last_name: string | null } | null;
+  tutors: { id: string; profiles: { full_name: string | null } | null } | null;
+  subjects: { name: string } | null;
+};
+
 const ADMIN_BOOKING_SELECT =
   "id, student_id, tutor_id, booked_by, subject_id, starts_at, ends_at, duration_minutes, status, currency, total_amount, cancellation_policy_id, cancelled_at, cancellation_reason, created_at, students(first_name, last_name), tutors(id, profiles(full_name)), subjects(name)";
+
+/** Flat admin API row → the nested shape the page reads. */
+function toAdminBooking(row: Record<string, unknown>): AdminBooking {
+  const r = row as Record<string, string | number | null>;
+  return {
+    id: r["id"] as string,
+    student_id: r["student_id"] as string,
+    tutor_id: r["tutor_id"] as string,
+    booked_by: r["booked_by"] as string,
+    subject_id: r["subject_id"] as string | null,
+    starts_at: r["starts_at"] as string,
+    ends_at: r["ends_at"] as string,
+    duration_minutes: Number(r["duration_minutes"]),
+    status: r["status"] as BookingStatus,
+    currency: r["currency"] as string,
+    total_amount: Number(r["total_amount"]),
+    cancellation_policy_id: r["cancellation_policy_id"] as string | null,
+    cancelled_at: r["cancelled_at"] as string | null,
+    cancellation_reason: r["cancellation_reason"] as string | null,
+    created_at: r["created_at"] as string,
+    students: r["student_first_name"]
+      ? {
+          first_name: r["student_first_name"] as string,
+          last_name: r["student_last_name"] as string | null,
+        }
+      : null,
+    tutors: {
+      id: r["tutor_id"] as string,
+      profiles: { full_name: r["tutor_name"] as string | null },
+    },
+    subjects: r["subject_name"] ? { name: r["subject_name"] as string } : null,
+  };
+}
 
 export function useAdminBookings(params?: {
   search?: string;
@@ -569,10 +627,19 @@ export function useAdminBookings(params?: {
 }) {
   const search = params?.search?.trim() ?? "";
   const status = params?.status ?? "all";
+  const viaApi = useApiData();
 
   return useQuery({
     queryKey: ["admin-bookings", search, status, params?.from ?? null, params?.to ?? null],
-    queryFn: async () => {
+    queryFn: async (): Promise<AdminBooking[]> => {
+      if (viaApi) {
+        const query = new URLSearchParams({ status });
+        if (search) query.set("search", search);
+        if (params?.from) query.set("from", params.from);
+        if (params?.to) query.set("to", params.to);
+        const rows = await apiGet<Record<string, unknown>[]>(`/admin/bookings?${query.toString()}`);
+        return rows.map(toAdminBooking);
+      }
       let query = supabase
         .from("bookings")
         .select(ADMIN_BOOKING_SELECT)
@@ -584,7 +651,7 @@ export function useAdminBookings(params?: {
 
       const { data, error } = await query;
       if (error) throw error;
-      let rows = data ?? [];
+      let rows = (data ?? []) as AdminBooking[];
 
       if (search) {
         const needle = search.toLowerCase();
@@ -600,14 +667,17 @@ export function useAdminBookings(params?: {
   });
 }
 
-export type AdminBooking = NonNullable<ReturnType<typeof useAdminBookings>["data"]>[number];
-
 /** Non-financial status overrides only — cancellation always goes through
  * useAdminCancelBooking() so the refund calculation isn't bypassed. */
 export function useAdminUpdateBookingStatus() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: BookingStatus }) => {
+      if (viaApi) {
+        await apiPatch(`/admin/bookings/${id}/status`, { status });
+        return;
+      }
       const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
       if (error) throw error;
     },
@@ -619,22 +689,30 @@ export function useAdminUpdateBookingStatus() {
 }
 
 /** Cancels a booking and applies its cancellation policy's refund % (or an
- * explicit override) to any paid payment, via admin_cancel_booking(). This
- * is the first place in the app that actually executes a refund — nothing
- * else computes one from cancellation_policies today. */
+ * explicit override) to any paid payment, via admin_cancel_booking(). That
+ * function only runs once a second admin approves the request this submits;
+ * the hook resolves to the request id. */
 export function useAdminCancelBooking() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: {
       bookingId: string;
       reason: string;
       refundPercentage?: number | null;
     }) => {
-      // Was a direct admin_cancel_booking() call, which refunded immediately.
-      // That RPC is no longer executable by authenticated — the approval
-      // dispatcher is its only caller now — so this submits a request and
-      // returns its id. The refund figure is no longer known at this point,
-      // because no refund has been calculated yet.
+      if (viaApi) {
+        const result = await apiPost<{ requestId: string }>(
+          `/admin/bookings/${input.bookingId}/cancel`,
+          {
+            reason: input.reason,
+            ...(input.refundPercentage === null || input.refundPercentage === undefined
+              ? {}
+              : { refundPercentage: input.refundPercentage }),
+          },
+        );
+        return result.requestId;
+      }
       return governanceRpc<string>("admin_request_action", {
         p_action: "booking.cancel_with_refund",
         p_payload: {
@@ -649,6 +727,7 @@ export function useAdminCancelBooking() {
       void queryClient.invalidateQueries({ queryKey: ["admin-payments"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-refunds"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-summary"] });
+      void queryClient.invalidateQueries({ queryKey: ["governance-action-requests"] });
     },
   });
 }
@@ -657,8 +736,62 @@ export function useAdminCancelBooking() {
 /* Payments & refunds (Phase 2)                                         */
 /* ------------------------------------------------------------------ */
 
+type PaymentRowDb = Database["public"]["Tables"]["payments"]["Row"];
+
+export type AdminPayment = Pick<
+  PaymentRowDb,
+  | "id"
+  | "booking_id"
+  | "tutor_id"
+  | "payer_id"
+  | "amount"
+  | "currency"
+  | "status"
+  | "provider"
+  | "provider_reference"
+  | "paid_at"
+  | "refunded_amount"
+  | "created_at"
+> & {
+  bookings: {
+    starts_at: string;
+    students: { first_name: string; last_name: string | null } | null;
+    tutors: { profiles: { full_name: string | null } | null } | null;
+  } | null;
+};
+
 const ADMIN_PAYMENT_SELECT =
   "id, booking_id, tutor_id, payer_id, amount, currency, status, provider, provider_reference, paid_at, refunded_amount, created_at, bookings(starts_at, students(first_name, last_name), tutors(profiles(full_name)))";
+
+function toAdminPayment(row: Record<string, unknown>): AdminPayment {
+  const r = row as Record<string, string | number | null>;
+  return {
+    id: r["id"] as string,
+    booking_id: r["booking_id"] as string,
+    tutor_id: r["tutor_id"] as string,
+    payer_id: r["payer_id"] as string,
+    amount: Number(r["amount"]),
+    currency: r["currency"] as string,
+    status: r["status"] as PaymentStatus,
+    provider: r["provider"] as string | null,
+    provider_reference: r["provider_reference"] as string | null,
+    paid_at: r["paid_at"] as string | null,
+    refunded_amount: r["refunded_amount"] === null ? null : Number(r["refunded_amount"]),
+    created_at: r["created_at"] as string,
+    bookings: r["booking_starts_at"]
+      ? {
+          starts_at: r["booking_starts_at"] as string,
+          students: r["student_first_name"]
+            ? {
+                first_name: r["student_first_name"] as string,
+                last_name: r["student_last_name"] as string | null,
+              }
+            : null,
+          tutors: { profiles: { full_name: r["tutor_name"] as string | null } },
+        }
+      : null,
+  } as AdminPayment;
+}
 
 export function useAdminPayments(params?: {
   status?: PaymentStatus | "all" | "flagged";
@@ -666,10 +799,19 @@ export function useAdminPayments(params?: {
   to?: string;
 }) {
   const status = params?.status ?? "all";
+  const viaApi = useApiData();
 
   return useQuery({
     queryKey: ["admin-payments", status, params?.from ?? null, params?.to ?? null],
-    queryFn: async () => {
+    queryFn: async (): Promise<AdminPayment[]> => {
+      if (viaApi) {
+        // "flagged" is computed server-side: failed, or stuck for over a day.
+        const query = new URLSearchParams({ status });
+        if (params?.from) query.set("from", params.from);
+        if (params?.to) query.set("to", params.to);
+        const rows = await apiGet<Record<string, unknown>[]>(`/admin/payments?${query.toString()}`);
+        return rows.map(toAdminPayment);
+      }
       let query = supabase
         .from("payments")
         .select(ADMIN_PAYMENT_SELECT)
@@ -681,7 +823,7 @@ export function useAdminPayments(params?: {
 
       const { data, error } = await query;
       if (error) throw error;
-      let rows = data ?? [];
+      let rows = (data ?? []) as AdminPayment[];
 
       // "Flagged" isn't a stored column — nothing in this schema tracks it —
       // so it's a filter: failed payments, plus pending/processing ones
@@ -700,12 +842,15 @@ export function useAdminPayments(params?: {
   });
 }
 
-export type AdminPayment = NonNullable<ReturnType<typeof useAdminPayments>["data"]>[number];
-
 export function useAdminRefunds() {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-refunds"],
-    queryFn: async () => {
+    queryFn: async (): Promise<AdminPayment[]> => {
+      if (viaApi) {
+        const rows = await apiGet<Record<string, unknown>[]>("/admin/payments?status=refunded");
+        return rows.map(toAdminPayment);
+      }
       const { data, error } = await supabase
         .from("payments")
         .select(ADMIN_PAYMENT_SELECT)
@@ -713,19 +858,17 @@ export function useAdminRefunds() {
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as AdminPayment[];
     },
   });
 }
 
-/** Ad-hoc refund on a payment not tied to a booking cancellation (goodwill,
- * billing correction, etc). Single-table update — admin_cancel_booking()
- * handles the booking+payment combo, this handles payment-only. */
-/** Submits the refund for approval. The clamp against the payment total now
+/** Submits the refund for approval. The clamp against the payment total
  * happens in the dispatcher, at execution time, so an amount cannot be made
  * stale by anything that happens while the request waits. */
 export function useIssueRefund() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({
       paymentId,
@@ -736,6 +879,13 @@ export function useIssueRefund() {
       amount: number;
       reason?: string;
     }) => {
+      if (viaApi) {
+        const result = await apiPost<{ requestId: string }>(`/admin/payments/${paymentId}/refund`, {
+          amount,
+          ...(reason ? { reason } : {}),
+        });
+        return result.requestId;
+      }
       return governanceRpc<string>("admin_request_action", {
         p_action: "payment.refund",
         p_payload: { payment_id: paymentId, amount, reason: reason ?? null },
@@ -754,15 +904,47 @@ export function useIssueRefund() {
 /* Payouts (Phase 2)                                                     */
 /* ------------------------------------------------------------------ */
 
+export type AdminPayout = Pick<
+  Database["public"]["Tables"]["payouts"]["Row"],
+  | "id"
+  | "tutor_id"
+  | "amount"
+  | "currency"
+  | "status"
+  | "reference"
+  | "notes"
+  | "requested_at"
+  | "settled_at"
+> & { tutors: { profiles: { full_name: string | null } | null } | null };
+
 const ADMIN_PAYOUT_SELECT =
   "id, tutor_id, amount, currency, status, reference, notes, requested_at, settled_at, tutors(profiles(full_name))";
 
 export function useAdminPayouts(params?: { status?: PayoutStatus | "all" }) {
   const status = params?.status ?? "all";
+  const viaApi = useApiData();
 
   return useQuery({
     queryKey: ["admin-payouts", status],
-    queryFn: async () => {
+    queryFn: async (): Promise<AdminPayout[]> => {
+      if (viaApi) {
+        const rows = await apiGet<Record<string, unknown>[]>(`/admin/payouts?status=${status}`);
+        return rows.map((row) => {
+          const r = row as Record<string, string | number | null>;
+          return {
+            id: r["id"] as string,
+            tutor_id: r["tutor_id"] as string,
+            amount: Number(r["amount"]),
+            currency: r["currency"] as string,
+            status: r["status"] as PayoutStatus,
+            reference: r["reference"] as string | null,
+            notes: r["notes"] as string | null,
+            requested_at: r["requested_at"] as string,
+            settled_at: r["settled_at"] as string | null,
+            tutors: { profiles: { full_name: r["tutor_name"] as string | null } },
+          };
+        });
+      }
       let query = supabase
         .from("payouts")
         .select(ADMIN_PAYOUT_SELECT)
@@ -772,18 +954,21 @@ export function useAdminPayouts(params?: { status?: PayoutStatus | "all" }) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as AdminPayout[];
     },
   });
 }
 
-export type AdminPayout = NonNullable<ReturnType<typeof useAdminPayouts>["data"]>[number];
-
 /** Settling a payout moves money out, so it needs a second approver. */
 export function useSettlePayout() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (id: string) => {
+      if (viaApi) {
+        const result = await apiPost<{ requestId: string }>(`/admin/payouts/${id}/settle`, {});
+        return result.requestId;
+      }
       return governanceRpc<string>("admin_request_action", {
         p_action: "payout.settle",
         p_payload: { payout_id: id },
@@ -796,13 +981,16 @@ export function useSettlePayout() {
   });
 }
 
-/** Rejecting moves no money, so it stays single-step — but it still needs an
- * RPC, because authenticated has no UPDATE privilege on payouts (and never
- * did, which is why the direct write this replaced always failed). */
+/** Rejecting moves no money, so it stays single-step. */
 export function useRejectPayout() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (id: string) => {
+      if (viaApi) {
+        await apiPost(`/admin/payouts/${id}/reject`, {});
+        return;
+      }
       await governanceRpc<void>("admin_reject_payout", { p_payout_id: id, p_notes: null });
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-payouts"] }),
@@ -813,19 +1001,58 @@ export function useRejectPayout() {
 /* Disputes (Phase 4A)                                                   */
 /* ------------------------------------------------------------------ */
 
-export type DisputeStatus = Database["public"]["Enums"]["dispute_status"];
-export type DisputeCategory = Database["public"]["Enums"]["dispute_category"];
+// types.ts predates the disputes migration, so these are spelled out.
+export type DisputeStatus = "open" | "investigating" | "resolved" | "dismissed";
+export type DisputeCategory = "payment" | "conduct" | "quality" | "scheduling" | "other";
+
+export interface AdminDispute {
+  id: string;
+  booking_id: string;
+  category: DisputeCategory;
+  status: DisputeStatus;
+  description: string;
+  resolution_notes: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  raised_by_profile: { full_name: string | null } | null;
+  against_profile: { full_name: string | null } | null;
+  bookings: { starts_at: string; subjects: { name: string } | null } | null;
+}
 
 const ADMIN_DISPUTE_SELECT =
   "id, booking_id, category, status, description, resolution_notes, resolved_at, created_at, raised_by_profile:profiles!raised_by(full_name), against_profile:profiles!against_profile_id(full_name), bookings(starts_at, subjects(name))";
 
 export function useAdminDisputes(status?: DisputeStatus | "all") {
   const filter = status ?? "open";
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-disputes", filter],
-    queryFn: async () => {
-      let query = supabase
-        .from("disputes")
+    queryFn: async (): Promise<AdminDispute[]> => {
+      if (viaApi) {
+        const rows = await apiGet<Record<string, unknown>[]>(`/admin/disputes?status=${filter}`);
+        return rows.map((row) => {
+          const r = row as Record<string, string | null>;
+          return {
+            id: r["id"] as string,
+            booking_id: r["booking_id"] as string,
+            category: r["category"] as DisputeCategory,
+            status: r["status"] as DisputeStatus,
+            description: r["description"] as string,
+            resolution_notes: r["resolution_notes"] ?? null,
+            resolved_at: r["resolved_at"] ?? null,
+            created_at: r["created_at"] as string,
+            raised_by_profile: { full_name: r["raised_by_name"] ?? null },
+            against_profile: r["against_name"] ? { full_name: r["against_name"] } : null,
+            bookings: r["booking_starts_at"]
+              ? {
+                  starts_at: r["booking_starts_at"],
+                  subjects: r["subject_name"] ? { name: r["subject_name"] } : null,
+                }
+              : null,
+          };
+        });
+      }
+      let query = governanceTable<AdminDispute>("disputes")
         .select(ADMIN_DISPUTE_SELECT)
         .order("created_at", { ascending: false })
         .limit(200);
@@ -837,18 +1064,23 @@ export function useAdminDisputes(status?: DisputeStatus | "all") {
   });
 }
 
-export type AdminDispute = NonNullable<ReturnType<typeof useAdminDisputes>["data"]>[number];
-
 export function useResolveDispute() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: { disputeId: string; status: DisputeStatus; notes?: string }) => {
-      const { error } = await supabase.rpc("admin_resolve_dispute", {
+      if (viaApi) {
+        await apiPost(`/admin/disputes/${input.disputeId}/resolve`, {
+          status: input.status,
+          ...(input.notes ? { notes: input.notes } : {}),
+        });
+        return;
+      }
+      await governanceRpc<void>("admin_resolve_dispute", {
         p_dispute_id: input.disputeId,
         p_status: input.status,
         p_resolution_notes: input.notes ?? null,
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-disputes"] });

@@ -197,6 +197,39 @@ export class BookingsService {
     }
   }
 
+  async raiseDispute(
+    userId: string,
+    bookingId: string,
+    input: { category: string; description: string },
+    context: AuditContext,
+  ): Promise<{ id: string }> {
+    let id: string;
+    try {
+      id = await this.repository.raiseDispute(userId, bookingId, {
+        category: input.category,
+        description: input.description.trim(),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (/DESCRIPTION_REQUIRED/.test(message)) {
+        throw new AppException(
+          ErrorCode.VALIDATION_FAILED,
+          'Please describe what went wrong.',
+          400,
+        );
+      }
+      throw translateBookingError(error);
+    }
+    await this.audit.record('dispute.raised', {
+      actorId: userId,
+      entityType: 'dispute',
+      entityId: id,
+      context,
+      metadata: { bookingId, category: input.category },
+    });
+    return { id };
+  }
+
   async tutorSchedule(
     tutorUserId: string,
     input: { from?: string; to?: string; statuses?: string[] },
@@ -250,34 +283,6 @@ export class BookingsService {
       context,
       metadata: { studentAttended: studentAttended ?? null },
     });
-  }
-
-  async adminCancel(
-    adminId: string,
-    input: { bookingId: string; reason: string; refundPercentage: number },
-    context: AuditContext,
-  ): Promise<Record<string, unknown>> {
-    let result: Record<string, unknown> | null;
-    try {
-      result = await this.repository.adminCancel(adminId, input);
-    } catch (error) {
-      throw translateBookingError(error);
-    }
-    if (!result) throw new NotFoundError('Booking');
-
-    await this.audit.record('booking.cancelled', {
-      actorId: adminId,
-      entityType: 'booking',
-      entityId: input.bookingId,
-      context,
-      metadata: {
-        reason: input.reason,
-        refundPercentage: input.refundPercentage,
-        refundAmount: String(result.refund_amount ?? ''),
-      },
-    });
-
-    return result;
   }
 
   /**

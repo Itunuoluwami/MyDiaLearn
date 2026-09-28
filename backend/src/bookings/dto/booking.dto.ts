@@ -4,12 +4,12 @@ import {
   IsDateString,
   IsIn,
   IsInt,
-  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
   Max,
   MaxLength,
+  MinLength,
   Min,
 } from 'class-validator';
 
@@ -85,6 +85,25 @@ export class RateBookingDto {
   comment?: string;
 }
 
+/** Mirrors the dispute_category enum. */
+export const DISPUTE_CATEGORIES = [
+  'payment',
+  'conduct',
+  'quality',
+  'scheduling',
+  'other',
+] as const;
+
+export class RaiseDisputeDto {
+  @IsIn(DISPUTE_CATEGORIES)
+  category!: (typeof DISPUTE_CATEGORIES)[number];
+
+  @IsString()
+  @MinLength(1, { message: 'Please describe what went wrong.' })
+  @MaxLength(4000)
+  description!: string;
+}
+
 export class EndClassDto {
   /** Omitted when the tutor does not record attendance; tutor_end_class defaults it. */
   @IsOptional()
@@ -147,20 +166,6 @@ export class TutorScheduleQueryDto {
   @IsOptional()
   @IsDateString()
   to?: string;
-}
-
-export class AdminCancelBookingDto {
-  @IsString()
-  @MaxLength(500)
-  reason!: string;
-
-  /** 0-100. The refund is computed by admin_cancel_booking(). */
-  @Type(() => Number)
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  @Max(100)
-  @Transform(({ value }: { value: unknown }) => Number(value))
-  refundPercentage!: number;
 }
 
 /**
