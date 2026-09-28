@@ -56,7 +56,7 @@ export class MessagingService {
 
   async startConversation(
     tutorUserId: string,
-    input: { studentId: string; subject: string },
+    input: { studentId: string; subject?: string | undefined },
   ): Promise<{ id: string }> {
     return { id: await this.repository.startConversation(tutorUserId, input) };
   }

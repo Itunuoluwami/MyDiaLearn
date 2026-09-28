@@ -78,6 +78,14 @@ export class CreateAssignmentDto {
   @IsOptional()
   @IsUUID('4')
   resourceId?: string;
+
+  /**
+   * false saves a draft the family does not see yet. Defaults to true, which
+   * is how this endpoint behaved before drafts existed.
+   */
+  @IsOptional()
+  @IsBoolean()
+  assignNow?: boolean;
 }
 
 export class SubmitAssignmentDto {
@@ -93,10 +101,11 @@ export class SubmitAssignmentDto {
 }
 
 export class ReviewAssignmentDto {
+  /** Optional: a tutor may mark work reviewed without written feedback. */
+  @IsOptional()
   @IsString()
-  @MinLength(1)
   @MaxLength(4000)
-  feedback!: string;
+  feedback?: string;
 }
 
 export class ListAssignmentsQueryDto extends PaginationQueryDto {
@@ -192,6 +201,10 @@ export interface AssignmentResponse {
   bookingId: string | null;
   subjectId: string | null;
   subjectName: string | null;
+  studentFirstName: string | null;
+  studentAvatarUrl: string | null;
+  resourceId: string | null;
+  resourceTitle: string | null;
   title: string;
   instructions: string | null;
   submissionRequirements: string | null;
@@ -225,5 +238,7 @@ export interface ResourceResponse {
   tutorId: string;
   /** Filled on list responses only. */
   tutorName: string | null;
+  subjectName: string | null;
+  studentFirstName: string | null;
   createdAt: string;
 }

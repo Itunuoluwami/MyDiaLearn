@@ -86,8 +86,10 @@ export class RateBookingDto {
 }
 
 export class EndClassDto {
+  /** Omitted when the tutor does not record attendance; tutor_end_class defaults it. */
+  @IsOptional()
   @IsBoolean()
-  studentAttended!: boolean;
+  studentAttended?: boolean;
 }
 
 export class AvailableSlotsQueryDto {

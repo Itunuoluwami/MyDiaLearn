@@ -88,10 +88,21 @@ export class TeachingService {
   async reviewAssignment(
     tutorUserId: string,
     id: string,
-    feedback: string,
+    feedback: string | undefined,
   ): Promise<AssignmentResponse> {
-    const row = await this.repository.reviewAssignment(tutorUserId, id, feedback);
+    const row = await this.repository.reviewAssignment(
+      tutorUserId,
+      id,
+      feedback?.trim() ? feedback.trim() : null,
+    );
     if (!row) throw new NotFoundError('Assignment');
+    return toAssignment(row);
+  }
+
+  async assignDraft(tutorUserId: string, id: string): Promise<AssignmentResponse> {
+    const row = await this.repository.assignDraft(tutorUserId, id);
+    // Missing, not the caller's, or no longer a draft: none can be assigned.
+    if (!row) throw new NotFoundError('Draft assignment');
     return toAssignment(row);
   }
 
@@ -145,6 +156,10 @@ export function toAssignment(row: AssignmentRow): AssignmentResponse {
     bookingId: row.booking_id,
     subjectId: row.subject_id,
     subjectName: row.subject_name ?? null,
+    studentFirstName: row.student_first_name ?? null,
+    studentAvatarUrl: row.student_avatar_url ?? null,
+    resourceId: row.resource_id,
+    resourceTitle: row.resource_title ?? null,
     title: row.title,
     instructions: row.instructions,
     submissionRequirements: row.submission_requirements,
@@ -171,6 +186,8 @@ export function toResource(row: LearningResourceRow): ResourceResponse {
     isShared: row.is_shared,
     tutorId: row.tutor_id,
     tutorName: row.tutor_name ?? null,
+    subjectName: row.subject_name ?? null,
+    studentFirstName: row.student_first_name ?? null,
     createdAt: row.created_at.toISOString(),
   };
 }

@@ -15,14 +15,24 @@ export interface SettlementPolicy {
   currency: string;
 }
 
+/**
+ * tutor_earnings_summary(), field for field. Money stays a string (NUMERIC).
+ * The schedule fields are the function's own wording of the admin-configured
+ * payout policy, passed through rather than re-derived.
+ */
 export interface EarningsSummary {
   currency: string;
   grossRevenue: string;
-  platformFees: string;
-  commission: string;
+  platformCommission: string;
+  paymentFees: string;
   netEarnings: string;
-  pendingPayout: string;
+  pendingEarnings: string;
   paidOut: string;
+  pendingPayouts: string;
+  availableBalance: string;
+  minimumPayout: string;
+  nextPayoutDate: string | null;
+  scheduleLabel: string | null;
 }
 
 /**
@@ -65,14 +75,20 @@ export class SettlementService {
     if (!row) return null;
 
     const str = (v: unknown) => String(v ?? '0');
+    const text = (v: unknown) => (v === null || v === undefined ? null : String(v));
     return {
       currency: String(row.currency ?? ''),
       grossRevenue: str(row.gross_revenue),
-      platformFees: str(row.platform_fees),
-      commission: str(row.commission),
+      platformCommission: str(row.platform_commission),
+      paymentFees: str(row.payment_fees),
       netEarnings: str(row.net_earnings),
-      pendingPayout: str(row.pending_payout),
+      pendingEarnings: str(row.pending_earnings),
       paidOut: str(row.paid_out),
+      pendingPayouts: str(row.pending_payouts),
+      availableBalance: str(row.available_balance),
+      minimumPayout: str(row.minimum_payout),
+      nextPayoutDate: text(row.next_payout_date),
+      scheduleLabel: text(row.schedule_label),
     };
   }
 

@@ -38,6 +38,9 @@ export interface AssignmentRow {
   /** Filled by the list query only. */
   tutor_name?: string | null;
   subject_name?: string | null;
+  student_first_name?: string | null;
+  student_avatar_url?: string | null;
+  resource_title?: string | null;
 }
 
 export interface LearningResourceRow {
@@ -56,6 +59,8 @@ export interface LearningResourceRow {
   created_at: Date;
   /** Filled by the list query only. */
   tutor_name?: string | null;
+  subject_name?: string | null;
+  student_first_name?: string | null;
 }
 
 /**
@@ -154,7 +159,10 @@ export class TeachingRepository extends BaseRepository {
                submission_text, submission_path, submitted_at, feedback, reviewed_at, created_at,
                (select tp.full_name from public.tutors t join public.profiles tp on tp.id = t.profile_id
                  where t.id = assignments.tutor_id) as tutor_name,
-               (select name from public.subjects where id = assignments.subject_id) as subject_name
+               (select name from public.subjects where id = assignments.subject_id) as subject_name,
+               (select first_name from public.students where id = assignments.student_id) as student_first_name,
+               (select avatar_url from public.students where id = assignments.student_id) as student_avatar_url,
+               (select title from public.learning_resources where id = assignments.resource_id) as resource_title
         from public.assignments
         where (${filters.studentId ?? null}::uuid is null or student_id = ${filters.studentId ?? null}::uuid)
           and (${filters.status ?? null}::text is null or status::text = ${filters.status ?? null})
@@ -193,11 +201,13 @@ export class TeachingRepository extends BaseRepository {
       submissionRequirements?: string | undefined;
       dueAt?: string | undefined;
       resourceId?: string | undefined;
+      assignNow?: boolean | undefined;
     },
   ): Promise<AssignmentRow> {
     return this.prisma.withUser(tutorUserId, async (tx) => {
-      // status defaults to 'assigned'; the assignments_notify trigger fires and
-      // notifies the family, so no notification is raised here.
+      // A draft stays invisible to the family. When status is 'assigned' the
+      // assignments_notify trigger notifies them, so nothing is raised here.
+      const assignNow = input.assignNow ?? true;
       const rows = await tx.$queryRaw<AssignmentRow[]>`
         insert into public.assignments
           (tutor_id, student_id, booking_id, subject_id, title, instructions,
@@ -206,7 +216,9 @@ export class TeachingRepository extends BaseRepository {
           public.current_tutor_id(), ${input.studentId}::uuid, ${input.bookingId ?? null}::uuid,
           ${input.subjectId ?? null}::uuid, ${input.title}, ${input.instructions ?? null},
           ${input.submissionRequirements ?? null}, ${input.dueAt ?? null}::timestamptz,
-          ${input.resourceId ?? null}::uuid, 'assigned', now()
+          ${input.resourceId ?? null}::uuid,
+          (case when ${assignNow} then 'assigned' else 'draft' end)::public.assignment_status,
+          case when ${assignNow} then now() end
         )
         returning id, tutor_id, student_id, booking_id, subject_id, title, instructions,
                   submission_requirements, due_at, resource_id, status::text, assigned_at,
@@ -243,13 +255,32 @@ export class TeachingRepository extends BaseRepository {
   async reviewAssignment(
     tutorUserId: string,
     id: string,
-    feedback: string,
+    feedback: string | null,
   ): Promise<AssignmentRow | null> {
     return this.prisma.withUser(tutorUserId, async (tx) => {
       const rows = await tx.$queryRaw<AssignmentRow[]>`
         update public.assignments set
-          feedback = ${feedback}, reviewed_at = now(), status = 'reviewed', updated_at = now()
+          feedback = ${feedback}::text, reviewed_at = now(), status = 'reviewed', updated_at = now()
         where id = ${id}::uuid
+        returning id, tutor_id, student_id, booking_id, subject_id, title, instructions,
+                  submission_requirements, due_at, resource_id, status::text, assigned_at,
+                  submission_text, submission_path, submitted_at, feedback, reviewed_at, created_at
+      `;
+      return rows[0] ?? null;
+    });
+  }
+
+  /**
+   * Publishes a draft. Only a draft moves, so assigning twice cannot reset
+   * assigned_at or re-notify the family (assignments_notify fires on the
+   * change to 'assigned').
+   */
+  async assignDraft(tutorUserId: string, id: string): Promise<AssignmentRow | null> {
+    return this.prisma.withUser(tutorUserId, async (tx) => {
+      const rows = await tx.$queryRaw<AssignmentRow[]>`
+        update public.assignments set
+          status = 'assigned', assigned_at = now(), updated_at = now()
+        where id = ${id}::uuid and status = 'draft'
         returning id, tutor_id, student_id, booking_id, subject_id, title, instructions,
                   submission_requirements, due_at, resource_id, status::text, assigned_at,
                   submission_text, submission_path, submitted_at, feedback, reviewed_at, created_at
@@ -270,7 +301,9 @@ export class TeachingRepository extends BaseRepository {
         select id, tutor_id, title, description, resource_type::text, storage_path,
                external_url, subject_id, student_id, mime_type, size_bytes, is_shared, created_at,
                (select tp.full_name from public.tutors t join public.profiles tp on tp.id = t.profile_id
-                 where t.id = learning_resources.tutor_id) as tutor_name
+                 where t.id = learning_resources.tutor_id) as tutor_name,
+               (select name from public.subjects where id = learning_resources.subject_id) as subject_name,
+               (select first_name from public.students where id = learning_resources.student_id) as student_first_name
         from public.learning_resources
         where (${filters.studentId ?? null}::uuid is null or student_id = ${filters.studentId ?? null}::uuid)
           and (${filters.subjectId ?? null}::uuid is null or subject_id = ${filters.subjectId ?? null}::uuid)

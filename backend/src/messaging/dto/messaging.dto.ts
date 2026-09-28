@@ -24,10 +24,12 @@ export class StartConversationDto {
   @IsUUID('4')
   studentId!: string;
 
+  /** Optional: tutor_start_conversation() defaults it. */
+  @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(160)
-  subject!: string;
+  subject?: string;
 }
 
 export class ListMessagesQueryDto extends PaginationQueryDto {}

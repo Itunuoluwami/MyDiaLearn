@@ -235,7 +235,7 @@ export class BookingsService {
   async endClass(
     tutorUserId: string,
     bookingId: string,
-    studentAttended: boolean,
+    studentAttended: boolean | undefined,
     context: AuditContext,
   ): Promise<void> {
     try {
@@ -248,7 +248,7 @@ export class BookingsService {
       entityType: 'booking',
       entityId: bookingId,
       context,
-      metadata: { studentAttended },
+      metadata: { studentAttended: studentAttended ?? null },
     });
   }
 

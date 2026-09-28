@@ -43,8 +43,10 @@ export class MessagingRepository extends BaseRepository {
 
   /** The caller's conversations, newest activity first, via my_conversations(). */
   async listConversations(userId: string): Promise<Record<string, unknown>[]> {
-    return this.prisma.withUser(userId, async (tx) =>
-      tx.$queryRaw<Record<string, unknown>[]>`select * from public.my_conversations()`,
+    return this.prisma.withUser(
+      userId,
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`select * from public.my_conversations()`,
     );
   }
 
@@ -134,11 +136,11 @@ export class MessagingRepository extends BaseRepository {
   /** Tutor opens a conversation with a student, via tutor_start_conversation(). */
   async startConversation(
     tutorUserId: string,
-    input: { studentId: string; subject: string },
+    input: { studentId: string; subject?: string | undefined },
   ): Promise<string> {
     return this.prisma.withUser(tutorUserId, async (tx) => {
       const rows = await tx.$queryRaw<{ id: string }[]>`
-        select public.tutor_start_conversation(${input.studentId}::uuid, ${input.subject}) as id
+        select public.tutor_start_conversation(${input.studentId}::uuid, ${input.subject ?? null}::text) as id
       `;
       return rows[0]!.id;
     });

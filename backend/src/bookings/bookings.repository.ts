@@ -269,11 +269,11 @@ export class BookingsRepository extends BaseRepository {
   async endClass(
     tutorUserId: string,
     bookingId: string,
-    studentAttended: boolean,
+    studentAttended: boolean | undefined,
   ): Promise<void> {
     await this.prisma.withUser(tutorUserId, async (tx) => {
       await tx.$executeRaw`
-        select public.tutor_end_class(${bookingId}::uuid, ${studentAttended})
+        select public.tutor_end_class(${bookingId}::uuid, ${studentAttended ?? null}::boolean)
       `;
     });
   }

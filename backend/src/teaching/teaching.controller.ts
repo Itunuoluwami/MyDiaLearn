@@ -95,6 +95,17 @@ export class TeachingController {
     return this.teaching.submitAssignment(user.id, id, dto);
   }
 
+  /** Publishes a draft to the family. */
+  @Post('assignments/:id/assign')
+  @Roles('tutor')
+  @HttpCode(HttpStatus.OK)
+  assign(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<AssignmentResponse> {
+    return this.teaching.assignDraft(user.id, id);
+  }
+
   @Post('assignments/:id/review')
   @Roles('tutor')
   @HttpCode(HttpStatus.OK)

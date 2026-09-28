@@ -10,7 +10,10 @@ import {
   Query,
 } from '@nestjs/common';
 
-import { CurrentUser, type AuthenticatedUser } from '../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  type AuthenticatedUser,
+} from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import type { Paginated } from '../shared/query.dto';
 import {
