@@ -68,6 +68,10 @@ export class CatalogueService {
     return paginateWithoutTotal(rows, query);
   }
 
+  tutorSubjects(tutorId: string): Promise<Record<string, unknown>[]> {
+    return this.repository.tutorSubjects(tutorId);
+  }
+
   async tutorDetail(tutorId: string): Promise<Record<string, unknown>> {
     const tutor = await this.repository.tutorDetail(tutorId);
     // Absent means "not publicly visible", which covers both a missing tutor

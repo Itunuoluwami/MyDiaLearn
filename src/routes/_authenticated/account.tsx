@@ -59,9 +59,16 @@ function AccountPage() {
     setCurrency(profile.preferred_currency);
   }, [profile]);
 
+  const viaApi = useApiData();
   const { data: currencies } = useQuery({
     queryKey: ["currencies"],
     queryFn: async () => {
+      if (viaApi) {
+        // Active currencies from the catalogue, in the table's order.
+        const rows =
+          await apiGet<{ code: string; name: string; symbol: string }[]>("/catalogue/currencies");
+        return rows.map(({ code, name, symbol }) => ({ code, name, symbol }));
+      }
       const { data, error } = await supabase
         .from("currencies")
         .select("code, name, symbol")
@@ -72,7 +79,6 @@ function AccountPage() {
     },
   });
 
-  const viaApi = useApiData();
   const { data: permissionCatalog } = useQuery({
     queryKey: ["permission-catalog"],
     queryFn: async () => {

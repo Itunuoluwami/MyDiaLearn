@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Plus, Trash2, UserRound } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { apiPost, apiPatch, apiDelete, useApiData } from "@/lib/api/data-client";
+import { apiGet, apiPost, apiPatch, apiDelete, useApiData } from "@/lib/api/data-client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 import { useRedirectToPortalHome } from "@/hooks/use-portal-redirect";
@@ -79,6 +79,48 @@ function FamilyPage() {
   const students = useQuery({
     queryKey: ["students", user?.id],
     queryFn: async () => {
+      if (viaApi) {
+        // The caller's own learners (the API scopes the list to the parent),
+        // reshaped to the Supabase select's columns and joined names.
+        const page = await apiGet<{
+          data: {
+            id: string;
+            firstName: string;
+            lastName: string | null;
+            dateOfBirth: string | null;
+            schoolName: string | null;
+            learningGoals: string | null;
+            canSelfLogin: boolean;
+            canBookLessons: boolean;
+            canMessageTutors: boolean;
+            isActive: boolean;
+            curriculumId: string | null;
+            curriculumName: string | null;
+            educationLevelId: string | null;
+            educationLevelName: string | null;
+            createdAt: string;
+          }[];
+        }>("/students?limit=100");
+        return page.data
+          .slice()
+          .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+          .map((st) => ({
+            id: st.id,
+            first_name: st.firstName,
+            last_name: st.lastName,
+            date_of_birth: st.dateOfBirth,
+            school_name: st.schoolName,
+            learning_goals: st.learningGoals,
+            can_self_login: st.canSelfLogin,
+            can_book_lessons: st.canBookLessons,
+            can_message_tutors: st.canMessageTutors,
+            is_active: st.isActive,
+            curriculum_id: st.curriculumId,
+            education_level_id: st.educationLevelId,
+            curricula: st.curriculumName ? { name: st.curriculumName } : null,
+            education_levels: st.educationLevelName ? { name: st.educationLevelName } : null,
+          })) as never;
+      }
       const { data, error } = await supabase
         .from("students")
         .select(
@@ -93,6 +135,10 @@ function FamilyPage() {
   const curricula = useQuery({
     queryKey: ["curricula"],
     queryFn: async () => {
+      if (viaApi) {
+        const rows = await apiGet<{ id: string; name: string }[]>("/catalogue/curricula");
+        return rows.map(({ id, name }) => ({ id, name }));
+      }
       const { data, error } = await supabase
         .from("curricula")
         .select("id, name")
@@ -107,6 +153,14 @@ function FamilyPage() {
     queryKey: ["education-levels", form.curriculum_id],
     enabled: Boolean(form.curriculum_id),
     queryFn: async () => {
+      if (viaApi) {
+        const rows = await apiGet<{ id: string; name: string; curriculum_id: string | null }[]>(
+          "/catalogue/education-levels",
+        );
+        return rows
+          .filter((row) => row.curriculum_id === form.curriculum_id)
+          .map(({ id, name }) => ({ id, name }));
+      }
       const { data, error } = await supabase
         .from("education_levels")
         .select("id, name")

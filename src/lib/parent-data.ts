@@ -235,12 +235,26 @@ export function useNotifications() {
 
 export type Notification = NonNullable<ReturnType<typeof useNotifications>["data"]>[number];
 
+type MyRating = {
+  id: string;
+  booking_id: string | null;
+  tutor_id: string;
+  score: number;
+  comment: string | null;
+  created_at: string;
+};
+
 export function useMyRatings() {
   const { user } = useAuth();
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["parent-ratings", user?.id],
     enabled: Boolean(user?.id),
-    queryFn: async () => {
+    queryFn: async (): Promise<MyRating[]> => {
+      if (viaApi) {
+        const rows = await apiGet<MyRating[]>("/bookings/my-ratings");
+        return rows.map((r) => ({ ...r, score: Number(r.score) }));
+      }
       const { data, error } = await supabase
         .from("ratings")
         .select("id, booking_id, tutor_id, score, comment, created_at")
@@ -256,10 +270,19 @@ export function useMyRatings() {
 /* ------------------------------------------------------------------ */
 
 export function useCurriculaOptions() {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["config-curricula"],
     staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
+    queryFn: async (): Promise<{ id: string; name: string; country_code: string | null }[]> => {
+      if (viaApi) {
+        // Active curricula, already in sort order.
+        const rows =
+          await apiGet<{ id: string; name: string; country_code: string | null }[]>(
+            "/catalogue/curricula",
+          );
+        return rows.map(({ id, name, country_code }) => ({ id, name, country_code }));
+      }
       const { data, error } = await supabase
         .from("curricula")
         .select("id, name, country_code")
@@ -272,10 +295,19 @@ export function useCurriculaOptions() {
 }
 
 export function useLevelOptions(curriculumId?: string | undefined) {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["config-levels", curriculumId ?? "all"],
     staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
+    queryFn: async (): Promise<{ id: string; name: string; curriculum_id: string | null }[]> => {
+      if (viaApi) {
+        const rows = await apiGet<{ id: string; name: string; curriculum_id: string | null }[]>(
+          "/catalogue/education-levels",
+        );
+        return rows
+          .filter((row) => !curriculumId || row.curriculum_id === curriculumId)
+          .map(({ id, name, curriculum_id }) => ({ id, name, curriculum_id }));
+      }
       let query = supabase
         .from("education_levels")
         .select("id, name, curriculum_id")
@@ -290,10 +322,18 @@ export function useLevelOptions(curriculumId?: string | undefined) {
 }
 
 export function useSubjectOptions() {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["config-subjects"],
     staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
+    queryFn: async (): Promise<{ id: string; name: string; category: string | null }[]> => {
+      if (viaApi) {
+        const rows =
+          await apiGet<{ id: string; name: string; category: string | null }[]>(
+            "/catalogue/subjects",
+          );
+        return rows.map(({ id, name, category }) => ({ id, name, category }));
+      }
       const { data, error } = await supabase
         .from("subjects")
         .select("id, name, category")
@@ -305,11 +345,35 @@ export function useSubjectOptions() {
   });
 }
 
+type TutorSubjectOption = {
+  subject_id: string;
+  education_level_id: string | null;
+  subjects: { name: string } | null;
+  education_levels: { name: string } | null;
+};
+
 export function useTutorSubjects(tutorId: string | undefined) {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["tutor-subjects", tutorId],
     enabled: Boolean(tutorId),
-    queryFn: async () => {
+    queryFn: async (): Promise<TutorSubjectOption[]> => {
+      if (viaApi) {
+        const rows = await apiGet<
+          {
+            subject_id: string;
+            education_level_id: string | null;
+            subject_name: string;
+            level_name: string | null;
+          }[]
+        >(`/catalogue/tutors/${tutorId}/subjects`);
+        return rows.map((r) => ({
+          subject_id: r.subject_id,
+          education_level_id: r.education_level_id,
+          subjects: { name: r.subject_name },
+          education_levels: r.level_name ? { name: r.level_name } : null,
+        }));
+      }
       const { data, error } = await supabase
         .from("tutor_subjects")
         .select("subject_id, education_level_id, subjects(name), education_levels(name)")
@@ -320,11 +384,33 @@ export function useTutorSubjects(tutorId: string | undefined) {
   });
 }
 
+type CancellationPolicy = {
+  id: string;
+  name: string;
+  hours_before: number;
+  refund_percentage: number;
+  description: string | null;
+};
+
 export function useCancellationPolicy(policyId?: string | null) {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["cancellation-policy", policyId ?? "default"],
     staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
+    queryFn: async (): Promise<CancellationPolicy | null> => {
+      if (viaApi) {
+        const rows = await apiGet<(CancellationPolicy & { is_default: boolean })[]>(
+          "/catalogue/cancellation-policies",
+        );
+        const match = rows.find((row) => (policyId ? row.id === policyId : row.is_default));
+        if (!match) return null;
+        const { is_default: _isDefault, ...policy } = match;
+        return {
+          ...policy,
+          hours_before: Number(policy.hours_before),
+          refund_percentage: Number(policy.refund_percentage),
+        };
+      }
       let query = supabase
         .from("cancellation_policies")
         .select("id, name, hours_before, refund_percentage, description")
@@ -339,10 +425,21 @@ export function useCancellationPolicy(policyId?: string | null) {
 
 /** Lesson duration options come from admin settings, never from a hardcoded list. */
 export function useDurationOptions() {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["config-durations"],
     staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
+    queryFn: async (): Promise<number[]> => {
+      if (viaApi) {
+        // Your database keeps these under booking.allowed_durations, the key
+        // the API validates bookings against; the Supabase path read an older
+        // key that does not exist there.
+        const settings = await apiGet<Record<string, unknown>>("/catalogue/settings");
+        const value = settings["booking.allowed_durations"];
+        return Array.isArray(value)
+          ? value.map((item) => Number(item)).filter((item) => Number.isFinite(item) && item > 0)
+          : [];
+      }
       const { data, error } = await supabase
         .from("platform_settings")
         .select("value")

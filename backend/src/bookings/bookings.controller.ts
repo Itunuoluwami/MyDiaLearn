@@ -72,6 +72,12 @@ export class BookingsController {
     return this.bookings.list(user.id, query);
   }
 
+  /** Declared before `:id` so the literal path is not parsed as a UUID. */
+  @Get('my-ratings')
+  myRatings(@CurrentUser() user: AuthenticatedUser): Promise<Record<string, unknown>[]> {
+    return this.bookings.myRatings(user.id);
+  }
+
   @Get(':id')
   async findOne(
     @CurrentUser() user: AuthenticatedUser,

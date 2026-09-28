@@ -128,8 +128,9 @@ export class CatalogueRepository extends BaseRepository {
   }
 
   async publicSettings(): Promise<Record<string, unknown>> {
-    const rows = await this.prisma.asAnonymous(async (tx) =>
-      tx.$queryRaw<{ key: string; value: unknown }[]>`
+    const rows = await this.prisma.asAnonymous(
+      async (tx) =>
+        tx.$queryRaw<{ key: string; value: unknown }[]>`
         select key, value from public.platform_settings where is_public
       `,
     );
@@ -137,18 +138,41 @@ export class CatalogueRepository extends BaseRepository {
     return Object.fromEntries(rows.map((r) => [r.key, r.value]));
   }
 
+  /**
+   * What a tutor teaches, with ids, for the booking form's subject picker.
+   * Listed tutors only — the same visibility as their public profile.
+   */
+  async tutorSubjects(tutorId: string): Promise<Record<string, unknown>[]> {
+    return this.prisma.asAnonymous(
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select ts.subject_id, ts.education_level_id, s.name as subject_name, el.name as level_name
+        from public.tutor_subjects ts
+        join public.tutors t on t.id = ts.tutor_id and t.is_listed
+        join public.subjects s on s.id = ts.subject_id
+        left join public.education_levels el on el.id = ts.education_level_id
+        where ts.tutor_id = ${tutorId}::uuid
+        order by s.name, el.sort_order
+      `,
+    );
+  }
+
   async cancellationPolicies(): Promise<Record<string, unknown>[]> {
-    return this.prisma.asAnonymous(async (tx) =>
-      tx.$queryRaw<Record<string, unknown>[]>`
-        select id, name, description, hours_before, refund_percentage
-        from public.cancellation_policies order by hours_before nulls last
+    return this.prisma.asAnonymous(
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select id, name, description, hours_before, refund_percentage, is_default
+        from public.cancellation_policies
+        where is_active
+        order by hours_before nulls last
       `,
     );
   }
 
   async verificationSteps(): Promise<Record<string, unknown>[]> {
-    return this.prisma.asAnonymous(async (tx) =>
-      tx.$queryRaw<Record<string, unknown>[]>`
+    return this.prisma.asAnonymous(
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
         select id, name, code, description, applies_to::text, is_required, sort_order
         from public.verification_steps where is_active order by sort_order, name
       `,
@@ -157,8 +181,9 @@ export class CatalogueRepository extends BaseRepository {
 
   async commissionExample(): Promise<Record<string, unknown> | null> {
     // A single representative active rule, for the pricing explainer page.
-    const rows = await this.prisma.asAnonymous(async (tx) =>
-      tx.$queryRaw<Record<string, unknown>[]>`
+    const rows = await this.prisma.asAnonymous(
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
         select model::text, percentage, platform_fee_percentage, platform_fee_fixed, currency
         from public.commission_rules
         where is_active and tutor_id is null and agency_id is null and subject_id is null

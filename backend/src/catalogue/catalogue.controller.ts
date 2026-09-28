@@ -99,6 +99,13 @@ export class CatalogueController {
     return this.catalogue.tutorDetail(id);
   }
 
+  @Get('tutors/:id/subjects')
+  tutorSubjects(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<Record<string, unknown>[]> {
+    return this.catalogue.tutorSubjects(id);
+  }
+
   @Get('tutors/:id/reviews')
   tutorReviews(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,

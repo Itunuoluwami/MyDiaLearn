@@ -197,6 +197,10 @@ export class BookingsService {
     }
   }
 
+  myRatings(userId: string): Promise<Record<string, unknown>[]> {
+    return this.repository.myRatings(userId);
+  }
+
   async raiseDispute(
     userId: string,
     bookingId: string,

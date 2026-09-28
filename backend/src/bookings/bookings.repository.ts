@@ -296,4 +296,17 @@ export class BookingsRepository extends BaseRepository {
       return rows[0]!.id;
     });
   }
+
+  /** Ratings the caller has written, so the history page knows what is rated. */
+  async myRatings(userId: string): Promise<Record<string, unknown>[]> {
+    return this.prisma.withUser(
+      userId,
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select id, booking_id, tutor_id, score, comment, created_at
+        from public.ratings where rater_id = ${userId}::uuid
+        order by created_at desc
+      `,
+    );
+  }
 }
