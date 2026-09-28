@@ -51,7 +51,7 @@ export class UsersController {
   /** Admin directory. RLS restricts the rows; the role gate stops the call. */
   @Get()
   @Roles('admin')
-  @RequirePermission('users.view')
+  @RequirePermission('admin.users')
   async search(
     @CurrentUser() user: AuthenticatedUser,
     @Query() query: SearchUsersQueryDto,
@@ -77,12 +77,15 @@ export class UsersController {
   }
 
   /**
-   * Role assignment. Super-admin only, enforced again by
-   * admin_set_user_roles() and by the user_roles_guard trigger — three layers,
-   * because privilege escalation is the failure that matters most.
+   * Role assignment for ordinary roles, by an admin holding admin.users —
+   * the same rule admin_set_user_roles() applies. Granting or removing admin
+   * or super_admin is refused there (ELEVATED_ROLE_REQUIRES_APPROVAL) and goes
+   * through the approval queue instead; the user_roles_guard trigger is the
+   * third layer, because privilege escalation is the failure that matters most.
    */
   @Post(':id/roles')
-  @Roles('super_admin')
+  @Roles('admin')
+  @RequirePermission('admin.users')
   @HttpCode(HttpStatus.OK)
   async setRoles(
     @CurrentUser() user: AuthenticatedUser,

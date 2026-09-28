@@ -144,7 +144,7 @@ export class BookingsController {
    */
   @Post(':id/admin-cancel')
   @Roles('admin')
-  @RequirePermission('bookings.cancel')
+  @RequirePermission('admin.bookings')
   @HttpCode(HttpStatus.OK)
   async adminCancel(
     @CurrentUser() user: AuthenticatedUser,

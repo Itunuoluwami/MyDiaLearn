@@ -34,6 +34,7 @@ import { IntegrationsModule } from './integrations/integrations.module';
 import { HealthModule } from './health/health.module';
 import { PlatformSettingsModule } from './platform-settings/platform-settings.module';
 
+import { AdminModule } from './admin/admin.module';
 import { AgenciesModule } from './agencies/agencies.module';
 import { AuthModule } from './auth/auth.module';
 import { BookingsModule } from './bookings/bookings.module';
@@ -137,6 +138,7 @@ import { UsersModule } from './users/users.module';
 
     // Boundaries still to be filled. Each module's header names what it will
     // own and what it replaces.
+    AdminModule,
     AgenciesModule,
     FilesModule,
   ],

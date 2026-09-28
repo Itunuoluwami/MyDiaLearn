@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { translateAdminError } from '../admin/admin-errors';
 import { AuditService, type AuditContext } from '../common/audit/audit.service';
 import { NotFoundError } from '../common/exceptions/app.exception';
 import { paginate, type Paginated, type PaginationQueryDto } from '../shared/query.dto';
@@ -87,7 +88,12 @@ export class UsersService {
     context: AuditContext,
   ): Promise<{ roles: string[] }> {
     const before = await this.repository.findRoles(adminId, userId);
-    await this.repository.setRoles(adminId, userId, roles);
+    try {
+      await this.repository.setRoles(adminId, userId, roles);
+    } catch (error) {
+      // SELF_ROLE_GRANT_FORBIDDEN, ELEVATED_ROLE_REQUIRES_APPROVAL, ... as 4xx.
+      throw translateAdminError(error, 'We could not change those roles.');
+    }
     const after = await this.repository.findRoles(adminId, userId);
 
     // A role change is one of the five maker-checker actions and among the
@@ -111,7 +117,11 @@ export class UsersService {
     granted: boolean,
     context: AuditContext,
   ): Promise<void> {
-    await this.repository.setPermission(adminId, userId, permissionKey, granted);
+    try {
+      await this.repository.setPermission(adminId, userId, permissionKey, granted);
+    } catch (error) {
+      throw translateAdminError(error, 'We could not change that permission.');
+    }
     await this.audit.record('user.permission_changed', {
       actorId: adminId,
       entityType: 'profile',

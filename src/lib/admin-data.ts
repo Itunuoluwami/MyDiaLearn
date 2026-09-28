@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
+import { apiRequest } from "@/lib/api/client";
+import { apiGet, apiPatch, apiPost, useApiData } from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
 import { governanceRpc } from "@/integrations/supabase/governance-types";
 import type { Database } from "@/integrations/supabase/types";
@@ -11,26 +13,89 @@ export type AppRole = AuthAppRole;
 export type VerificationStatus = Database["public"]["Enums"]["verification_status"];
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
+/** PUT with the session token; data-client has no apiPut. */
+async function apiPut<T>(path: string, body: unknown): Promise<T> {
+  const { data } = await authClient.getSession();
+  const accessToken = data.session?.access_token;
+  return apiRequest<T>(path, { method: "PUT", body, ...(accessToken ? { accessToken } : {}) });
+}
+
 /* ------------------------------------------------------------------ */
 /* Dashboard                                                            */
 /* ------------------------------------------------------------------ */
 
+/** admin_dashboard_summary(), as the live function returns it. */
+export interface AdminSummaryRow {
+  new_students: number;
+  new_parents: number;
+  new_tutors: number;
+  tutor_activation_rate: number | null;
+  booking_demand: number;
+  gmv: number;
+  gmv_currency: string;
+  commission_revenue: number;
+  avg_transaction_value: number | null;
+  classes_per_student: number | null;
+  repeat_booking_rate: number | null;
+  mau: number;
+  avg_tutor_rating: number | null;
+  cancellation_rate: number | null;
+  no_show_rate: number | null;
+  dispute_rate: number | null;
+}
+
+/** Function rows arrive with NUMERIC/bigint columns possibly stringified. */
+function numericRow<T>(row: Record<string, unknown>, textKeys: readonly string[] = []): T {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row)) {
+    out[key] =
+      value === null || value === undefined || textKeys.includes(key) ? value : Number(value);
+  }
+  return out as T;
+}
+
 export function useAdminSummary() {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-summary"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("admin_dashboard_summary");
-      if (error) throw error;
-      return data?.[0] ?? null;
+    queryFn: async (): Promise<AdminSummaryRow | null> => {
+      if (viaApi) {
+        const row = await apiGet<Record<string, unknown> | null>("/admin/dashboard");
+        return row ? numericRow<AdminSummaryRow>(row, ["gmv_currency"]) : null;
+      }
+      const rows = await governanceRpc<AdminSummaryRow[] | null>("admin_dashboard_summary");
+      return rows?.[0] ?? null;
     },
   });
 }
 
-export type AdminSummary = NonNullable<ReturnType<typeof useAdminSummary>["data"]>;
+export type AdminSummary = AdminSummaryRow;
 
 /* ------------------------------------------------------------------ */
 /* User management (all roles)                                         */
 /* ------------------------------------------------------------------ */
+
+export interface AdminUserRow {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  primary_role: AppRole;
+  is_active: boolean;
+  onboarding_completed: boolean;
+  created_at: string;
+  user_roles: { role: AppRole }[];
+}
+
+interface ApiAdminUser {
+  id: string;
+  fullName: string | null;
+  email: string | null;
+  primaryRole: AppRole;
+  isActive: boolean;
+  onboardingCompleted: boolean;
+  createdAt: string;
+  roles: AppRole[];
+}
 
 export function useAdminUsers(params?: {
   search?: string;
@@ -40,10 +105,29 @@ export function useAdminUsers(params?: {
 }) {
   const search = params?.search?.trim() ?? "";
   const role = params?.role ?? "all";
+  const viaApi = useApiData();
 
   return useQuery({
     queryKey: ["admin-users", search, role, params?.from ?? null, params?.to ?? null],
-    queryFn: async () => {
+    queryFn: async (): Promise<AdminUserRow[]> => {
+      if (viaApi) {
+        const query = new URLSearchParams();
+        if (search) query.set("search", search);
+        if (role !== "all") query.set("role", role);
+        if (params?.from) query.set("from", params.from);
+        if (params?.to) query.set("to", params.to);
+        const rows = await apiGet<ApiAdminUser[]>(`/admin/users?${query.toString()}`);
+        return rows.map((u) => ({
+          id: u.id,
+          full_name: u.fullName,
+          email: u.email,
+          primary_role: u.primaryRole,
+          is_active: u.isActive,
+          onboarding_completed: u.onboardingCompleted,
+          created_at: u.createdAt,
+          user_roles: u.roles.map((r) => ({ role: r })),
+        }));
+      }
       let query = supabase
         .from("profiles")
         .select(
@@ -65,20 +149,27 @@ export function useAdminUsers(params?: {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as AdminUserRow[];
     },
   });
 }
 
-export type AdminUser = NonNullable<ReturnType<typeof useAdminUsers>["data"]>[number];
+export type AdminUser = AdminUserRow;
 
 /** Suspending or restoring an account changes who can reach the platform, so it
  * goes through the approval queue rather than committing on the first click.
  * Resolves to a request id — nothing has happened yet when this returns. */
 export function useSuspendUser() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      if (viaApi) {
+        const result = await apiPost<{ requestId: string }>(`/admin/users/${id}/suspend`, {
+          isActive,
+        });
+        return result.requestId;
+      }
       return governanceRpc<string>("admin_request_action", {
         p_action: "profile.suspend",
         p_payload: { profile_id: id, is_active: isActive },
@@ -100,8 +191,13 @@ export function useSuspendUser() {
  * failed with 42501 every time. */
 export function useUpdateUserRoles() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ userId, roles }: { userId: string; roles: AppRole[] }) => {
+      if (viaApi) {
+        await apiPost(`/users/${userId}/roles`, { roles });
+        return;
+      }
       await governanceRpc<void>("admin_set_user_roles", {
         p_user_id: userId,
         p_roles: roles,
@@ -118,11 +214,58 @@ export function useUpdateUserRoles() {
 /* Tutor verification queue                                            */
 /* ------------------------------------------------------------------ */
 
+type TutorRow = Database["public"]["Tables"]["tutors"]["Row"];
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+
+export type VerificationQueueItem = Pick<
+  TutorRow,
+  | "id"
+  | "profile_id"
+  | "headline"
+  | "verification_status"
+  | "is_listed"
+  | "submitted_at"
+  | "years_experience"
+  | "hourly_rate"
+  | "currency"
+> & { profiles: Pick<ProfileRow, "full_name" | "email" | "avatar_url"> | null };
+
+interface ApiQueueItem {
+  id: string;
+  profileId: string;
+  headline: string | null;
+  verificationStatus: VerificationStatus;
+  isListed: boolean;
+  submittedAt: string | null;
+  yearsExperience: number | null;
+  hourlyRate: string | null;
+  currency: string;
+  fullName: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+}
+
 export function useVerificationQueue(status?: VerificationStatus | "all") {
   const filter = status ?? "pending";
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-verification-queue", filter],
-    queryFn: async () => {
+    queryFn: async (): Promise<VerificationQueueItem[]> => {
+      if (viaApi) {
+        const rows = await apiGet<ApiQueueItem[]>(`/admin/verification?status=${filter}`);
+        return rows.map((t) => ({
+          id: t.id,
+          profile_id: t.profileId,
+          headline: t.headline,
+          verification_status: t.verificationStatus,
+          is_listed: t.isListed,
+          submitted_at: t.submittedAt,
+          years_experience: t.yearsExperience,
+          hourly_rate: t.hourlyRate === null ? null : Number(t.hourlyRate),
+          currency: t.currency,
+          profiles: { full_name: t.fullName, email: t.email, avatar_url: t.avatarUrl },
+        })) as VerificationQueueItem[];
+      }
       let query = supabase
         .from("tutors")
         .select(
@@ -138,20 +281,62 @@ export function useVerificationQueue(status?: VerificationStatus | "all") {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as VerificationQueueItem[];
     },
   });
 }
 
-export type VerificationQueueItem = NonNullable<
-  ReturnType<typeof useVerificationQueue>["data"]
->[number];
+type StepRow = Pick<
+  Database["public"]["Tables"]["verification_steps"]["Row"],
+  "id" | "code" | "name" | "description" | "is_required" | "sort_order"
+>;
+type ProgressRow = Pick<
+  Database["public"]["Tables"]["tutor_verification_progress"]["Row"],
+  "id" | "step_id" | "status" | "reviewer_notes" | "reviewed_at"
+>;
+type DocumentRow = Pick<
+  Database["public"]["Tables"]["tutor_documents"]["Row"],
+  | "id"
+  | "step_id"
+  | "label"
+  | "storage_path"
+  | "mime_type"
+  | "size_bytes"
+  | "status"
+  | "reviewer_notes"
+  | "created_at"
+>;
+
+export interface TutorVerificationDetail {
+  steps: StepRow[];
+  progress: ProgressRow[];
+  documents: DocumentRow[];
+}
 
 export function useTutorVerificationDetail(tutorId: string | null) {
+  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-verification-detail", tutorId],
     enabled: Boolean(tutorId),
-    queryFn: async () => {
+    queryFn: async (): Promise<TutorVerificationDetail> => {
+      if (viaApi) {
+        const detail = await apiGet<{
+          steps: StepRow[];
+          progress: ProgressRow[];
+          documents: (Omit<DocumentRow, "storage_path"> & { has_file: boolean })[];
+        }>(`/admin/verification/${tutorId}`);
+        return {
+          steps: detail.steps.map((step) => ({ ...step, sort_order: Number(step.sort_order) })),
+          progress: detail.progress,
+          // Storage keys are not exposed, and files cannot be opened until a
+          // storage provider is configured.
+          documents: detail.documents.map(({ has_file: _hasFile, ...doc }) => ({
+            ...doc,
+            size_bytes: doc.size_bytes === null ? null : Number(doc.size_bytes),
+            storage_path: "",
+          })),
+        };
+      }
       const [steps, progress, documents] = await Promise.all([
         supabase
           .from("verification_steps")
@@ -185,6 +370,7 @@ export function useTutorVerificationDetail(tutorId: string | null) {
 
 export function useReviewVerificationStep() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: {
       tutorId: string;
@@ -193,6 +379,14 @@ export function useReviewVerificationStep() {
       status: VerificationStatus;
       reviewerNotes?: string | null;
     }) => {
+      if (viaApi) {
+        // One progress row per tutor and step; the server inserts or updates.
+        await apiPut(`/admin/verification/${input.tutorId}/steps/${input.stepId}`, {
+          status: input.status,
+          ...(input.reviewerNotes ? { reviewerNotes: input.reviewerNotes } : {}),
+        });
+        return;
+      }
       const {
         data: { user },
       } = await authClient.getUser();
@@ -228,12 +422,20 @@ export function useReviewVerificationStep() {
 
 export function useReviewTutorDocument() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: {
       documentId: string;
       status: VerificationStatus;
       reviewerNotes?: string | null;
     }) => {
+      if (viaApi) {
+        await apiPatch(`/admin/verification/documents/${input.documentId}`, {
+          status: input.status,
+          ...(input.reviewerNotes ? { reviewerNotes: input.reviewerNotes } : {}),
+        });
+        return;
+      }
       const {
         data: { user },
       } = await authClient.getUser();
@@ -255,8 +457,14 @@ export function useReviewTutorDocument() {
 }
 
 export function useDocumentUrl() {
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (storagePath: string) => {
+      if (viaApi || !storagePath) {
+        throw new Error(
+          "Viewing uploaded documents isn't available on this server yet (no file storage is configured).",
+        );
+      }
       const { data, error } = await supabase.storage
         .from("tutor-documents")
         .createSignedUrl(storagePath, 60 * 5);
@@ -272,8 +480,13 @@ export function useDocumentUrl() {
  * explicitly turns is_listed back on to actually make the tutor bookable. */
 export function useApproveTutor() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (tutorId: string) => {
+      if (viaApi) {
+        await apiPost(`/admin/verification/${tutorId}/approve`, {});
+        return;
+      }
       const { error } = await supabase
         .from("tutors")
         .update({ verification_status: "verified", is_listed: true })
@@ -294,8 +507,13 @@ export function useApproveTutor() {
  * UI). This is the one write path: admin sets it, here or in Users. */
 export function useSetTutorHourlyRate() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ tutorId, hourlyRate }: { tutorId: string; hourlyRate: number }) => {
+      if (viaApi) {
+        await apiPatch(`/admin/tutors/${tutorId}/hourly-rate`, { hourlyRate });
+        return;
+      }
       const { error } = await supabase
         .from("tutors")
         .update({ hourly_rate: hourlyRate })
@@ -311,8 +529,13 @@ export function useSetTutorHourlyRate() {
 
 export function useRejectTutor() {
   const queryClient = useQueryClient();
+  const viaApi = useApiData();
   return useMutation({
-    mutationFn: async ({ tutorId }: { tutorId: string; reason?: string }) => {
+    mutationFn: async ({ tutorId, reason }: { tutorId: string; reason?: string }) => {
+      if (viaApi) {
+        await apiPost(`/admin/verification/${tutorId}/reject`, reason ? { reason } : {});
+        return;
+      }
       const { error } = await supabase
         .from("tutors")
         .update({ verification_status: "rejected", is_listed: false })
