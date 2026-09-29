@@ -412,6 +412,11 @@ function AdminVerificationPage() {
                   >
                     <span className="font-medium">{profile?.full_name ?? "Tutor"}</span>
                     <span className="text-xs text-muted-foreground">{profile?.email}</span>
+                    {item.agency_name ? (
+                      <span className="text-xs text-muted-foreground">
+                        Agency: {item.agency_name}
+                      </span>
+                    ) : null}
                     <Badge
                       className={cn("mt-1 w-fit", VERIFICATION_TONE[item.verification_status])}
                     >

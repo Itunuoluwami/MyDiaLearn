@@ -16,17 +16,13 @@ describe("portalHome", () => {
     [["parent"], "/dashboard"],
     [["tutor"], "/tutor/dashboard"],
     [["student"], "/student/dashboard"],
+    [["agency"], "/agency/dashboard"],
   ])("routes %s to %s", (roles, expected) => {
     expect(portalHome(roles as AppRole[])).toBe(expected);
   });
 
   it("falls back to /account when the account has no roles", () => {
     expect(portalHome([])).toBe("/account");
-  });
-
-  it("falls back to /account for a role with no portal built yet", () => {
-    // `agency` exists in the app_role enum and in signup, but has no UI.
-    expect(portalHome(["agency"] as AppRole[])).toBe("/account");
   });
 
   it("honours array order, not role seniority, for multi-role accounts", () => {
@@ -37,6 +33,8 @@ describe("portalHome", () => {
   });
 
   it("skips unrecognised roles to reach the first known one", () => {
-    expect(portalHome(["agency", "tutor"] as AppRole[])).toBe("/tutor/dashboard");
+    // Every role in the app_role enum now has a portal, so an unknown value
+    // stands in for one the frontend does not recognise.
+    expect(portalHome(["unknown_role", "tutor"] as unknown as AppRole[])).toBe("/tutor/dashboard");
   });
 });

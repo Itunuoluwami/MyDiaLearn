@@ -10,6 +10,7 @@ const ROLE_HOME: Partial<Record<AppRole, string>> = {
   parent: "/dashboard",
   tutor: "/tutor/dashboard",
   student: "/student/dashboard",
+  agency: "/agency/dashboard",
 };
 
 export function portalHome(roles: AppRole[]): string {

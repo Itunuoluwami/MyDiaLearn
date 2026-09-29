@@ -228,7 +228,11 @@ export type VerificationQueueItem = Pick<
   | "years_experience"
   | "hourly_rate"
   | "currency"
-> & { profiles: Pick<ProfileRow, "full_name" | "email" | "avatar_url"> | null };
+> & {
+  profiles: Pick<ProfileRow, "full_name" | "email" | "avatar_url"> | null;
+  /** Present when the tutor is managed by an agency (API only). */
+  agency_name?: string | null;
+};
 
 interface ApiQueueItem {
   id: string;
@@ -243,6 +247,7 @@ interface ApiQueueItem {
   fullName: string | null;
   email: string | null;
   avatarUrl: string | null;
+  agencyName: string | null;
 }
 
 export function useVerificationQueue(status?: VerificationStatus | "all") {
@@ -264,6 +269,7 @@ export function useVerificationQueue(status?: VerificationStatus | "all") {
           hourly_rate: t.hourlyRate === null ? null : Number(t.hourlyRate),
           currency: t.currency,
           profiles: { full_name: t.fullName, email: t.email, avatar_url: t.avatarUrl },
+          agency_name: t.agencyName,
         })) as VerificationQueueItem[];
       }
       let query = supabase
@@ -1280,6 +1286,136 @@ export function useAdminReportSummary(from: string, to: string) {
       });
       return rows?.[0] ?? null;
     },
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Agencies                                                            */
+/* ------------------------------------------------------------------ */
+//
+// Agencies exist only on the NestJS API (there was never a Supabase agency
+// implementation), so these hooks have no Supabase branch.
+
+export interface AdminAgencyRow {
+  id: string;
+  name: string;
+  registration_number: string | null;
+  country_code: string | null;
+  contact_email: string | null;
+  verification_status: VerificationStatus;
+  is_active: boolean;
+  revenue_share_percentage: string;
+  submitted_at: string | null;
+  created_at: string;
+  owner_name: string | null;
+  owner_email: string | null;
+  tutor_count: number;
+}
+
+export interface AdminAgencyDetail {
+  agency: AdminAgencyRow & {
+    contact_phone: string | null;
+    website: string | null;
+    about: string | null;
+  };
+  steps: {
+    id: string;
+    code: string;
+    name: string;
+    description: string | null;
+    is_required: boolean;
+    progress_id: string | null;
+    status: VerificationStatus | null;
+    reviewer_notes: string | null;
+    reviewed_at: string | null;
+  }[];
+  tutors: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    verification_status: VerificationStatus;
+    is_listed: boolean;
+  }[];
+}
+
+const AGENCIES_API_ONLY = "Agency review needs the DiaLearn API.";
+
+export function useAdminAgencies(status: VerificationStatus | "all") {
+  const viaApi = useApiData();
+  return useQuery({
+    queryKey: ["admin-agencies", status],
+    queryFn: async () => {
+      if (!viaApi) throw new Error(AGENCIES_API_ONLY);
+      return apiGet<AdminAgencyRow[]>(`/admin/agencies?status=${status}`);
+    },
+  });
+}
+
+export function useAdminAgency(agencyId: string | null) {
+  const viaApi = useApiData();
+  return useQuery({
+    queryKey: ["admin-agency", agencyId],
+    enabled: Boolean(agencyId),
+    queryFn: async () => {
+      if (!viaApi) throw new Error(AGENCIES_API_ONLY);
+      return apiGet<AdminAgencyDetail>(`/admin/agencies/${agencyId}`);
+    },
+  });
+}
+
+function useAgencyAdminInvalidate() {
+  const queryClient = useQueryClient();
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: ["admin-agencies"] });
+    void queryClient.invalidateQueries({ queryKey: ["admin-agency"] });
+    void queryClient.invalidateQueries({ queryKey: ["admin-verification-queue"] });
+  };
+}
+
+export function useReviewAgencyStep() {
+  const invalidate = useAgencyAdminInvalidate();
+  return useMutation({
+    mutationFn: async (input: {
+      agencyId: string;
+      stepId: string;
+      status: VerificationStatus;
+      reviewerNotes?: string | null;
+    }) => {
+      await apiPut(`/admin/agencies/${input.agencyId}/steps/${input.stepId}`, {
+        status: input.status,
+        ...(input.reviewerNotes ? { reviewerNotes: input.reviewerNotes } : {}),
+      });
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useDecideAgency() {
+  const invalidate = useAgencyAdminInvalidate();
+  return useMutation({
+    mutationFn: async (input: {
+      agencyId: string;
+      status: "verified" | "rejected" | "suspended";
+      reason?: string;
+    }) => {
+      await apiPost(`/admin/agencies/${input.agencyId}/decision`, {
+        status: input.status,
+        ...(input.reason ? { reason: input.reason } : {}),
+      });
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useSetAgencyShare() {
+  const invalidate = useAgencyAdminInvalidate();
+  return useMutation({
+    mutationFn: async (input: { agencyId: string; revenueSharePercentage: number }) => {
+      await apiPatch(`/admin/agencies/${input.agencyId}/revenue-share`, {
+        revenueSharePercentage: input.revenueSharePercentage,
+      });
+    },
+    onSuccess: invalidate,
   });
 }
 
