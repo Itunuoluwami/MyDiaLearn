@@ -34,6 +34,7 @@ import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-passw
 import { Route as TutorsIndexRouteImport } from './routes/tutors.index'
 import { Route as TutorsTutorIdRouteImport } from './routes/tutors.$tutorId'
 import { Route as AuthenticatedAdminAdminsRouteImport } from './routes/_authenticated/admin.admins'
+import { Route as AuthenticatedAdminAgenciesRouteImport } from './routes/_authenticated/admin.agencies'
 import { Route as AuthenticatedAdminApprovalsRouteImport } from './routes/_authenticated/admin.approvals'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedAdminBookingsRouteImport } from './routes/_authenticated/admin.bookings'
@@ -47,6 +48,10 @@ import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminVerificationRouteImport } from './routes/_authenticated/admin.verification'
+import { Route as AuthenticatedAgencyBookingsRouteImport } from './routes/_authenticated/agency.bookings'
+import { Route as AuthenticatedAgencyDashboardRouteImport } from './routes/_authenticated/agency.dashboard'
+import { Route as AuthenticatedAgencyEarningsRouteImport } from './routes/_authenticated/agency.earnings'
+import { Route as AuthenticatedAgencyProfileRouteImport } from './routes/_authenticated/agency.profile'
 import { Route as AuthenticatedBookTutorIdRouteImport } from './routes/_authenticated/book.$tutorId'
 import { Route as AuthenticatedChildrenIndexRouteImport } from './routes/_authenticated/children.index'
 import { Route as AuthenticatedChildrenStudentIdRouteImport } from './routes/_authenticated/children.$studentId'
@@ -70,6 +75,8 @@ import { Route as AuthenticatedTutorReviewsRouteImport } from './routes/_authent
 import { Route as AuthenticatedTutorSettingsRouteImport } from './routes/_authenticated/tutor.settings'
 import { Route as AuthenticatedTutorStudentsRouteImport } from './routes/_authenticated/tutor.students'
 import { Route as AuthenticatedTutorVerificationRouteImport } from './routes/_authenticated/tutor.verification'
+import { Route as AuthenticatedAgencyTutorsIndexRouteImport } from './routes/_authenticated/agency.tutors.index'
+import { Route as AuthenticatedAgencyTutorsTutorIdRouteImport } from './routes/_authenticated/agency.tutors.$tutorId'
 import { Route as AuthenticatedStudentBookTutorIdRouteImport } from './routes/_authenticated/student.book.$tutorId'
 import { Route as AuthenticatedStudentClassroomBookingIdRouteImport } from './routes/_authenticated/student.classroom.$bookingId'
 import { Route as AuthenticatedTutorClassroomBookingIdRouteImport } from './routes/_authenticated/tutor.classroom.$bookingId'
@@ -202,6 +209,12 @@ const AuthenticatedAdminAdminsRoute =
     path: '/admin/admins',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminAgenciesRoute =
+  AuthenticatedAdminAgenciesRouteImport.update({
+    id: '/admin/agencies',
+    path: '/admin/agencies',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminApprovalsRoute =
   AuthenticatedAdminApprovalsRouteImport.update({
     id: '/admin/approvals',
@@ -276,6 +289,30 @@ const AuthenticatedAdminVerificationRoute =
   AuthenticatedAdminVerificationRouteImport.update({
     id: '/admin/verification',
     path: '/admin/verification',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAgencyBookingsRoute =
+  AuthenticatedAgencyBookingsRouteImport.update({
+    id: '/agency/bookings',
+    path: '/agency/bookings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAgencyDashboardRoute =
+  AuthenticatedAgencyDashboardRouteImport.update({
+    id: '/agency/dashboard',
+    path: '/agency/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAgencyEarningsRoute =
+  AuthenticatedAgencyEarningsRouteImport.update({
+    id: '/agency/earnings',
+    path: '/agency/earnings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAgencyProfileRoute =
+  AuthenticatedAgencyProfileRouteImport.update({
+    id: '/agency/profile',
+    path: '/agency/profile',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBookTutorIdRoute =
@@ -416,6 +453,18 @@ const AuthenticatedTutorVerificationRoute =
     path: '/tutor/verification',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAgencyTutorsIndexRoute =
+  AuthenticatedAgencyTutorsIndexRouteImport.update({
+    id: '/agency/tutors/',
+    path: '/agency/tutors/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAgencyTutorsTutorIdRoute =
+  AuthenticatedAgencyTutorsTutorIdRouteImport.update({
+    id: '/agency/tutors/$tutorId',
+    path: '/agency/tutors/$tutorId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedStudentBookTutorIdRoute =
   AuthenticatedStudentBookTutorIdRouteImport.update({
     id: '/student/book/$tutorId',
@@ -472,6 +521,7 @@ export interface FileRoutesByFullPath {
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors/': typeof TutorsIndexRoute
   '/admin/admins': typeof AuthenticatedAdminAdminsRoute
+  '/admin/agencies': typeof AuthenticatedAdminAgenciesRoute
   '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
@@ -485,6 +535,10 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/verification': typeof AuthenticatedAdminVerificationRoute
+  '/agency/bookings': typeof AuthenticatedAgencyBookingsRoute
+  '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
+  '/agency/earnings': typeof AuthenticatedAgencyEarningsRoute
+  '/agency/profile': typeof AuthenticatedAgencyProfileRoute
   '/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
   '/student/dashboard': typeof AuthenticatedStudentDashboardRoute
@@ -508,11 +562,13 @@ export interface FileRoutesByFullPath {
   '/tutor/students': typeof AuthenticatedTutorStudentsRouteWithChildren
   '/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/children/': typeof AuthenticatedChildrenIndexRoute
+  '/agency/tutors/$tutorId': typeof AuthenticatedAgencyTutorsTutorIdRoute
   '/student/book/$tutorId': typeof AuthenticatedStudentBookTutorIdRoute
   '/student/classroom/$bookingId': typeof AuthenticatedStudentClassroomBookingIdRoute
   '/tutor/classroom/$bookingId': typeof AuthenticatedTutorClassroomBookingIdRoute
   '/tutor/notes/$bookingId': typeof AuthenticatedTutorNotesBookingIdRoute
   '/tutor/students/$studentId': typeof AuthenticatedTutorStudentsStudentIdRoute
+  '/agency/tutors/': typeof AuthenticatedAgencyTutorsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -539,6 +595,7 @@ export interface FileRoutesByTo {
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors': typeof TutorsIndexRoute
   '/admin/admins': typeof AuthenticatedAdminAdminsRoute
+  '/admin/agencies': typeof AuthenticatedAdminAgenciesRoute
   '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
@@ -552,6 +609,10 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/verification': typeof AuthenticatedAdminVerificationRoute
+  '/agency/bookings': typeof AuthenticatedAgencyBookingsRoute
+  '/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
+  '/agency/earnings': typeof AuthenticatedAgencyEarningsRoute
+  '/agency/profile': typeof AuthenticatedAgencyProfileRoute
   '/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
   '/student/dashboard': typeof AuthenticatedStudentDashboardRoute
@@ -575,11 +636,13 @@ export interface FileRoutesByTo {
   '/tutor/students': typeof AuthenticatedTutorStudentsRouteWithChildren
   '/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/children': typeof AuthenticatedChildrenIndexRoute
+  '/agency/tutors/$tutorId': typeof AuthenticatedAgencyTutorsTutorIdRoute
   '/student/book/$tutorId': typeof AuthenticatedStudentBookTutorIdRoute
   '/student/classroom/$bookingId': typeof AuthenticatedStudentClassroomBookingIdRoute
   '/tutor/classroom/$bookingId': typeof AuthenticatedTutorClassroomBookingIdRoute
   '/tutor/notes/$bookingId': typeof AuthenticatedTutorNotesBookingIdRoute
   '/tutor/students/$studentId': typeof AuthenticatedTutorStudentsStudentIdRoute
+  '/agency/tutors': typeof AuthenticatedAgencyTutorsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -608,6 +671,7 @@ export interface FileRoutesById {
   '/tutors/$tutorId': typeof TutorsTutorIdRoute
   '/tutors/': typeof TutorsIndexRoute
   '/_authenticated/admin/admins': typeof AuthenticatedAdminAdminsRoute
+  '/_authenticated/admin/agencies': typeof AuthenticatedAdminAgenciesRoute
   '/_authenticated/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
@@ -621,6 +685,10 @@ export interface FileRoutesById {
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/verification': typeof AuthenticatedAdminVerificationRoute
+  '/_authenticated/agency/bookings': typeof AuthenticatedAgencyBookingsRoute
+  '/_authenticated/agency/dashboard': typeof AuthenticatedAgencyDashboardRoute
+  '/_authenticated/agency/earnings': typeof AuthenticatedAgencyEarningsRoute
+  '/_authenticated/agency/profile': typeof AuthenticatedAgencyProfileRoute
   '/_authenticated/book/$tutorId': typeof AuthenticatedBookTutorIdRoute
   '/_authenticated/children/$studentId': typeof AuthenticatedChildrenStudentIdRoute
   '/_authenticated/student/dashboard': typeof AuthenticatedStudentDashboardRoute
@@ -644,11 +712,13 @@ export interface FileRoutesById {
   '/_authenticated/tutor/students': typeof AuthenticatedTutorStudentsRouteWithChildren
   '/_authenticated/tutor/verification': typeof AuthenticatedTutorVerificationRoute
   '/_authenticated/children/': typeof AuthenticatedChildrenIndexRoute
+  '/_authenticated/agency/tutors/$tutorId': typeof AuthenticatedAgencyTutorsTutorIdRoute
   '/_authenticated/student/book/$tutorId': typeof AuthenticatedStudentBookTutorIdRoute
   '/_authenticated/student/classroom/$bookingId': typeof AuthenticatedStudentClassroomBookingIdRoute
   '/_authenticated/tutor/classroom/$bookingId': typeof AuthenticatedTutorClassroomBookingIdRoute
   '/_authenticated/tutor/notes/$bookingId': typeof AuthenticatedTutorNotesBookingIdRoute
   '/_authenticated/tutor/students/$studentId': typeof AuthenticatedTutorStudentsStudentIdRoute
+  '/_authenticated/agency/tutors/': typeof AuthenticatedAgencyTutorsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -677,6 +747,7 @@ export interface FileRouteTypes {
     | '/tutors/$tutorId'
     | '/tutors/'
     | '/admin/admins'
+    | '/admin/agencies'
     | '/admin/approvals'
     | '/admin/audit'
     | '/admin/bookings'
@@ -690,6 +761,10 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/users'
     | '/admin/verification'
+    | '/agency/bookings'
+    | '/agency/dashboard'
+    | '/agency/earnings'
+    | '/agency/profile'
     | '/book/$tutorId'
     | '/children/$studentId'
     | '/student/dashboard'
@@ -713,11 +788,13 @@ export interface FileRouteTypes {
     | '/tutor/students'
     | '/tutor/verification'
     | '/children/'
+    | '/agency/tutors/$tutorId'
     | '/student/book/$tutorId'
     | '/student/classroom/$bookingId'
     | '/tutor/classroom/$bookingId'
     | '/tutor/notes/$bookingId'
     | '/tutor/students/$studentId'
+    | '/agency/tutors/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -744,6 +821,7 @@ export interface FileRouteTypes {
     | '/tutors/$tutorId'
     | '/tutors'
     | '/admin/admins'
+    | '/admin/agencies'
     | '/admin/approvals'
     | '/admin/audit'
     | '/admin/bookings'
@@ -757,6 +835,10 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/users'
     | '/admin/verification'
+    | '/agency/bookings'
+    | '/agency/dashboard'
+    | '/agency/earnings'
+    | '/agency/profile'
     | '/book/$tutorId'
     | '/children/$studentId'
     | '/student/dashboard'
@@ -780,11 +862,13 @@ export interface FileRouteTypes {
     | '/tutor/students'
     | '/tutor/verification'
     | '/children'
+    | '/agency/tutors/$tutorId'
     | '/student/book/$tutorId'
     | '/student/classroom/$bookingId'
     | '/tutor/classroom/$bookingId'
     | '/tutor/notes/$bookingId'
     | '/tutor/students/$studentId'
+    | '/agency/tutors'
   id:
     | '__root__'
     | '/'
@@ -812,6 +896,7 @@ export interface FileRouteTypes {
     | '/tutors/$tutorId'
     | '/tutors/'
     | '/_authenticated/admin/admins'
+    | '/_authenticated/admin/agencies'
     | '/_authenticated/admin/approvals'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/bookings'
@@ -825,6 +910,10 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/verification'
+    | '/_authenticated/agency/bookings'
+    | '/_authenticated/agency/dashboard'
+    | '/_authenticated/agency/earnings'
+    | '/_authenticated/agency/profile'
     | '/_authenticated/book/$tutorId'
     | '/_authenticated/children/$studentId'
     | '/_authenticated/student/dashboard'
@@ -848,11 +937,13 @@ export interface FileRouteTypes {
     | '/_authenticated/tutor/students'
     | '/_authenticated/tutor/verification'
     | '/_authenticated/children/'
+    | '/_authenticated/agency/tutors/$tutorId'
     | '/_authenticated/student/book/$tutorId'
     | '/_authenticated/student/classroom/$bookingId'
     | '/_authenticated/tutor/classroom/$bookingId'
     | '/_authenticated/tutor/notes/$bookingId'
     | '/_authenticated/tutor/students/$studentId'
+    | '/_authenticated/agency/tutors/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1049,6 +1140,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/agencies': {
+      id: '/_authenticated/admin/agencies'
+      path: '/admin/agencies'
+      fullPath: '/admin/agencies'
+      preLoaderRoute: typeof AuthenticatedAdminAgenciesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/approvals': {
       id: '/_authenticated/admin/approvals'
       path: '/admin/approvals'
@@ -1138,6 +1236,34 @@ declare module '@tanstack/react-router' {
       path: '/admin/verification'
       fullPath: '/admin/verification'
       preLoaderRoute: typeof AuthenticatedAdminVerificationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agency/bookings': {
+      id: '/_authenticated/agency/bookings'
+      path: '/agency/bookings'
+      fullPath: '/agency/bookings'
+      preLoaderRoute: typeof AuthenticatedAgencyBookingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agency/dashboard': {
+      id: '/_authenticated/agency/dashboard'
+      path: '/agency/dashboard'
+      fullPath: '/agency/dashboard'
+      preLoaderRoute: typeof AuthenticatedAgencyDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agency/earnings': {
+      id: '/_authenticated/agency/earnings'
+      path: '/agency/earnings'
+      fullPath: '/agency/earnings'
+      preLoaderRoute: typeof AuthenticatedAgencyEarningsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agency/profile': {
+      id: '/_authenticated/agency/profile'
+      path: '/agency/profile'
+      fullPath: '/agency/profile'
+      preLoaderRoute: typeof AuthenticatedAgencyProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/book/$tutorId': {
@@ -1301,6 +1427,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTutorVerificationRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/agency/tutors/': {
+      id: '/_authenticated/agency/tutors/'
+      path: '/agency/tutors'
+      fullPath: '/agency/tutors/'
+      preLoaderRoute: typeof AuthenticatedAgencyTutorsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agency/tutors/$tutorId': {
+      id: '/_authenticated/agency/tutors/$tutorId'
+      path: '/agency/tutors/$tutorId'
+      fullPath: '/agency/tutors/$tutorId'
+      preLoaderRoute: typeof AuthenticatedAgencyTutorsTutorIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/student/book/$tutorId': {
       id: '/_authenticated/student/book/$tutorId'
       path: '/student/book/$tutorId'
@@ -1363,6 +1503,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedAdminAdminsRoute: typeof AuthenticatedAdminAdminsRoute
+  AuthenticatedAdminAgenciesRoute: typeof AuthenticatedAdminAgenciesRoute
   AuthenticatedAdminApprovalsRoute: typeof AuthenticatedAdminApprovalsRoute
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminBookingsRoute: typeof AuthenticatedAdminBookingsRoute
@@ -1376,6 +1517,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminVerificationRoute: typeof AuthenticatedAdminVerificationRoute
+  AuthenticatedAgencyBookingsRoute: typeof AuthenticatedAgencyBookingsRoute
+  AuthenticatedAgencyDashboardRoute: typeof AuthenticatedAgencyDashboardRoute
+  AuthenticatedAgencyEarningsRoute: typeof AuthenticatedAgencyEarningsRoute
+  AuthenticatedAgencyProfileRoute: typeof AuthenticatedAgencyProfileRoute
   AuthenticatedBookTutorIdRoute: typeof AuthenticatedBookTutorIdRoute
   AuthenticatedChildrenStudentIdRoute: typeof AuthenticatedChildrenStudentIdRoute
   AuthenticatedStudentDashboardRoute: typeof AuthenticatedStudentDashboardRoute
@@ -1399,10 +1544,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTutorStudentsRoute: typeof AuthenticatedTutorStudentsRouteWithChildren
   AuthenticatedTutorVerificationRoute: typeof AuthenticatedTutorVerificationRoute
   AuthenticatedChildrenIndexRoute: typeof AuthenticatedChildrenIndexRoute
+  AuthenticatedAgencyTutorsTutorIdRoute: typeof AuthenticatedAgencyTutorsTutorIdRoute
   AuthenticatedStudentBookTutorIdRoute: typeof AuthenticatedStudentBookTutorIdRoute
   AuthenticatedStudentClassroomBookingIdRoute: typeof AuthenticatedStudentClassroomBookingIdRoute
   AuthenticatedTutorClassroomBookingIdRoute: typeof AuthenticatedTutorClassroomBookingIdRoute
   AuthenticatedTutorNotesBookingIdRoute: typeof AuthenticatedTutorNotesBookingIdRoute
+  AuthenticatedAgencyTutorsIndexRoute: typeof AuthenticatedAgencyTutorsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1414,6 +1561,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedAdminAdminsRoute: AuthenticatedAdminAdminsRoute,
+  AuthenticatedAdminAgenciesRoute: AuthenticatedAdminAgenciesRoute,
   AuthenticatedAdminApprovalsRoute: AuthenticatedAdminApprovalsRoute,
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminBookingsRoute: AuthenticatedAdminBookingsRoute,
@@ -1427,6 +1575,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminVerificationRoute: AuthenticatedAdminVerificationRoute,
+  AuthenticatedAgencyBookingsRoute: AuthenticatedAgencyBookingsRoute,
+  AuthenticatedAgencyDashboardRoute: AuthenticatedAgencyDashboardRoute,
+  AuthenticatedAgencyEarningsRoute: AuthenticatedAgencyEarningsRoute,
+  AuthenticatedAgencyProfileRoute: AuthenticatedAgencyProfileRoute,
   AuthenticatedBookTutorIdRoute: AuthenticatedBookTutorIdRoute,
   AuthenticatedChildrenStudentIdRoute: AuthenticatedChildrenStudentIdRoute,
   AuthenticatedStudentDashboardRoute: AuthenticatedStudentDashboardRoute,
@@ -1451,12 +1603,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTutorStudentsRoute: AuthenticatedTutorStudentsRouteWithChildren,
   AuthenticatedTutorVerificationRoute: AuthenticatedTutorVerificationRoute,
   AuthenticatedChildrenIndexRoute: AuthenticatedChildrenIndexRoute,
+  AuthenticatedAgencyTutorsTutorIdRoute: AuthenticatedAgencyTutorsTutorIdRoute,
   AuthenticatedStudentBookTutorIdRoute: AuthenticatedStudentBookTutorIdRoute,
   AuthenticatedStudentClassroomBookingIdRoute:
     AuthenticatedStudentClassroomBookingIdRoute,
   AuthenticatedTutorClassroomBookingIdRoute:
     AuthenticatedTutorClassroomBookingIdRoute,
   AuthenticatedTutorNotesBookingIdRoute: AuthenticatedTutorNotesBookingIdRoute,
+  AuthenticatedAgencyTutorsIndexRoute: AuthenticatedAgencyTutorsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
