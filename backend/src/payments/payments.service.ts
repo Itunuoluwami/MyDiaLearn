@@ -6,6 +6,7 @@ import { translateDatabaseError } from '../common/exceptions/database-errors';
 import { paginate, type Paginated, type PaginationQueryDto } from '../shared/query.dto';
 import type { PaymentResponse, PayoutResponse } from './dto/payment.dto';
 import { PaymentsRepository, type PaymentRow, type PayoutRow } from './payments.repository';
+import { PaymentProcessingService } from './services/payment-processing.service';
 import { PricingService, type BookingQuote } from './services/pricing.service';
 import {
   SettlementService,
@@ -17,7 +18,7 @@ import {
  * Payments, commission and payouts.
  *
  * The arithmetic is not here. Quotes come from booking_quote() and charges from
- * pay_for_booking(), both of which already encode the fee split, the tiered
+ * payment_prepare() (via PaymentProcessingService), both of which encode the fee split, the tiered
  * commission window and the rule that `amount` is the total captured at quote
  * time — so a later rule change never retroactively alters an existing charge.
  * This service orchestrates, audits, and shapes responses.
@@ -29,6 +30,7 @@ export class PaymentsService {
     private readonly pricing: PricingService,
     private readonly settlement: SettlementService,
     private readonly audit: AuditService,
+    private readonly processing: PaymentProcessingService,
   ) {}
 
   async quote(
@@ -39,40 +41,24 @@ export class PaymentsService {
   }
 
   /**
-   * Pays for a booking.
-   *
-   * Single database call, so it is atomic by construction: the payments row
-   * and the booking's move to `confirmed` (via the confirm_booking_on_payment
-   * trigger) either both happen or neither does.
+   * Pays for a booking through the configured payment provider. The provider
+   * flow — prepare, charge, server-side verification, confirmation — lives in
+   * PaymentProcessingService; this keeps the controller's contract.
    */
   async payForBooking(
     payerId: string,
     bookingId: string,
     context: AuditContext,
   ): Promise<PaymentResponse> {
-    let payment;
-    try {
-      payment = await this.repository.payForBooking(payerId, bookingId);
-    } catch (error) {
-      // Without this, paying twice reports a 500 rather than "already paid".
-      throw translateDatabaseError(error, 'We could not complete that payment.');
-    }
+    const outcome = await this.processing.payForBooking(payerId, bookingId, context);
+    return {
+      ...toPaymentResponse(outcome.payment),
+      ...(outcome.checkoutUrl ? { checkoutUrl: outcome.checkoutUrl } : {}),
+    };
+  }
 
-    await this.audit.record('payment.created', {
-      actorId: payerId,
-      entityType: 'payment',
-      entityId: payment.id,
-      context,
-      // Amounts and identifiers only — never provider secrets or card data.
-      metadata: {
-        bookingId,
-        amount: String(payment.amount),
-        currency: payment.currency,
-        status: payment.status,
-      },
-    });
-
-    return toPaymentResponse(payment);
+  async verify(userId: string, paymentId: string): Promise<PaymentResponse> {
+    return toPaymentResponse(await this.processing.verifyForPayer(userId, paymentId));
   }
 
   async list(userId: string, query: PaginationQueryDto): Promise<Paginated<PaymentResponse>> {

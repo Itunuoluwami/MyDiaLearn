@@ -3,6 +3,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AuditService, type AuditContext } from '../../common/audit/audit.service';
 import { authConfig, type AuthConfig } from '../../config/configuration';
 import { EmailService } from '../../integrations/email/email.service';
+import { PaymentProcessingService } from '../../payments/services/payment-processing.service';
 import { translateAdminError } from '../admin-errors';
 import { GovernanceRepository } from './governance.repository';
 
@@ -23,6 +24,7 @@ export class GovernanceService {
     private readonly repository: GovernanceRepository,
     private readonly email: EmailService,
     private readonly audit: AuditService,
+    private readonly payments: PaymentProcessingService,
     @Inject(authConfig.KEY) private readonly config: AuthConfig,
   ) {}
 
@@ -169,6 +171,25 @@ export class GovernanceService {
         input.notes?.trim() || null,
       ),
     );
+    // An approved refund or cancel-with-refund has just recorded a refund on
+    // the payment; the database has queued it in payment_refunds. Send it to
+    // the provider now rather than waiting for a retry run. A provider error
+    // leaves it pending — the approval itself stands.
+    if (
+      result['status'] === 'executed' &&
+      (result['action'] === 'payment.refund' ||
+        result['action'] === 'booking.cancel_with_refund')
+    ) {
+      try {
+        await this.payments.processPendingRefunds();
+      } catch (error) {
+        this.logger.error(
+          { requestId, error: error instanceof Error ? error.message : String(error) },
+          'Refund processing after approval failed; it stays pending for retry',
+        );
+      }
+    }
+
     await this.audit.record('admin.action_reviewed', {
       actorId: adminId,
       entityType: 'admin_action_request',

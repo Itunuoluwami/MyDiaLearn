@@ -41,6 +41,11 @@ export class ListPaymentsQueryDto extends PaginationQueryDto {}
  * how settlement reports stop reconciling.
  */
 export interface PaymentResponse {
+  /**
+   * Present only when the provider needs the customer to finish on its own
+   * page. The simulated provider never sets it, so today's UI is unaffected.
+   */
+  checkoutUrl?: string;
   id: string;
   bookingId: string;
   amount: string;

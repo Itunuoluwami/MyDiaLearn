@@ -4,6 +4,7 @@ import { PaymentsController } from './payments.controller';
 import { PaymentsRepository } from './payments.repository';
 import { PaymentsService } from './payments.service';
 import { CommissionService } from './services/commission.service';
+import { PaymentProcessingService } from './services/payment-processing.service';
 import { PricingService } from './services/pricing.service';
 import { SettlementService } from './services/settlement.service';
 
@@ -19,10 +20,17 @@ import { SettlementService } from './services/settlement.service';
   providers: [
     PaymentsRepository,
     PaymentsService,
+    PaymentProcessingService,
     PricingService,
     CommissionService,
     SettlementService,
   ],
-  exports: [PaymentsService, PricingService, CommissionService, SettlementService],
+  exports: [
+    PaymentsService,
+    PaymentProcessingService,
+    PricingService,
+    CommissionService,
+    SettlementService,
+  ],
 })
 export class PaymentsModule {}

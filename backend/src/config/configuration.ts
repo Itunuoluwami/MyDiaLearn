@@ -55,6 +55,8 @@ export const smtpConfig = registerAs('smtp', () => ({
 export const integrationsConfig = registerAs('integrations', () => ({
   email: process.env.EMAIL_PROVIDER as 'smtp' | 'log',
   payment: process.env.PAYMENT_PROVIDER as 'simulated',
+  /** Shared secret the payment adapter verifies webhooks with. Never logged. */
+  paymentWebhookSecret: process.env.PAYMENT_WEBHOOK_SECRET ?? '',
   storage: process.env.STORAGE_PROVIDER as 'unconfigured',
   classroom: process.env.CLASSROOM_PROVIDER as 'none',
 }));

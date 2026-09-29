@@ -9,10 +9,13 @@ import {
   Post,
   Query,
   Req,
+  type RawBodyRequest,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import { SkipThrottle } from '@nestjs/throttler';
 
-import { Roles } from '../common/decorators/roles.decorator';
+import { Public } from '../common/decorators/public.decorator';
+import { RequirePermission, Roles } from '../common/decorators/roles.decorator';
 import {
   CurrentUser,
   type AuthenticatedUser,
@@ -28,12 +31,16 @@ import {
   type PayoutResponse,
 } from './dto/payment.dto';
 import { PaymentsService } from './payments.service';
+import { PaymentProcessingService } from './services/payment-processing.service';
 import type { BookingQuote } from './services/pricing.service';
 import type { EarningsSummary, SettlementPolicy } from './services/settlement.service';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly payments: PaymentsService) {}
+  constructor(
+    private readonly payments: PaymentsService,
+    private readonly processing: PaymentProcessingService,
+  ) {}
 
   /** What a lesson would cost, including the fee split. */
   @Post('quote')
@@ -53,6 +60,50 @@ export class PaymentsController {
     @Req() request: Request,
   ): Promise<PaymentResponse> {
     return this.payments.payForBooking(user.id, dto.bookingId, auditContextOf(request));
+  }
+
+  /** The payer, back from the provider: the server re-checks with the provider. */
+  @Post(':id/verify')
+  @HttpCode(HttpStatus.OK)
+  async verify(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<PaymentResponse> {
+    return this.payments.verify(user.id, id);
+  }
+
+  /**
+   * Provider webhooks. Public — the provider has no DiaLearn session — and
+   * authenticated instead by the adapter's signature check over the raw body.
+   * Redelivered events are acknowledged without being processed again.
+   */
+  @Public()
+  @SkipThrottle()
+  @Post('webhooks/:provider')
+  @HttpCode(HttpStatus.OK)
+  async webhook(
+    @Param('provider') provider: string,
+    @Req() request: RawBodyRequest<Request>,
+  ): Promise<{ received: true; duplicate: boolean }> {
+    return this.processing.handleWebhook(
+      provider,
+      request.rawBody,
+      request.headers as Record<string, string | string[] | undefined>,
+    );
+  }
+
+  /** Retries refunds the provider has not completed. */
+  @Post('refunds/process')
+  @Roles('admin')
+  @RequirePermission('admin.payments')
+  @HttpCode(HttpStatus.OK)
+  async processRefunds(): Promise<{
+    processed: number;
+    succeeded: number;
+    pending: number;
+    failed: number;
+  }> {
+    return this.processing.processPendingRefunds();
   }
 
   @Get()

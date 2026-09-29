@@ -7,7 +7,10 @@ import { configureApp } from './bootstrap';
 async function bootstrap(): Promise<void> {
   // bufferLogs holds startup output until pino is available, so boot messages
   // land in the same structured stream as everything else.
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  // rawBody keeps the exact request bytes alongside the parsed JSON: payment
+  // webhooks are signed over those bytes, and re-serialising the parsed body
+  // would not reproduce them.
+  const app = await NestFactory.create(AppModule, { bufferLogs: true, rawBody: true });
   app.useLogger(app.get(Logger));
 
   const config = configureApp(app);

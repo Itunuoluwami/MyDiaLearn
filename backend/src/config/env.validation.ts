@@ -79,6 +79,9 @@ export const envValidationSchema = Joi.object({
   // Which adapter is bound to each port. See src/integrations/.
   EMAIL_PROVIDER: Joi.string().valid('smtp', 'log').default('log'),
   PAYMENT_PROVIDER: Joi.string().valid('simulated').default('simulated'),
+  // Webhook signing secret for the payment provider. Optional: with none set,
+  // every payment webhook is refused.
+  PAYMENT_WEBHOOK_SECRET: Joi.string().min(16).allow('').optional(),
   STORAGE_PROVIDER: Joi.string().valid('unconfigured').default('unconfigured'),
   CLASSROOM_PROVIDER: Joi.string().valid('none').default('none'),
 

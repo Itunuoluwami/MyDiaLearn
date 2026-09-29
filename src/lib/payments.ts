@@ -22,6 +22,8 @@ interface ApiPayment {
   refundedAmount: string | null;
   paidAt: string | null;
   createdAt: string;
+  /** Only when the provider needs the customer to finish on its own page. */
+  checkoutUrl?: string;
 }
 
 /** Only the fields a caller reads; the API does not return the payer or rule ids. */
@@ -64,7 +66,14 @@ export function usePayForBooking() {
     mutationFn: async (bookingId: string) => {
       if (viaApi) {
         try {
-          return toPaymentRow(await apiPost<ApiPayment>("/payments", { bookingId }));
+          const result = await apiPost<ApiPayment>("/payments", { bookingId });
+          if (result.checkoutUrl) {
+            // A redirect-based provider: the charge completes on its page, and
+            // the server confirms it by webhook or verification afterwards —
+            // never from this browser. The simulated provider never sets this.
+            window.location.assign(result.checkoutUrl);
+          }
+          return toPaymentRow(result);
         } catch (error) {
           if (
             error instanceof ApiError &&
