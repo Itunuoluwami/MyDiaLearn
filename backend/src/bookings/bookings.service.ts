@@ -197,6 +197,32 @@ export class BookingsService {
     }
   }
 
+  async cancelByFamily(
+    userId: string,
+    bookingId: string,
+    reason: string | undefined,
+    context: AuditContext,
+  ): Promise<void> {
+    const outcome = await this.repository.cancelByFamily(
+      userId,
+      bookingId,
+      reason?.trim() || 'Cancelled by parent',
+    );
+    if (outcome === 'not_found') throw new NotFoundError('Booking');
+    if (outcome === 'not_cancellable') {
+      throw new ConflictError(
+        'Only an unpaid lesson that is still pending can be cancelled here. Contact support for a paid lesson.',
+      );
+    }
+    await this.audit.record('booking.cancelled', {
+      actorId: userId,
+      entityType: 'booking',
+      entityId: bookingId,
+      context,
+      metadata: { by: 'family' },
+    });
+  }
+
   myRatings(userId: string): Promise<Record<string, unknown>[]> {
     return this.repository.myRatings(userId);
   }

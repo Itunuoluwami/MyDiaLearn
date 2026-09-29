@@ -24,6 +24,7 @@ import {
   AvailableSlotsQueryDto,
   CreateBookingDto,
   EndClassDto,
+  FamilyCancelDto,
   ListBookingsQueryDto,
   RaiseDisputeDto,
   RateBookingDto,
@@ -107,6 +108,18 @@ export class BookingsController {
     @Body() dto: RateBookingDto,
   ): Promise<void> {
     await this.bookings.rate(user.id, id, dto);
+  }
+
+  /** A family cancels a pending, unpaid lesson. */
+  @Post(':id/cancel')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async cancelByFamily(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: FamilyCancelDto,
+    @Req() request: Request,
+  ): Promise<void> {
+    await this.bookings.cancelByFamily(user.id, id, dto.reason, auditContextOf(request));
   }
 
   /** Any party to the booking may raise a dispute; the database checks who. */

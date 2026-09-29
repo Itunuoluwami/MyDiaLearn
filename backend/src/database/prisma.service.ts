@@ -15,6 +15,15 @@ import type { AppConfig, DatabaseConfig } from '../config/configuration';
  * issuing `SET LOCAL request.jwt.claims` per transaction. A real pg pool makes
  * that reachable later; Prisma's managed connection does not.
  */
+/**
+ * How long a request may wait for a pooled connection before its transaction
+ * starts. Prisma's default is 2 s; opening a connection to the remote
+ * database can take longer than that, so a page that fires several requests
+ * at once after an idle spell had some fail with "Unable to start a
+ * transaction in the given time".
+ */
+const TRANSACTION_MAX_WAIT_MS = 10_000;
+
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private connected = false;
@@ -24,7 +33,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     @Inject(appConfig.KEY) private readonly app: AppConfig,
     private readonly logger: PinoLogger,
   ) {
-    super({ adapter: new PrismaPg({ connectionString: database.url }) });
+    // keepAlive stops idle pooled connections being dropped silently by the
+    // network between bursts of traffic to the remote database.
+    super({ adapter: new PrismaPg({ connectionString: database.url, keepAlive: true }) });
     this.logger.setContext(PrismaService.name);
   }
 
@@ -107,7 +118,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         await tx.$executeRaw`select set_config('request.jwt.claims', ${claims}, true)`;
         return fn(tx);
       },
-      { timeout: options?.timeoutMs ?? 15_000 },
+      { timeout: options?.timeoutMs ?? 15_000, maxWait: TRANSACTION_MAX_WAIT_MS },
     );
   }
 
@@ -119,9 +130,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
    * decision rather than an omission.
    */
   async asAnonymous<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
-    return this.$transaction(async (tx) => {
-      await tx.$executeRaw`select set_config('request.jwt.claims', '', true)`;
-      return fn(tx);
-    });
+    return this.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`select set_config('request.jwt.claims', '', true)`;
+        return fn(tx);
+      },
+      { maxWait: TRANSACTION_MAX_WAIT_MS },
+    );
   }
 }

@@ -1,6 +1,5 @@
 import { API_BASE_URL, apiRequest, isApiConfigured } from "./client";
 import { authClient } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Whether the frontend's data reads should go to the NestJS API.
@@ -40,8 +39,8 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   return apiRequest<T>(path, { method: "POST", body, ...(accessToken ? { accessToken } : {}) });
 }
 
-/** Re-exported so hooks can branch without importing three modules. */
-export { API_BASE_URL, supabase };
+/** Re-exported so hooks can build absolute URLs without a second import. */
+export { API_BASE_URL };
 
 export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
   let accessToken: string | null = null;

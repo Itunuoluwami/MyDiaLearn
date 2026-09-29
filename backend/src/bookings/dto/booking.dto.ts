@@ -104,6 +104,13 @@ export class RaiseDisputeDto {
   description!: string;
 }
 
+export class FamilyCancelDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
+}
+
 export class EndClassDto {
   /** Omitted when the tutor does not record attendance; tutor_end_class defaults it. */
   @IsOptional()

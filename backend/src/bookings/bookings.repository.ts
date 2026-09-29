@@ -320,4 +320,38 @@ export class BookingsRepository extends BaseRepository {
       `,
     );
   }
+
+  /**
+   * A family cancels a lesson it has not paid for. The same condition the
+   * bookings page offers the button under: still pending and unpaid. A paid
+   * or confirmed lesson is cancelled by an admin, where the cancellation
+   * policy's refund applies. Access mirrors the bookings update policy.
+   */
+  async cancelByFamily(
+    userId: string,
+    bookingId: string,
+    reason: string,
+  ): Promise<'cancelled' | 'not_found' | 'not_cancellable'> {
+    return this.prisma.withUser(userId, async (tx) => {
+      const found = await tx.$queryRaw<{ status: string; paid: boolean }[]>`
+        select b.status::text as status,
+               exists(select 1 from public.payments p
+                      where p.booking_id = b.id and p.status in ('paid', 'processing')) as paid
+        from public.bookings b
+        where b.id = ${bookingId}::uuid
+          and (b.booked_by = auth.uid() or public.can_access_student(b.student_id))
+        for update
+      `;
+      const booking = found[0];
+      if (!booking) return 'not_found';
+      if (booking.status !== 'pending' || booking.paid) return 'not_cancellable';
+      await tx.$executeRaw`
+        update public.bookings set
+          status = 'cancelled', cancelled_at = now(), cancelled_by = auth.uid(),
+          cancellation_reason = ${reason}, updated_at = now()
+        where id = ${bookingId}::uuid
+      `;
+      return 'cancelled';
+    });
+  }
 }

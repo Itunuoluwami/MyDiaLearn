@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { apiPatch, useApiData } from "@/lib/api/data-client";
 
 import { TutorShell } from "@/components/tutor/TutorShell";
 import { CardSkeletonList, LoadError } from "@/components/parent/ui";
@@ -78,6 +79,7 @@ function TutorOnboardingPage() {
   const queryClient = useQueryClient();
   const tutor = useTutorRecord();
   const update = useUpdateTutor();
+  const viaApi = useApiData();
   const subjects = useSubjectOptions();
   const levels = useLevelOptions();
   const mySubjects = useMyTutorSubjects();
@@ -183,7 +185,12 @@ function TutorOnboardingPage() {
   async function handleLocationNext() {
     try {
       await update.mutateAsync({ timezone: form.timezone, onboarding_step: 5 });
-      if (user) {
+      if (user && viaApi) {
+        await apiPatch("/users/me", {
+          timezone: form.timezone,
+          ...(form.country ? { countryCode: form.country } : {}),
+        });
+      } else if (user) {
         await supabase
           .from("profiles")
           .update({ timezone: form.timezone, country_code: form.country || null })
