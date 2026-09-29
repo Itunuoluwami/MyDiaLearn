@@ -65,7 +65,14 @@ export type AuditAction =
   | 'admin.invite_revoked'
   | 'admin.action_requested'
   | 'admin.action_reviewed'
-  | 'admin.settings_changed';
+  | 'admin.settings_changed'
+  // Agencies
+  | 'agency.verification_submitted'
+  | 'agency.verification_reviewed'
+  | 'agency.tutor_added'
+  | 'agency.tutor_removed'
+  | 'agency.tutor_managed'
+  | 'agency.payout_requested';
 
 /**
  * Durable record of sensitive operations, written to public.audit_logs.

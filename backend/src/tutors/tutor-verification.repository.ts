@@ -119,7 +119,8 @@ export class TutorVerificationRepository extends BaseRepository {
   async removeDocument(userId: string, documentId: string): Promise<string | null> {
     return this.prisma.withUser(userId, async (tx) => {
       const rows = await tx.$queryRaw<{ storage_path: string }[]>`
-        delete from public.tutor_documents where id = ${documentId}::uuid
+        delete from public.tutor_documents
+        where id = ${documentId}::uuid and public.owns_tutor(tutor_id)
         returning storage_path
       `;
       return rows[0]?.storage_path ?? null;

@@ -287,6 +287,71 @@ export class AuthService {
     });
   }
 
+  /**
+   * Creates an account on someone's behalf — an agency adding a tutor — and
+   * emails the owner a link to choose their own password.
+   *
+   * The account starts with a random password nobody knows and an unconfirmed
+   * address; the set-password link (the password-reset flow, with the email
+   * verification lifetime) is what makes it usable. handle_new_user() gives
+   * it its profile and role from the metadata, exactly as sign-up does.
+   */
+  async provisionAccount(
+    input: { email: string; fullName: string; role: 'tutor'; timezone?: string | undefined },
+    invite: { agencyName: string; actorId: string },
+    context: RequestContext,
+  ): Promise<{ userId: string; emailed: boolean }> {
+    const email = input.email.trim().toLowerCase();
+    if (await this.users.findByEmail(email)) {
+      throw new ConflictError('An account with this email already exists.');
+    }
+
+    const created = await this.users.create({
+      email,
+      passwordHash: await this.passwords.hash(this.passwords.createToken()),
+      emailConfirmed: false,
+      metadata: {
+        full_name: input.fullName,
+        first_name: null,
+        last_name: null,
+        phone: null,
+        country_code: null,
+        timezone: input.timezone ?? 'UTC',
+        role: input.role,
+      },
+    });
+
+    const token = this.passwords.createToken();
+    const expiryHours = this.config.emailVerificationTtlHours;
+    await this.verificationTokens.create({
+      userId: created.id,
+      purpose: 'password_reset',
+      tokenHash: this.passwords.hashToken(token),
+      expiresAt: new Date(Date.now() + expiryHours * 3_600_000),
+    });
+
+    const sent = await this.email.sendTemplate({
+      trigger: 'agency.tutor_invite',
+      to: email,
+      vars: {
+        agency_name: invite.agencyName,
+        set_password_url: `${this.config.appUrl}/auth/reset-password?token=${token}`,
+        expiry_hours: expiryHours,
+      },
+    });
+
+    await this.audit.record('auth.register', {
+      actorId: invite.actorId,
+      actorEmail: null,
+      entityType: 'profile',
+      entityId: created.id,
+      context,
+      metadata: { role: input.role, provisionedBy: 'agency' },
+    });
+
+    return { userId: created.id, emailed: sent !== null };
+  }
+
   async resetPassword(dto: ResetPasswordDto, context: RequestContext): Promise<void> {
     const record = await this.verificationTokens.consume(
       this.passwords.hashToken(dto.token),
@@ -301,6 +366,10 @@ export class AuthService {
     }
 
     await this.users.setPassword(record.user_id, await this.passwords.hash(dto.password));
+    // The link was delivered to this address, so using it proves the address:
+    // an account an agency set up is confirmed the moment its owner sets a
+    // password. A no-op for accounts already confirmed.
+    await this.users.markEmailConfirmed(record.user_id);
     // Every existing session dies. A password reset is the standard response to
     // a suspected compromise, so leaving other sessions alive would defeat it.
     await this.tokens.revokeAllForUser(record.user_id, 'password_reset');

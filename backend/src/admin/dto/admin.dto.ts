@@ -255,3 +255,30 @@ export class ReportQueryDto {
   @IsDateString()
   to!: string;
 }
+
+// --- Agencies -------------------------------------------------------------------
+
+export class AgencyQueueQueryDto {
+  /** A verification status, or "all". Defaults to pending. */
+  @IsOptional()
+  @IsIn([...VERIFICATION_STATUSES, 'all'])
+  status?: string;
+}
+
+export class AgencyDecisionDto {
+  @IsIn(['verified', 'rejected', 'suspended'])
+  status!: 'verified' | 'rejected' | 'suspended';
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  reason?: string;
+}
+
+export class AgencyShareDto {
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(100)
+  revenueSharePercentage!: number;
+}

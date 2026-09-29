@@ -49,6 +49,11 @@ describe('AdminController access', () => {
     ['setReviewPublished', 'admin.moderation'],
     ['messages', 'admin.moderation'],
     ['setMessageHidden', 'admin.moderation'],
+    ['agencies', 'admin.verification'],
+    ['agency', 'admin.verification'],
+    ['reviewAgencyStep', 'admin.verification'],
+    ['decideAgency', 'admin.verification'],
+    ['setAgencyShare', 'admin.settings'],
   ])('%s requires %s', (method, permission) => {
     expect(permissionOf(method)).toEqual([permission]);
   });

@@ -23,6 +23,9 @@ import { RequirePermission, Roles } from '../common/decorators/roles.decorator';
 import { AdminService } from './admin.service';
 import {
   AdminBookingsQueryDto,
+  AgencyDecisionDto,
+  AgencyQueueQueryDto,
+  AgencyShareDto,
   AdminDisputesQueryDto,
   AdminPaymentsQueryDto,
   AdminPayoutsQueryDto,
@@ -326,5 +329,68 @@ export class AdminController {
     @Query() query: ReportQueryDto,
   ): Promise<Record<string, unknown> | null> {
     return this.admin.report(user.id, query.from, query.to);
+  }
+
+  // --- Agencies -----------------------------------------------------------------
+
+  @Get('agencies')
+  @RequirePermission('admin.verification')
+  agencies(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: AgencyQueueQueryDto,
+  ): Promise<Record<string, unknown>[]> {
+    return this.admin.agencies(user.id, query.status ?? 'pending');
+  }
+
+  @Get('agencies/:id')
+  @RequirePermission('admin.verification')
+  agency(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) id: string,
+  ): Promise<Record<string, unknown>> {
+    return this.admin.agency(user.id, id);
+  }
+
+  @Put('agencies/:id/steps/:stepId')
+  @RequirePermission('admin.verification')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async reviewAgencyStep(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) agencyId: string,
+    @Param('stepId', UUID) stepId: string,
+    @Body() dto: ReviewVerificationDto,
+  ): Promise<void> {
+    await this.admin.reviewAgencyStep(user.id, { agencyId, stepId, ...dto });
+  }
+
+  /** Verify, reject or suspend; listings of the agency's tutors follow. */
+  @Post('agencies/:id/decision')
+  @RequirePermission('admin.verification')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async decideAgency(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) id: string,
+    @Body() dto: AgencyDecisionDto,
+    @Req() request: Request,
+  ): Promise<void> {
+    await this.admin.decideAgency(user.id, id, dto, auditContextOf(request));
+  }
+
+  /** The agency's agreed share of its tutors' earnings. */
+  @Patch('agencies/:id/revenue-share')
+  @RequirePermission('admin.settings')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async setAgencyShare(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', UUID) id: string,
+    @Body() dto: AgencyShareDto,
+    @Req() request: Request,
+  ): Promise<void> {
+    await this.admin.setAgencyShare(
+      user.id,
+      id,
+      dto.revenueSharePercentage,
+      auditContextOf(request),
+    );
   }
 }

@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { BaseRepository } from '../database/repositories/base.repository';
 import type { PaginationQueryDto } from '../shared/query.dto';
+import { NotAuthorizedError } from '../common/exceptions/app.exception';
 
 export interface LessonNoteRow {
   id: string;
@@ -110,6 +111,18 @@ export class TeachingRepository extends BaseRepository {
     },
   ): Promise<LessonNoteRow> {
     return this.prisma.withUser(tutorUserId, async (tx) => {
+      // Only the tutor who teaches the booking writes its note. The API's
+      // connection is not subject to row-level security, so this is checked
+      // here rather than left to the policy.
+      const own = await tx.$queryRaw<{ ok: boolean }[]>`
+        select exists (
+          select 1 from public.bookings
+          where id = ${input.bookingId}::uuid and tutor_id = public.current_tutor_id()
+        ) as ok
+      `;
+      if (!own[0]?.ok)
+        throw new NotAuthorizedError('You can only write notes for your own lessons.');
+
       const existing = await tx.$queryRaw<{ id: string }[]>`
         select id from public.lesson_notes where booking_id = ${input.bookingId}::uuid limit 1
       `;
@@ -122,7 +135,7 @@ export class TeachingRepository extends BaseRepository {
             improvements  = coalesce(${input.improvements ?? null}, improvements),
             next_steps    = coalesce(${input.nextSteps ?? null}, next_steps),
             updated_at    = now()
-          where id = ${existing[0].id}::uuid
+          where id = ${existing[0].id}::uuid and public.owns_tutor(tutor_id)
           returning id, booking_id, tutor_id, covered, understanding, improvements,
                     next_steps, created_at, updated_at
         `;
@@ -242,7 +255,11 @@ export class TeachingRepository extends BaseRepository {
           submitted_at    = now(),
           status          = 'submitted',
           updated_at      = now()
+        -- The "Families submit" policy, applied here: the API's connection
+        -- bypasses row-level security.
         where id = ${id}::uuid
+          and status in ('assigned', 'submitted')
+          and public.can_access_student(student_id)
         returning id, tutor_id, student_id, booking_id, subject_id, title, instructions,
                   submission_requirements, due_at, resource_id, status::text, assigned_at,
                   submission_text, submission_path, submitted_at, feedback, reviewed_at, created_at
@@ -261,7 +278,7 @@ export class TeachingRepository extends BaseRepository {
       const rows = await tx.$queryRaw<AssignmentRow[]>`
         update public.assignments set
           feedback = ${feedback}::text, reviewed_at = now(), status = 'reviewed', updated_at = now()
-        where id = ${id}::uuid
+        where id = ${id}::uuid and public.owns_tutor(tutor_id)
         returning id, tutor_id, student_id, booking_id, subject_id, title, instructions,
                   submission_requirements, due_at, resource_id, status::text, assigned_at,
                   submission_text, submission_path, submitted_at, feedback, reviewed_at, created_at
@@ -280,7 +297,7 @@ export class TeachingRepository extends BaseRepository {
       const rows = await tx.$queryRaw<AssignmentRow[]>`
         update public.assignments set
           status = 'assigned', assigned_at = now(), updated_at = now()
-        where id = ${id}::uuid and status = 'draft'
+        where id = ${id}::uuid and status = 'draft' and public.owns_tutor(tutor_id)
         returning id, tutor_id, student_id, booking_id, subject_id, title, instructions,
                   submission_requirements, due_at, resource_id, status::text, assigned_at,
                   submission_text, submission_path, submitted_at, feedback, reviewed_at, created_at
@@ -356,7 +373,8 @@ export class TeachingRepository extends BaseRepository {
   async deleteResource(tutorUserId: string, id: string): Promise<string | null> {
     return this.prisma.withUser(tutorUserId, async (tx) => {
       const rows = await tx.$queryRaw<{ storage_path: string | null }[]>`
-        delete from public.learning_resources where id = ${id}::uuid
+        delete from public.learning_resources
+        where id = ${id}::uuid and public.owns_tutor(tutor_id)
         returning storage_path
       `;
       return rows.length ? (rows[0]!.storage_path ?? '') : null;

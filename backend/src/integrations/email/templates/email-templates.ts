@@ -24,6 +24,7 @@ import { escapeHtml, type LayoutInput } from './email-layout';
  * carry (the code was rendered from user metadata, never a templates row):
  *
  *   admin.invitation          one-time code and accept link
+ *   agency.tutor_invite       an agency added you; set your password
  *
  * Adding a key here without a corresponding flow would be inventing a
  * workflow. Don't.
@@ -39,6 +40,7 @@ export const EMAIL_TRIGGERS = [
   'payout.sent',
   'tutor.verification_updated',
   'admin.invitation',
+  'agency.tutor_invite',
 ] as const;
 
 export type EmailTrigger = (typeof EMAIL_TRIGGERS)[number];
@@ -162,6 +164,18 @@ export const TEMPLATE_FALLBACKS: Record<EmailTrigger, TemplateDefinition> = {
     action: { label: 'Accept invitation', urlVar: 'accept_url' },
     footerNote: "If you weren't expecting this, you can ignore this email.",
     variables: ['role', 'otp', 'expires_at', 'accept_url'],
+  },
+
+  'agency.tutor_invite': {
+    subject: '{{agency_name}} added you as a tutor on DiaLearn',
+    heading: 'Welcome to DiaLearn',
+    paragraphs: [
+      '<strong>{{agency_name}}</strong> has set up a DiaLearn tutor account for you.',
+      'Choose a password to sign in, see your classes and teach. The link expires in {{expiry_hours}} hours.',
+    ],
+    action: { label: 'Set your password', urlVar: 'set_password_url' },
+    footerNote: "If you don't work with this agency, you can ignore this email.",
+    variables: ['agency_name', 'set_password_url', 'expiry_hours'],
   },
 };
 

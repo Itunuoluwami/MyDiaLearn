@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { BaseRepository } from '../database/repositories/base.repository';
 import type { PaginationQueryDto } from '../shared/query.dto';
+import { NotAuthorizedError } from '../common/exceptions/app.exception';
 
 export interface ConversationRow {
   id: string;
@@ -105,6 +106,13 @@ export class MessagingRepository extends BaseRepository {
     },
   ): Promise<MessageRow> {
     return this.prisma.withUser(userId, async (tx) => {
+      // The messages insert policy, checked here: only participants post.
+      const member = await tx.$queryRaw<{ ok: boolean }[]>`
+        select public.in_conversation(${input.conversationId}::uuid) as ok
+      `;
+      if (!member[0]?.ok)
+        throw new NotAuthorizedError('You are not part of this conversation.');
+
       const rows = await tx.$queryRaw<MessageRow[]>`
         insert into public.messages
           (conversation_id, sender_id, body, attachment_path, attachment_name)

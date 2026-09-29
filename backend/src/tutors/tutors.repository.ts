@@ -228,7 +228,13 @@ export class TutorsRepository extends BaseRepository {
   async removeSubject(userId: string, id: string): Promise<boolean> {
     const n = await this.prisma.withUser(
       userId,
-      async (tx) => tx.$executeRaw`delete from public.tutor_subjects where id = ${id}::uuid`,
+      // Scoped to the caller's own tutor record in SQL: the API's connection
+      // is not subject to row-level security, so an id alone is not enough.
+      async (tx) =>
+        tx.$executeRaw`
+        delete from public.tutor_subjects
+        where id = ${id}::uuid and tutor_id = public.current_tutor_id()
+      `,
     );
     return n > 0;
   }

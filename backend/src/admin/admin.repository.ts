@@ -27,6 +27,7 @@ export interface VerificationQueueRow {
   full_name: string | null;
   email: string | null;
   avatar_url: string | null;
+  agency_name: string | null;
 }
 
 /**
@@ -96,9 +97,10 @@ export class AdminRepository extends BaseRepository {
         tx.$queryRaw<VerificationQueueRow[]>`
         select t.id, t.profile_id, t.headline, t.verification_status::text, t.is_listed,
                t.submitted_at, t.years_experience, t.hourly_rate, t.currency,
-               p.full_name, p.email, p.avatar_url
+               p.full_name, p.email, p.avatar_url, ag.name as agency_name
         from public.tutors t
         join public.profiles p on p.id = t.profile_id
+        left join public.tutor_agencies ag on ag.id = t.agency_id
         where case when ${status} = 'all'
                    then t.verification_status <> 'unverified'
                    else t.verification_status::text = ${status} end
@@ -308,8 +310,10 @@ export class AdminRepository extends BaseRepository {
       async (tx) =>
         tx.$queryRaw<Record<string, unknown>[]>`
         select po.id, po.tutor_id, po.amount, po.currency, po.status::text, po.reference,
-               po.notes, po.requested_at, po.settled_at, tp.full_name as tutor_name
+               po.notes, po.requested_at, po.settled_at, tp.full_name as tutor_name,
+               po.agency_id, ag.name as agency_name
         from public.payouts po
+        left join public.tutor_agencies ag on ag.id = po.agency_id
         left join public.tutors t on t.id = po.tutor_id
         left join public.profiles tp on tp.id = t.profile_id
         where ${status} = 'all' or po.status::text = ${status}
@@ -445,5 +449,109 @@ export class AdminRepository extends BaseRepository {
       `,
     );
     return rows[0] ?? null;
+  }
+
+  // --- Agencies -----------------------------------------------------------------
+
+  async listAgencies(adminId: string, status: string): Promise<Record<string, unknown>[]> {
+    return this.prisma.withUser(
+      adminId,
+      async (tx) =>
+        tx.$queryRaw<Record<string, unknown>[]>`
+        select a.id, a.name, a.registration_number, a.country_code, a.contact_email,
+               a.verification_status::text, a.is_active, a.revenue_share_percentage,
+               a.submitted_at, a.created_at, p.full_name as owner_name, p.email as owner_email,
+               (select count(*) from public.tutors t where t.agency_id = a.id)::int as tutor_count
+        from public.tutor_agencies a
+        left join public.profiles p on p.id = a.owner_id
+        where case when ${status} = 'all' then true else a.verification_status::text = ${status} end
+        order by a.submitted_at asc nulls last, a.created_at desc
+      `,
+    );
+  }
+
+  async agencyDetail(
+    adminId: string,
+    agencyId: string,
+  ): Promise<{
+    agency: Record<string, unknown> | null;
+    steps: Record<string, unknown>[];
+    tutors: Record<string, unknown>[];
+  }> {
+    return this.prisma.withUser(adminId, async (tx) => {
+      const agencies = await tx.$queryRaw<Record<string, unknown>[]>`
+        select a.id, a.name, a.registration_number, a.country_code, a.contact_email,
+               a.contact_phone, a.website, a.about, a.verification_status::text, a.is_active,
+               a.revenue_share_percentage, a.submitted_at, a.created_at,
+               p.full_name as owner_name, p.email as owner_email
+        from public.tutor_agencies a left join public.profiles p on p.id = a.owner_id
+        where a.id = ${agencyId}::uuid
+      `;
+      const steps = await tx.$queryRaw<Record<string, unknown>[]>`
+        select vs.id, vs.code, vs.name, vs.description, vs.is_required, vs.sort_order,
+               pr.id as progress_id, pr.status::text as status, pr.reviewer_notes, pr.reviewed_at
+        from public.verification_steps vs
+        left join public.agency_verification_progress pr
+          on pr.step_id = vs.id and pr.agency_id = ${agencyId}::uuid
+        where vs.is_active and vs.applies_to = 'agency'
+        order by vs.sort_order
+      `;
+      const tutors = await tx.$queryRaw<Record<string, unknown>[]>`
+        select t.id, p.full_name, p.email, t.verification_status::text, t.is_listed
+        from public.tutors t left join public.profiles p on p.id = t.profile_id
+        where t.agency_id = ${agencyId}::uuid
+        order by p.full_name
+      `;
+      return { agency: agencies[0] ?? null, steps, tutors };
+    });
+  }
+
+  async reviewAgencyStep(
+    adminId: string,
+    input: { agencyId: string; stepId: string; status: string; reviewerNotes: string | null },
+  ): Promise<void> {
+    await this.prisma.withUser(adminId, async (tx) => {
+      await tx.$executeRaw`
+        insert into public.agency_verification_progress
+          (agency_id, step_id, status, reviewer_notes, reviewed_at, reviewed_by)
+        values (${input.agencyId}::uuid, ${input.stepId}::uuid,
+                ${input.status}::public.verification_status, ${input.reviewerNotes},
+                now(), ${adminId}::uuid)
+        on conflict (agency_id, step_id) do update set
+          status = excluded.status, reviewer_notes = excluded.reviewer_notes,
+          reviewed_at = excluded.reviewed_at, reviewed_by = excluded.reviewed_by
+      `;
+    });
+  }
+
+  /** The listing-sync trigger lists or unlists the agency's tutors to match. */
+  async setAgencyStatus(adminId: string, agencyId: string, status: string): Promise<boolean> {
+    return this.prisma.withUser(adminId, async (tx) => {
+      const n = await tx.$executeRaw`
+        update public.tutor_agencies
+        set verification_status = ${status}::public.verification_status, updated_at = now()
+        where id = ${agencyId}::uuid
+      `;
+      return n > 0;
+    });
+  }
+
+  async setAgencyShare(
+    adminId: string,
+    agencyId: string,
+    share: number,
+  ): Promise<{ previous: string } | null> {
+    return this.prisma.withUser(adminId, async (tx) => {
+      const before = await tx.$queryRaw<{ revenue_share_percentage: string }[]>`
+        select revenue_share_percentage from public.tutor_agencies
+        where id = ${agencyId}::uuid for update
+      `;
+      if (!before[0]) return null;
+      await tx.$executeRaw`
+        update public.tutor_agencies set revenue_share_percentage = ${share}, updated_at = now()
+        where id = ${agencyId}::uuid
+      `;
+      return { previous: String(before[0].revenue_share_percentage) };
+    });
   }
 }

@@ -1,18 +1,27 @@
 import { Module } from '@nestjs/common';
 
+import { AuthModule } from '../auth/auth.module';
+import { TutorsModule } from '../tutors/tutors.module';
+import { AgenciesController } from './agencies.controller';
+import { AgenciesRepository } from './agencies.repository';
+import { AgenciesService } from './agencies.service';
+
 /**
  * Tutor agencies.
  *
- * Scope is unresolved. The schema has tutor_agencies, tutors.agency_id,
- * commission_rules.agency_id and an `agency` member of the app_role enum, but
- * there is no agency UI anywhere in the frontend and no agency RPC.
+ * An agency account is verified by DiaLearn, adds tutors under it (creating
+ * their accounts), manages their profiles, subjects, availability and
+ * verification, sees every booking across its tutors, and receives its
+ * agreed share of their earnings with its own payouts.
  *
- * So this module exists to mark the boundary, not to be filled in. Building
- * endpoints here would mean inventing business rules, which migration rule 10
- * forbids. See question Q2 in the architecture audit.
- *
- * Foundation phase: boundary only. No controllers or services yet — migration
- * rule 7 keeps Supabase serving this domain until a verified replacement exists.
+ * The rules live in the database (prisma/sql/130_agencies.sql): the agency
+ * rules trigger, the tutor listing gate, the payment split in
+ * pay_for_booking() and the agency_* functions. Admin review of agencies is
+ * in the admin module.
  */
-@Module({})
+@Module({
+  imports: [AuthModule, TutorsModule],
+  controllers: [AgenciesController],
+  providers: [AgenciesRepository, AgenciesService],
+})
 export class AgenciesModule {}

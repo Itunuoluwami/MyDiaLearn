@@ -77,6 +77,7 @@ export class AdminService {
       fullName: row.full_name,
       email: row.email,
       avatarUrl: row.avatar_url,
+      agencyName: row.agency_name,
     }));
   }
 
@@ -351,5 +352,73 @@ export class AdminService {
     to: string,
   ): Promise<Record<string, unknown> | null> {
     return this.repository.reportSummary(adminId, new Date(from), new Date(to));
+  }
+
+  // --- Agencies -----------------------------------------------------------------
+
+  async agencies(adminId: string, status: string): Promise<Record<string, unknown>[]> {
+    return this.repository.listAgencies(adminId, status);
+  }
+
+  async agency(adminId: string, agencyId: string): Promise<Record<string, unknown>> {
+    const detail = await this.repository.agencyDetail(adminId, agencyId);
+    if (!detail.agency) throw new NotFoundError('Agency');
+    return detail;
+  }
+
+  async reviewAgencyStep(
+    adminId: string,
+    input: {
+      agencyId: string;
+      stepId: string;
+      status: string;
+      reviewerNotes?: string | undefined;
+    },
+  ): Promise<void> {
+    try {
+      await this.repository.reviewAgencyStep(adminId, {
+        agencyId: input.agencyId,
+        stepId: input.stepId,
+        status: input.status,
+        reviewerNotes: input.reviewerNotes?.trim() || null,
+      });
+    } catch (error) {
+      throw translateAdminError(error, 'We could not save that review.');
+    }
+  }
+
+  async decideAgency(
+    adminId: string,
+    agencyId: string,
+    input: { status: string; reason?: string | undefined },
+    context: AuditContext,
+  ): Promise<void> {
+    if (!(await this.repository.setAgencyStatus(adminId, agencyId, input.status))) {
+      throw new NotFoundError('Agency');
+    }
+    await this.audit.record('agency.verification_reviewed', {
+      actorId: adminId,
+      entityType: 'agency',
+      entityId: agencyId,
+      context,
+      metadata: { status: input.status, hasReason: Boolean(input.reason?.trim()) },
+    });
+  }
+
+  async setAgencyShare(
+    adminId: string,
+    agencyId: string,
+    share: number,
+    context: AuditContext,
+  ): Promise<void> {
+    const result = await this.repository.setAgencyShare(adminId, agencyId, share);
+    if (!result) throw new NotFoundError('Agency');
+    await this.audit.record('admin.settings_changed', {
+      actorId: adminId,
+      entityType: 'agency',
+      entityId: agencyId,
+      context,
+      metadata: { scope: 'agency_revenue_share', from: result.previous, to: share.toFixed(2) },
+    });
   }
 }

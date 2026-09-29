@@ -95,7 +95,7 @@ export class TutorAvailabilityRepository extends BaseRepository {
       async (tx) =>
         tx.$executeRaw`
         update public.availability_windows set is_active = ${isActive}, updated_at = now()
-        where id = ${id}::uuid
+        where id = ${id}::uuid and tutor_id = public.current_tutor_id()
       `,
     );
     return n > 0;
@@ -105,7 +105,10 @@ export class TutorAvailabilityRepository extends BaseRepository {
     const n = await this.prisma.withUser(
       userId,
       async (tx) =>
-        tx.$executeRaw`delete from public.availability_windows where id = ${id}::uuid`,
+        tx.$executeRaw`
+        delete from public.availability_windows
+        where id = ${id}::uuid and tutor_id = public.current_tutor_id()
+      `,
     );
     return n > 0;
   }

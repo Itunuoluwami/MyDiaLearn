@@ -217,6 +217,8 @@ export class StudentsRepository extends BaseRepository {
           can_message_tutors = coalesce(${input.canMessageTutors ?? null}, can_message_tutors),
           updated_at         = now()
         where id = ${id}::uuid
+          -- students_parent_update, applied here (no row-level security on this connection).
+          and (parent_id = auth.uid() or profile_id = auth.uid() or public.is_admin())
         returning id, profile_id, parent_id, first_name, last_name, date_of_birth, gender,
                   curriculum_id, education_level_id, school_name, learning_goals,
                   special_needs, timezone, avatar_url, can_self_login, can_book_lessons,
@@ -241,6 +243,7 @@ export class StudentsRepository extends BaseRepository {
         tx.$executeRaw`
         update public.students set is_active = false, updated_at = now()
         where id = ${id}::uuid and is_active
+          and (parent_id = auth.uid() or public.is_admin())
       `,
     );
     return affected > 0;

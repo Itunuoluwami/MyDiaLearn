@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { BaseRepository } from '../database/repositories/base.repository';
 import type { PaginationQueryDto } from '../shared/query.dto';
+import { NotAuthorizedError } from '../common/exceptions/app.exception';
 
 export interface BookingRow {
   id: string;
@@ -84,6 +85,14 @@ export class BookingsRepository extends BaseRepository {
     >,
   ): Promise<BookingRow> {
     return this.prisma.withUser(callerId, async (tx) => {
+      // The bookings insert policy: the caller must be able to act for the
+      // student (their own record, or their child). No row-level security on
+      // this connection, so it is checked here.
+      const allowed = await tx.$queryRaw<{ ok: boolean }[]>`
+        select (public.can_access_student(${input.studentId}::uuid) or public.is_admin()) as ok
+      `;
+      if (!allowed[0]?.ok) throw new NotAuthorizedError('You cannot book for this student.');
+
       const quotes = await tx.$queryRaw<
         {
           currency: string;
@@ -205,7 +214,9 @@ export class BookingsRepository extends BaseRepository {
       const found = await tx.$queryRaw<
         { tutor_id: string; student_id: string; status: string }[]
       >`
-        select tutor_id, student_id, status::text from public.bookings where id = ${bookingId}::uuid
+        select tutor_id, student_id, status::text from public.bookings
+        where id = ${bookingId}::uuid
+          and (booked_by = auth.uid() or public.can_access_student(student_id))
       `;
       const booking = found[0];
       if (!booking) return 'not_found';
