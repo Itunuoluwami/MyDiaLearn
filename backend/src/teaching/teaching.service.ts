@@ -1,6 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
-import { NotFoundError } from '../common/exceptions/app.exception';
+import { NotAuthorizedError, NotFoundError } from '../common/exceptions/app.exception';
+import {
+  STORAGE_PROVIDER,
+  type StorageProvider,
+} from '../integrations/storage/storage.interface';
 import { paginate, type Paginated, type PaginationQueryDto } from '../shared/query.dto';
 import type {
   AssignmentResponse,
@@ -24,7 +28,10 @@ import {
  */
 @Injectable()
 export class TeachingService {
-  constructor(private readonly repository: TeachingRepository) {}
+  constructor(
+    private readonly repository: TeachingRepository,
+    @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
+  ) {}
 
   // --- Lesson notes ----------------------------------------------------------
 
@@ -80,6 +87,15 @@ export class TeachingService {
     id: string,
     input: { submissionText?: string; submissionPath?: string },
   ): Promise<AssignmentResponse> {
+    // "Families upload submissions" only allowed submissions/<own uid>/, and a
+    // tutor is later shown whatever this points at, so hold it to that folder.
+    if (
+      input.submissionPath &&
+      (!input.submissionPath.startsWith(`submissions/${userId}/`) ||
+        input.submissionPath.includes('..'))
+    ) {
+      throw new NotAuthorizedError('That file does not belong to you.');
+    }
     const row = await this.repository.submitAssignment(userId, id, input);
     if (!row) throw new NotFoundError('Assignment');
     return toAssignment(row);
@@ -129,8 +145,14 @@ export class TeachingService {
   async deleteResource(tutorUserId: string, id: string): Promise<void> {
     const result = await this.repository.deleteResource(tutorUserId, id);
     if (result === null) throw new NotFoundError('Resource');
-    // The stored file, if any, is removed by the files module's storage
-    // provider; this returns the key for that follow-up once storage is wired.
+    if (!result) return;
+    // The row is gone either way; a file that cannot be removed is an orphan
+    // for housekeeping, not an error for the tutor.
+    try {
+      await this.storage.remove('learning-resources', [result]);
+    } catch {
+      // Intentionally swallowed, as in TutorVerificationService.removeDocument.
+    }
   }
 }
 

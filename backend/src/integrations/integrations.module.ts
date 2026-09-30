@@ -1,10 +1,14 @@
 import { Global, Module, Provider } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import type { IntegrationsConfig } from '../config/configuration';
 import { EmailModule } from './email/email.module';
 
 import { CLASSROOM_PROVIDER } from './classroom/classroom.interface';
 import { NoneClassroomProvider } from './classroom/none-classroom.provider';
 import { PaymentModule } from './payments/payment.module';
-import { STORAGE_PROVIDER } from './storage/storage.interface';
+import { LocalDiskStorageProvider } from './storage/local-disk-storage.provider';
+import { STORAGE_PROVIDER, type StorageProvider } from './storage/storage.interface';
 import { UnconfiguredStorageProvider } from './storage/unconfigured-storage.provider';
 
 /**
@@ -21,7 +25,11 @@ import { UnconfiguredStorageProvider } from './storage/unconfigured-storage.prov
  */
 const storageProvider: Provider = {
   provide: STORAGE_PROVIDER,
-  useClass: UnconfiguredStorageProvider,
+  inject: [ConfigService],
+  useFactory: (config: ConfigService): StorageProvider =>
+    config.getOrThrow<IntegrationsConfig>('integrations').storage === 'local'
+      ? new LocalDiskStorageProvider(config)
+      : new UnconfiguredStorageProvider(),
 };
 
 const classroomProvider: Provider = {

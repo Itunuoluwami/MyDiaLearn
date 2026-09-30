@@ -15,7 +15,10 @@ export const envValidationSchema = Joi.object({
   APP_ENV: Joi.string()
     .valid('development', 'test', 'staging', 'production')
     .default('development'),
-  PORT: Joi.number().port().default(3000),
+  // A TCP port, or — under IIS/iisnode — the named pipe iisnode assigns.
+  PORT: Joi.alternatives()
+    .try(Joi.number().port(), Joi.string().pattern(/^\\\\\.\\pipe\\/))
+    .default(3000),
   API_PREFIX: Joi.string().default('api'),
   CORS_ORIGIN: Joi.string()
     .default('http://localhost:8080')
@@ -30,6 +33,12 @@ export const envValidationSchema = Joi.object({
   DATABASE_URL: Joi.string()
     .uri({ scheme: ['postgres', 'postgresql'] })
     .required(),
+  // Optional restricted login (no table ownership), so row-level security
+  // applies to per-user work. Empty keeps everything on DATABASE_URL.
+  DATABASE_APP_URL: Joi.string()
+    .uri({ scheme: ['postgres', 'postgresql'] })
+    .allow('')
+    .optional(),
 
   // --- Authentication ------------------------------------------------------
   JWT_SECRET: Joi.string().min(32).required().messages({
@@ -82,7 +91,15 @@ export const envValidationSchema = Joi.object({
   // Webhook signing secret for the payment provider. Optional: with none set,
   // every payment webhook is refused.
   PAYMENT_WEBHOOK_SECRET: Joi.string().min(16).allow('').optional(),
-  STORAGE_PROVIDER: Joi.string().valid('unconfigured').default('unconfigured'),
+  STORAGE_PROVIDER: Joi.string().valid('unconfigured', 'local').default('unconfigured'),
+  // local: where uploads are written. Relative paths resolve against the
+  // working directory; the default sits under App_Data, which IIS never serves.
+  STORAGE_LOCAL_PATH: Joi.string().default('App_Data/uploads'),
+  // Signs short-lived download links. Optional: derived from JWT_SECRET when
+  // empty, but a distinct value lets links be revoked without logging everyone out.
+  STORAGE_SIGNING_SECRET: Joi.string().min(32).allow('').optional(),
+  // Mirrors the 10 MB limit the upload screens already state.
+  STORAGE_MAX_UPLOAD_MB: Joi.number().positive().max(100).default(10),
   CLASSROOM_PROVIDER: Joi.string().valid('none').default('none'),
 
   // --- Rate limiting -------------------------------------------------------

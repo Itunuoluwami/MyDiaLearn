@@ -3,7 +3,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import type { Database } from "@/integrations/supabase/types";
-import { apiDelete, apiGet, apiPost, useApiData } from "@/lib/api/data-client";
+import {
+  API_FILE_PREFIX,
+  apiDelete,
+  apiGet,
+  apiPost,
+  apiUpload,
+  openApiFile,
+  useApiData,
+} from "@/lib/api/data-client";
 import { apiRequest } from "@/lib/api/client";
 import { authClient } from "@/lib/auth";
 import { useTutorRecord } from "@/lib/tutor-data";
@@ -17,13 +25,6 @@ type FnRow<T extends keyof Database["public"]["Functions"]> =
   Database["public"]["Functions"][T]["Returns"] extends (infer R)[] ? R : never;
 
 const RESOURCE_BUCKET = "learning-resources";
-
-/**
- * Files have no storage provider behind the API yet. Links and text work;
- * anything that needs file bytes says so instead of half-saving a record.
- */
-const FILES_UNAVAILABLE =
-  "File uploads aren't available on this server yet. Add a link instead, or try again later.";
 
 /** Raw function rows arrive with NUMERIC/bigint columns possibly stringified. */
 function withNumbers<T>(row: Record<string, unknown>, keys: readonly string[]): T {
@@ -243,9 +244,9 @@ export function useLearningResources() {
             description: r.description,
             resource_type: r.resourceType,
             external_url: r.externalUrl,
-            // Storage keys are not exposed; files can't be opened until a
-            // storage provider is configured.
-            storage_path: null,
+            // Storage keys are not exposed. A marker stands in so the page
+            // still knows there is a file; openStoredFile resolves it.
+            storage_path: r.hasFile ? `${API_FILE_PREFIX}${r.id}` : null,
             mime_type: null,
             size_bytes: null,
             subject_id: r.subjectId,
@@ -285,7 +286,8 @@ export function useCreateResource() {
     }) => {
       if (!tutor?.id) throw new Error("Tutor profile is not ready yet.");
       if (viaApi) {
-        if (input.file) throw new Error(FILES_UNAVAILABLE);
+        const uploaded = input.file ? await apiUpload("learning-resources", input.file) : null;
+        input.onProgress?.(85);
         await apiPost("/learning-resources", {
           title: input.title,
           resourceType: input.resourceType,
@@ -293,6 +295,13 @@ export function useCreateResource() {
           ...(input.externalUrl ? { externalUrl: input.externalUrl } : {}),
           ...(input.subjectId ? { subjectId: input.subjectId } : {}),
           ...(input.studentId ? { studentId: input.studentId } : {}),
+          ...(uploaded
+            ? {
+                storagePath: uploaded.storagePath,
+                sizeBytes: uploaded.sizeBytes,
+                ...(uploaded.mimeType ? { mimeType: uploaded.mimeType } : {}),
+              }
+            : {}),
         });
         input.onProgress?.(100);
         return;
@@ -360,11 +369,14 @@ export function useDeleteResource() {
 }
 
 /**
- * Private files are only ever reachable through a short-lived signed link.
- * Supabase storage only: under the API there is no storage provider yet, and
- * list rows carry no storage path, so callers never reach this for them.
+ * Private files are only ever reachable through a short-lived signed link,
+ * minted by the API (which checks access first) or by Supabase storage.
  */
 export async function openStoredFile(path: string) {
+  if (path.startsWith(API_FILE_PREFIX)) {
+    await openApiFile(`/files/learning-resources/${path.slice(API_FILE_PREFIX.length)}/url`);
+    return;
+  }
   const { data, error } = await supabase.storage.from(RESOURCE_BUCKET).createSignedUrl(path, 120);
   if (error || !data?.signedUrl) throw error ?? new Error("Link unavailable");
   window.open(data.signedUrl, "_blank", "noopener,noreferrer");

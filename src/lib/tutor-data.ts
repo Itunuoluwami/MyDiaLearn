@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { apiDelete, apiGet, apiPatch, apiPost, useApiData } from "@/lib/api/data-client";
+import { apiDelete, apiGet, apiPatch, apiPost, apiUpload, useApiData } from "@/lib/api/data-client";
 import type { Database } from "@/integrations/supabase/types";
 
 export type TutorRow = Database["public"]["Tables"]["tutors"]["Row"];
@@ -678,12 +678,15 @@ export function useUploadTutorDocument() {
     mutationFn: async (input: { file: File; label: string; stepId?: string | null }) => {
       if (!tutor?.id) throw new Error("Tutor profile is not ready yet.");
       if (viaApi) {
-        // The file bytes have nowhere to go yet: the API has no storage
-        // provider configured, and Supabase storage does not accept an API
-        // session. Say so plainly rather than half-saving a record.
-        throw new Error(
-          "Document upload isn't available on this server yet. Your other onboarding steps still save.",
-        );
+        const uploaded = await apiUpload("tutor-documents", input.file);
+        await apiPost("/tutors/me/documents", {
+          label: input.label,
+          storagePath: uploaded.storagePath,
+          sizeBytes: uploaded.sizeBytes,
+          ...(input.stepId ? { stepId: input.stepId } : {}),
+          ...(uploaded.mimeType ? { mimeType: uploaded.mimeType } : {}),
+        });
+        return;
       }
       const extension = input.file.name.split(".").pop()?.toLowerCase() ?? "bin";
       const path = `${tutor.id}/${crypto.randomUUID()}.${extension}`;

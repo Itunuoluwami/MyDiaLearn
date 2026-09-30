@@ -1,0 +1,98 @@
+name: Deploy (SmarterASP)
+
+# Builds the frontend and the API and commits the runnable output to two
+# branches, deploy-web and deploy-api. SmarterASP's GitHub deployment pulls
+# those branches into the two sites; it has no build step of its own, so what
+# is on these branches is exactly what runs.
+#
+# Secrets never go on these branches. The API's .env is created on the server
+# by hand (docs/deployment-smarterasp.md) and stays untracked there.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.1
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build for IIS
+        run: bun run build
+        env:
+          # nitro's iis_node preset: emits index.js + web.config and listens on
+          # the named pipe iisnode provides.
+          NITRO_PRESET: iis_node
+          # Without it React's development JSX runtime is bundled and every
+          # server-rendered page fails with "jsxDEV is not a function".
+          NODE_ENV: production
+          # Inlined into the browser bundle, so public values only — they are
+          # repository *variables*, not secrets.
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_AUTH_PROVIDER: ${{ vars.VITE_AUTH_PROVIDER }}
+          # Still read by the Supabase fallback paths until they are removed.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      - name: Publish to deploy-web
+        run: bash scripts/publish-deploy-branch.sh deploy-web .output
+
+  api:
+    # Windows, because the API ships its node_modules and @node-rs/argon2 is a
+    # native module: the binary has to match the server's OS.
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install and build
+        working-directory: backend
+        run: |
+          bun install --frozen-lockfile
+          bunx prisma generate
+          bun run build
+
+      - name: Assemble the site
+        run: |
+          site="$RUNNER_TEMP/api-site"
+          mkdir -p "$site"
+          cp -r backend/dist backend/package.json backend/bun.lock "$site/"
+          cp backend/deploy/iis/web.config backend/deploy/iis/index.js "$site/"
+          # Production dependencies only, then the generated Prisma client,
+          # which lives in node_modules but is not a package bun would install.
+          (cd "$site" && bun install --production --frozen-lockfile)
+          cp -r backend/node_modules/.prisma "$site/node_modules/"
+          bash backend/deploy/prune-site.sh "$site"
+          # Nothing on this branch should ever hold a secret.
+          find "$site" -name ".env*" -delete
+          # Smoke test: the entry point must at least resolve its modules.
+          # It fails on missing configuration, which is expected here.
+          (cd "$site" && node -e "require.resolve('./dist/main.js'); require('@node-rs/argon2'); require('.prisma/client')")
+
+      - name: Publish to deploy-api
+        run: bash scripts/publish-deploy-branch.sh deploy-api "$RUNNER_TEMP/api-site"

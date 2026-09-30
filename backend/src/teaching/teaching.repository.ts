@@ -1,9 +1,30 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../database/prisma.service';
 import { BaseRepository } from '../database/repositories/base.repository';
 import type { PaginationQueryDto } from '../shared/query.dto';
 import { NotAuthorizedError } from '../common/exceptions/app.exception';
+
+/**
+ * The SELECT policies of assignments and learning_resources, as SQL.
+ *
+ * The API connects as the tables' owner, so row-level security is not applied
+ * and every read has to carry its policy itself. Kept verbatim from the
+ * migrations so there is one definition of who may see what; the files module
+ * uses the same predicates before it signs a download.
+ */
+export const ASSIGNMENT_VISIBLE = Prisma.sql`(
+  public.owns_tutor(tutor_id)
+  or (status <> 'draft' and public.can_access_student(student_id))
+  or public.is_admin()
+)`;
+
+export const RESOURCE_VISIBLE = Prisma.sql`(
+  public.owns_tutor(tutor_id)
+  or (is_shared and student_id is not null and public.can_access_student(student_id))
+  or public.is_admin()
+)`;
 
 export interface LessonNoteRow {
   id: string;
@@ -88,6 +109,10 @@ export class TeachingRepository extends BaseRepository {
         select id, booking_id, tutor_id, covered, understanding, improvements,
                next_steps, created_at, updated_at
         from public.lesson_notes where booking_id = ${bookingId}::uuid
+          -- The three SELECT policies on lesson_notes, applied here: the API's
+          -- connection owns the table, so row-level security does not.
+          and (public.owns_tutor(tutor_id) or public.can_access_booking(booking_id)
+               or public.is_admin())
         order by created_at desc
       `,
     );
@@ -179,6 +204,9 @@ export class TeachingRepository extends BaseRepository {
         from public.assignments
         where (${filters.studentId ?? null}::uuid is null or student_id = ${filters.studentId ?? null}::uuid)
           and (${filters.status ?? null}::text is null or status::text = ${filters.status ?? null})
+          -- The SELECT policies on assignments, applied here: the API's
+          -- connection owns the table, so row-level security does not.
+          and ${ASSIGNMENT_VISIBLE}
         order by coalesce(due_at, created_at) desc
         limit ${query.limit} offset ${query.skip}
       `;
@@ -186,6 +214,7 @@ export class TeachingRepository extends BaseRepository {
         select count(*)::bigint n from public.assignments
         where (${filters.studentId ?? null}::uuid is null or student_id = ${filters.studentId ?? null}::uuid)
           and (${filters.status ?? null}::text is null or status::text = ${filters.status ?? null})
+          and ${ASSIGNMENT_VISIBLE}
       `;
       return { rows, total: Number(counted[0]?.n ?? 0) };
     });
@@ -197,7 +226,7 @@ export class TeachingRepository extends BaseRepository {
         select id, tutor_id, student_id, booking_id, subject_id, title, instructions,
                submission_requirements, due_at, resource_id, status::text, assigned_at,
                submission_text, submission_path, submitted_at, feedback, reviewed_at, created_at
-        from public.assignments where id = ${id}::uuid
+        from public.assignments where id = ${id}::uuid and ${ASSIGNMENT_VISIBLE}
       `;
       return rows[0] ?? null;
     });
@@ -324,6 +353,8 @@ export class TeachingRepository extends BaseRepository {
         from public.learning_resources
         where (${filters.studentId ?? null}::uuid is null or student_id = ${filters.studentId ?? null}::uuid)
           and (${filters.subjectId ?? null}::uuid is null or subject_id = ${filters.subjectId ?? null}::uuid)
+          -- The SELECT policies on learning_resources, applied here.
+          and ${RESOURCE_VISIBLE}
         order by created_at desc
         limit ${query.limit} offset ${query.skip}
       `;
@@ -331,6 +362,7 @@ export class TeachingRepository extends BaseRepository {
         select count(*)::bigint n from public.learning_resources
         where (${filters.studentId ?? null}::uuid is null or student_id = ${filters.studentId ?? null}::uuid)
           and (${filters.subjectId ?? null}::uuid is null or subject_id = ${filters.subjectId ?? null}::uuid)
+          and ${RESOURCE_VISIBLE}
       `;
       return { rows, total: Number(counted[0]?.n ?? 0) };
     });
@@ -352,6 +384,17 @@ export class TeachingRepository extends BaseRepository {
     },
   ): Promise<LearningResourceRow> {
     return this.prisma.withUser(tutorUserId, async (tx) => {
+      // The key comes from the caller, so it is confined to this tutor's
+      // folder — the rule "Tutors manage own learning files" applied to
+      // storage. Otherwise a row could point at another tutor's file and the
+      // files module would sign a link to it for this tutor's families.
+      if (input.storagePath) {
+        const owned = await tx.$queryRaw<{ ok: boolean }[]>`
+          select coalesce(starts_with(${input.storagePath}, public.current_tutor_id()::text || '/'), false)
+                 and position('..' in ${input.storagePath}) = 0 as ok
+        `;
+        if (!owned[0]?.ok) throw new NotAuthorizedError('That file does not belong to you.');
+      }
       const rows = await tx.$queryRaw<LearningResourceRow[]>`
         insert into public.learning_resources
           (tutor_id, title, description, resource_type, storage_path, external_url,

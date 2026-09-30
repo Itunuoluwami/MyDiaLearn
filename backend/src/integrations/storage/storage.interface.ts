@@ -32,6 +32,18 @@ export interface SignedUrlRequest {
   bucket: string;
   path: string;
   expiresInSeconds: number;
+  /** Served as this type; anything unsafe to render is downloaded instead. */
+  contentType?: string | null;
+  /** Suggested file name for the download. */
+  downloadName?: string | null;
+}
+
+/** What a signed link resolves to, for providers that serve files themselves. */
+export interface SignedDownload {
+  absolutePath: string;
+  contentType: string;
+  downloadName: string;
+  inline: boolean;
 }
 
 export interface StorageProvider {
@@ -43,6 +55,15 @@ export interface StorageProvider {
    */
   createSignedUrl(request: SignedUrlRequest): Promise<string>;
   remove(bucket: string, paths: string[]): Promise<void>;
+  /**
+   * Resolves a token minted by createSignedUrl. Only providers that serve
+   * bytes through the API (local disk) implement it; a cloud provider's URL
+   * points at the provider instead.
+   */
+  resolveSignedToken?(token: string): Promise<SignedDownload | null>;
 }
+
+/** The buckets DiaLearn stores into. Anything else is refused. */
+export const STORAGE_BUCKETS = ['avatars', 'tutor-documents', 'learning-resources'] as const;
 
 export const STORAGE_PROVIDER = Symbol('StorageProvider');

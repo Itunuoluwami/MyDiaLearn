@@ -86,7 +86,9 @@ import { UsersModule } from './users/users.module';
             // Probes would otherwise dominate the log volume.
             ignore: (req: IncomingMessage) => req.url?.startsWith('/health') ?? false,
           },
-          ...(app.isProduction
+          // pino-pretty is a dev dependency and absent from deployed builds, so
+          // only local environments may ask for it; staging logs JSON too.
+          ...(app.env !== 'development' && app.env !== 'test'
             ? {}
             : { transport: { target: 'pino-pretty', options: { singleLine: true } } }),
         },

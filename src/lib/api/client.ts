@@ -57,6 +57,9 @@ export interface RequestOptions {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const url = `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 
+  // A FormData body (file upload) sets its own multipart boundary header.
+  const isForm = typeof FormData !== "undefined" && options.body instanceof FormData;
+
   let response: Response;
   try {
     response = await fetch(url, {
@@ -64,10 +67,12 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       // Carries the refresh cookie. Required for /auth/refresh and /auth/logout.
       credentials: "include",
       headers: {
-        ...(options.body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(options.body !== undefined && !isForm ? { "Content-Type": "application/json" } : {}),
         ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
       },
-      ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
+      ...(options.body !== undefined
+        ? { body: isForm ? (options.body as FormData) : JSON.stringify(options.body) }
+        : {}),
       ...(options.signal ? { signal: options.signal } : {}),
     });
   } catch (cause) {

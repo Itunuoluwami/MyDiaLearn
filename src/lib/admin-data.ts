@@ -2,7 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { apiRequest } from "@/lib/api/client";
-import { apiGet, apiPatch, apiPost, useApiData } from "@/lib/api/data-client";
+import {
+  API_BASE_URL,
+  API_FILE_PREFIX,
+  apiGet,
+  apiPatch,
+  apiPost,
+  useApiData,
+} from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
 import { governanceRpc, governanceTable } from "@/integrations/supabase/governance-types";
 import type { Database } from "@/integrations/supabase/types";
@@ -334,12 +341,12 @@ export function useTutorVerificationDetail(tutorId: string | null) {
         return {
           steps: detail.steps.map((step) => ({ ...step, sort_order: Number(step.sort_order) })),
           progress: detail.progress,
-          // Storage keys are not exposed, and files cannot be opened until a
-          // storage provider is configured.
-          documents: detail.documents.map(({ has_file: _hasFile, ...doc }) => ({
+          // Storage keys are not exposed. A marker carrying the document id
+          // stands in; useDocumentUrl exchanges it for a signed link.
+          documents: detail.documents.map(({ has_file: hasFile, ...doc }) => ({
             ...doc,
             size_bytes: doc.size_bytes === null ? null : Number(doc.size_bytes),
-            storage_path: "",
+            storage_path: hasFile ? `${API_FILE_PREFIX}${doc.id}` : "",
           })),
         };
       }
@@ -466,10 +473,14 @@ export function useDocumentUrl() {
   const viaApi = useApiData();
   return useMutation({
     mutationFn: async (storagePath: string) => {
-      if (viaApi || !storagePath) {
-        throw new Error(
-          "Viewing uploaded documents isn't available on this server yet (no file storage is configured).",
+      if (storagePath.startsWith(API_FILE_PREFIX)) {
+        const { url } = await apiGet<{ url: string }>(
+          `/files/tutor-documents/${storagePath.slice(API_FILE_PREFIX.length)}/url`,
         );
+        return new URL(url, API_BASE_URL || window.location.origin).toString();
+      }
+      if (viaApi || !storagePath) {
+        throw new Error("This document has no uploaded file.");
       }
       const { data, error } = await supabase.storage
         .from("tutor-documents")

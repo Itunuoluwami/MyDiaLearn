@@ -63,3 +63,54 @@ export async function apiDelete<T>(path: string): Promise<T> {
   }
   return apiRequest<T>(path, { method: "DELETE", ...(accessToken ? { accessToken } : {}) });
 }
+
+/** What POST /files/<kind> returns: the key to register with the owning record. */
+export interface UploadedFile {
+  storagePath: string;
+  mimeType: string | null;
+  sizeBytes: number;
+}
+
+/**
+ * Uploads one file to the API's storage. The server picks the key; the caller
+ * then creates the record that points at it, as with Supabase storage.
+ */
+export async function apiUpload(
+  kind: "tutor-documents" | "learning-resources" | "submissions",
+  file: File,
+): Promise<UploadedFile> {
+  const form = new FormData();
+  form.append("file", file);
+  return apiPost<UploadedFile>(`/files/${kind}`, form);
+}
+
+/**
+ * Opens a stored file in a new tab through a short-lived signed link.
+ *
+ * The tab is opened before the request so popup blockers still see a direct
+ * response to the click; it is pointed at the link once the API has checked
+ * access.
+ */
+export async function openApiFile(urlEndpoint: string): Promise<void> {
+  const tab = typeof window !== "undefined" ? window.open("", "_blank") : null;
+  try {
+    const { url } = await apiGet<{ url: string }>(urlEndpoint);
+    const absolute = new URL(url, API_BASE_URL || window.location.origin).toString();
+    if (tab) {
+      tab.opener = null;
+      tab.location.href = absolute;
+    } else {
+      window.open(absolute, "_blank", "noopener,noreferrer");
+    }
+  } catch (error) {
+    tab?.close();
+    throw error;
+  }
+}
+
+/**
+ * Marker for a file held by the API. Rows from the API carry no storage key,
+ * so screens that test `storage_path` for "has a file" get this in its place,
+ * and the open/delete helpers recognise it. Never sent to the server.
+ */
+export const API_FILE_PREFIX = "api-file:";

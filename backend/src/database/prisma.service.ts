@@ -28,6 +28,13 @@ const TRANSACTION_MAX_WAIT_MS = 10_000;
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private connected = false;
 
+  /**
+   * The restricted login, when DATABASE_APP_URL is set. It owns nothing, so
+   * the RLS policies bind it; `this` (the owner) is kept for system work that
+   * has no user — token housekeeping, webhooks, audit.
+   */
+  private readonly restricted: PrismaClient | null;
+
   constructor(
     @Inject(databaseConfig.KEY) database: DatabaseConfig,
     @Inject(appConfig.KEY) private readonly app: AppConfig,
@@ -36,6 +43,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     // keepAlive stops idle pooled connections being dropped silently by the
     // network between bursts of traffic to the remote database.
     super({ adapter: new PrismaPg({ connectionString: database.url, keepAlive: true }) });
+    this.restricted = database.appUrl
+      ? new PrismaClient({
+          adapter: new PrismaPg({ connectionString: database.appUrl, keepAlive: true }),
+        })
+      : null;
     this.logger.setContext(PrismaService.name);
   }
 
@@ -47,6 +59,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       // proves the connection, and claiming otherwise in the startup log
       // sends whoever is debugging in exactly the wrong direction.
       await this.ping();
+      if (this.restricted) {
+        await this.restricted.$queryRaw`SELECT 1`;
+        this.logger.info('Restricted database login verified; row-level security applies');
+      }
       this.connected = true;
       this.logger.info('Database connection verified');
     } catch (error) {
@@ -69,7 +85,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   async onModuleDestroy(): Promise<void> {
-    await this.$disconnect();
+    await Promise.all([this.$disconnect(), this.restricted?.$disconnect()]);
+  }
+
+  /** Whether per-user work runs under row-level security. */
+  usesRestrictedLogin(): boolean {
+    return this.restricted !== null;
   }
 
   /** Whether the initial connection succeeded. Used by the health check. */
@@ -112,7 +133,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       role: options?.role ?? 'authenticated',
     });
 
-    return this.$transaction(
+    return (this.restricted ?? this).$transaction(
       async (tx) => {
         // `true` is the is_local flag: reverted when the transaction ends.
         await tx.$executeRaw`select set_config('request.jwt.claims', ${claims}, true)`;
@@ -130,7 +151,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
    * decision rather than an omission.
    */
   async asAnonymous<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
-    return this.$transaction(
+    return (this.restricted ?? this).$transaction(
       async (tx) => {
         await tx.$executeRaw`select set_config('request.jwt.claims', '', true)`;
         return fn(tx);
