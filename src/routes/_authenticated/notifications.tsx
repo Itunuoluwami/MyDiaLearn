@@ -3,8 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 
-import { supabase } from "@/integrations/supabase/client";
-import { apiPost, useApiData } from "@/lib/api/data-client";
+import { apiPost } from "@/lib/api/data-client";
 import { ParentShell } from "@/components/parent/ParentShell";
 import { CardSkeletonList, EmptyPanel, LoadError, SectionCard } from "@/components/parent/ui";
 import { Button } from "@/components/ui/button";
@@ -36,21 +35,13 @@ export const Route = createFileRoute("/_authenticated/notifications")({
 function NotificationsPage() {
   const notifications = useNotifications();
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   const rows = notifications.data ?? [];
   const unread = rows.filter((row) => !row.read_at);
 
   const markRead = useMutation({
     mutationFn: async (ids: string[]) => {
-      if (viaApi) {
-        if (ids.length) await apiPost("/notifications/read", { ids });
-        return;
-      }
-      const { error } = await supabase
-        .from("notifications")
-        .update({ read_at: new Date().toISOString() })
-        .in("id", ids);
-      if (error) throw error;
+      if (ids.length) await apiPost("/notifications/read", { ids });
+      return;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["parent-notifications"] });

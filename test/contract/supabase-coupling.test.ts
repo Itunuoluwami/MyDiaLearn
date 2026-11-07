@@ -61,14 +61,10 @@ const EXPECTED_RPCS = [
 ];
 
 const EXPECTED_TABLES = [
-  "bookings",
   "commission_rules",
-  "currencies",
   "curricula",
   "education_levels",
   "notification_templates",
-  "notifications",
-  "permissions",
   "platform_settings",
   "profiles",
   "role_permissions",
@@ -84,7 +80,7 @@ describe("Supabase coupling inventory", () => {
     expect([...collect(RPC_PATTERN)].sort()).toEqual(EXPECTED_RPCS);
   });
 
-  it("reads exactly the 16 tables and views on record", () => {
+  it("reads exactly the 12 tables and views on record", () => {
     expect([...collect(TABLE_PATTERN)].sort()).toEqual(EXPECTED_TABLES);
   });
 

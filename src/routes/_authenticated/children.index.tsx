@@ -4,8 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronRight, Loader2, Lock, Plus, ShieldCheck, UserRound, Users } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
-import { apiPost, apiPatch, useApiData } from "@/lib/api/data-client";
+import { apiPost, apiPatch } from "@/lib/api/data-client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 import { ParentShell } from "@/components/parent/ParentShell";
@@ -77,7 +76,6 @@ type FormState = typeof EMPTY_FORM;
 function ChildrenPage() {
   const { user, hasPermission } = useAuth();
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   const children = useChildren();
   const canManage = hasPermission("students.manage");
 
@@ -117,29 +115,18 @@ function ChildrenPage() {
         school_name: form.school_name.trim() || null,
         learning_goals: form.learning_goals.trim() || null,
       };
-      if (viaApi) {
-        const apiBody = {
-          firstName: payload.first_name,
-          lastName: payload.last_name ?? undefined,
-          dateOfBirth: payload.date_of_birth ?? undefined,
-          curriculumId: payload.curriculum_id ?? undefined,
-          educationLevelId: payload.education_level_id ?? undefined,
-          schoolName: payload.school_name ?? undefined,
-          learningGoals: payload.learning_goals ?? undefined,
-        };
-        if (editing) await apiPatch(`/students/${editing.id}`, apiBody);
-        else await apiPost("/students", apiBody);
-        return;
-      }
-      if (editing) {
-        const { error } = await supabase.from("students").update(payload).eq("id", editing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("students")
-          .insert({ ...payload, parent_id: user.id });
-        if (error) throw error;
-      }
+      const apiBody = {
+        firstName: payload.first_name,
+        lastName: payload.last_name ?? undefined,
+        dateOfBirth: payload.date_of_birth ?? undefined,
+        curriculumId: payload.curriculum_id ?? undefined,
+        educationLevelId: payload.education_level_id ?? undefined,
+        schoolName: payload.school_name ?? undefined,
+        learningGoals: payload.learning_goals ?? undefined,
+      };
+      if (editing) await apiPatch(`/students/${editing.id}`, apiBody);
+      else await apiPost("/students", apiBody);
+      return;
     },
     onSuccess: async () => {
       setDialogOpen(false);
@@ -164,16 +151,12 @@ function ChildrenPage() {
         >
       >;
     }) => {
-      if (viaApi) {
-        await apiPatch(`/students/${id}`, {
-          canSelfLogin: patch.can_self_login,
-          canBookLessons: patch.can_book_lessons,
-          canMessageTutors: patch.can_message_tutors,
-        });
-        return;
-      }
-      const { error } = await supabase.from("students").update(patch).eq("id", id);
-      if (error) throw error;
+      await apiPatch(`/students/${id}`, {
+        canSelfLogin: patch.can_self_login,
+        canBookLessons: patch.can_book_lessons,
+        canMessageTutors: patch.can_message_tutors,
+      });
+      return;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["parent-children"] });

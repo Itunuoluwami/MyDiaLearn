@@ -6,8 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TutorShell } from "@/components/tutor/TutorShell";
 import { CardSkeletonList, EmptyPanel, LoadError, SectionCard } from "@/components/parent/ui";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { apiPost, useApiData } from "@/lib/api/data-client";
+import { apiPost } from "@/lib/api/data-client";
 import { formatRelative, useNotifications } from "@/lib/parent-data";
 import { cn } from "@/lib/utils";
 
@@ -35,20 +34,12 @@ export const Route = createFileRoute("/_authenticated/tutor/notifications")({
 function TutorNotificationsPage() {
   const notifications = useNotifications();
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
 
   const markRead = useMutation({
     mutationFn: async (ids: string[]) => {
       if (ids.length === 0) return;
-      if (viaApi) {
-        await apiPost("/notifications/read", { ids });
-        return;
-      }
-      const { error } = await supabase
-        .from("notifications")
-        .update({ read_at: new Date().toISOString() })
-        .in("id", ids);
-      if (error) throw error;
+      await apiPost("/notifications/read", { ids });
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["parent-notifications"] });

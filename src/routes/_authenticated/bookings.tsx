@@ -4,8 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CalendarDays, Loader2, Search, XCircle } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
-import { apiPost, useApiData } from "@/lib/api/data-client";
+import { apiPost } from "@/lib/api/data-client";
 import { ParentShell } from "@/components/parent/ParentShell";
 import { ChildSwitcher } from "@/components/parent/ChildSwitcher";
 import { ClassCard } from "@/components/parent/ClassCard";
@@ -59,7 +58,6 @@ function BookingsPage() {
   const [childId, setChildId] = useState<string | null>(null);
   const bookings = useBookings(childId ? { studentId: childId } : undefined);
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
 
   const tutorIds = useMemo(() => (bookings.data ?? []).map((row) => row.tutor_id), [bookings.data]);
   const tutors = useTutorCards(tutorIds);
@@ -67,21 +65,10 @@ function BookingsPage() {
 
   const cancelBooking = useMutation({
     mutationFn: async (booking: Booking) => {
-      if (viaApi) {
-        // The API allows this for a pending, unpaid lesson — the case this
-        // button is shown for.
-        await apiPost(`/bookings/${booking.id}/cancel`, { reason: "Cancelled by parent" });
-        return;
-      }
-      const { error } = await supabase
-        .from("bookings")
-        .update({
-          status: "cancelled",
-          cancelled_at: new Date().toISOString(),
-          cancellation_reason: "Cancelled by parent",
-        })
-        .eq("id", booking.id);
-      if (error) throw error;
+      // The API allows this for a pending, unpaid lesson — the case this
+      // button is shown for.
+      await apiPost(`/bookings/${booking.id}/cancel`, { reason: "Cancelled by parent" });
+      return;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["parent-bookings"] });

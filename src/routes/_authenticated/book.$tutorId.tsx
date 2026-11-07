@@ -4,8 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CalendarDays, CheckCircle2, Clock, Globe2, Loader2, ShieldCheck } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
-import { apiPost, useApiData } from "@/lib/api/data-client";
+import { apiPost } from "@/lib/api/data-client";
 import { useAuth } from "@/hooks/use-auth";
 import { ParentShell } from "@/components/parent/ParentShell";
 import {
@@ -76,7 +75,6 @@ function BookClassPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const timezone = useViewerTimezone();
-  const viaApi = useApiData();
 
   const children = useChildren();
   const { tutor: tutorInfo } = useTutorCard(tutorId);
@@ -129,42 +127,21 @@ function BookClassPage() {
       const priced = quote.data;
       if (!priced) throw new Error("We couldn't price this lesson. Please try again.");
 
-      if (viaApi) {
-        // The server prices the lesson from booking_quote() and records the
-        // commission rule; only the parent's choices are sent.
-        await apiPost("/bookings", {
-          studentId: childId,
-          tutorId,
-          ...(subjectId ? { subjectId } : {}),
-          ...(selectedChild?.education_level_id
-            ? { educationLevelId: selectedChild.education_level_id }
-            : {}),
-          startsAt: selectedSlot.starts_at,
-          durationMinutes: priced.duration_minutes,
-          timezone,
-          ...(notes.trim() ? { studentNotes: notes.trim() } : {}),
-        });
-        return;
-      }
-
-      const { error } = await supabase.from("bookings").insert({
-        student_id: childId,
-        tutor_id: tutorId,
-        booked_by: user.id,
-        subject_id: subjectId ?? null,
-        education_level_id: selectedChild?.education_level_id ?? null,
-        starts_at: selectedSlot.starts_at,
-        ends_at: selectedSlot.ends_at,
-        duration_minutes: priced.duration_minutes,
-        booking_timezone: timezone,
-        hourly_rate: priced.hourly_rate,
-        currency: priced.currency,
-        total_amount: priced.total_amount,
-        commission_rule_id: priced.commission_rule_id ?? null,
-        cancellation_policy_id: priced.cancellation_policy_id ?? null,
-        student_notes: notes.trim() || null,
+      // The server prices the lesson from booking_quote() and records the
+      // commission rule; only the parent's choices are sent.
+      await apiPost("/bookings", {
+        studentId: childId,
+        tutorId,
+        ...(subjectId ? { subjectId } : {}),
+        ...(selectedChild?.education_level_id
+          ? { educationLevelId: selectedChild.education_level_id }
+          : {}),
+        startsAt: selectedSlot.starts_at,
+        durationMinutes: priced.duration_minutes,
+        timezone,
+        ...(notes.trim() ? { studentNotes: notes.trim() } : {}),
       });
-      if (error) throw error;
+      return;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["parent-bookings"] });

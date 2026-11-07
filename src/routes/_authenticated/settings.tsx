@@ -4,8 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { KeyRound, Loader2, Save, ShieldCheck } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
-import { apiGet, apiPatch, useApiData } from "@/lib/api/data-client";
+import { apiGet, apiPatch } from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { ParentShell } from "@/components/parent/ParentShell";
@@ -46,7 +45,6 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function SettingsPage() {
   const { profile, user, roles, refresh, loading } = useAuth();
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   const navigate = useNavigate();
 
   // Tutor-only accounts get the tutor settings surface, not the parent one.
@@ -76,19 +74,10 @@ function SettingsPage() {
     queryKey: ["currencies"],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      if (viaApi) {
-        // Active currencies, in the table's order.
-        const rows =
-          await apiGet<{ code: string; name: string; symbol: string }[]>("/catalogue/currencies");
-        return rows.map(({ code, name, symbol }) => ({ code, name, symbol }));
-      }
-      const { data, error } = await supabase
-        .from("currencies")
-        .select("code, name, symbol")
-        .eq("is_active", true)
-        .order("sort_order");
-      if (error) throw error;
-      return data ?? [];
+      // Active currencies, in the table's order.
+      const rows =
+        await apiGet<{ code: string; name: string; symbol: string }[]>("/catalogue/currencies");
+      return rows.map(({ code, name, symbol }) => ({ code, name, symbol }));
     },
   });
 
@@ -98,28 +87,15 @@ function SettingsPage() {
   const save = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("You need to be signed in.");
-      if (viaApi) {
-        // PATCH leaves omitted fields alone, so only filled ones are sent.
-        await apiPatch("/users/me", {
-          ...(fullName ? { fullName } : {}),
-          ...(phone ? { phone } : {}),
-          ...(countryCode ? { countryCode } : {}),
-          timezone,
-          preferredCurrency: currency,
-        });
-        return;
-      }
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: fullName || null,
-          phone: phone || null,
-          country_code: countryCode || null,
-          timezone,
-          preferred_currency: currency,
-        })
-        .eq("id", user.id);
-      if (error) throw error;
+      // PATCH leaves omitted fields alone, so only filled ones are sent.
+      await apiPatch("/users/me", {
+        ...(fullName ? { fullName } : {}),
+        ...(phone ? { phone } : {}),
+        ...(countryCode ? { countryCode } : {}),
+        timezone,
+        preferredCurrency: currency,
+      });
+      return;
     },
     onSuccess: async () => {
       await refresh();

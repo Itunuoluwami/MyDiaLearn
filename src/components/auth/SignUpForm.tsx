@@ -15,8 +15,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
-import { apiGet, useApiData } from "@/lib/api/data-client";
+import { apiGet } from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
 import { validateSignup } from "@/lib/signup.functions";
 import {
@@ -92,23 +91,13 @@ export function SignUpForm({
     [settings],
   );
 
-  const viaApi = useApiData();
   const { data: accountTypes } = useQuery({
     queryKey: ["setting", "auth.account_types"],
     queryFn: async () => {
-      if (viaApi) {
-        // Public settings, which include auth.account_types.
-        const settings = await apiGet<Record<string, unknown>>("/catalogue/settings");
-        const value = settings["auth.account_types"];
-        return Array.isArray(value) ? (value as string[]) : [];
-      }
-      const { data, error } = await supabase
-        .from("platform_settings")
-        .select("value")
-        .eq("key", "auth.account_types")
-        .maybeSingle();
-      if (error) throw error;
-      return Array.isArray(data?.value) ? (data.value as string[]) : [];
+      // Public settings, which include auth.account_types.
+      const settings = await apiGet<Record<string, unknown>>("/catalogue/settings");
+      const value = settings["auth.account_types"];
+      return Array.isArray(value) ? (value as string[]) : [];
     },
     staleTime: 5 * 60 * 1000,
   });

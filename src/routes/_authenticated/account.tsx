@@ -4,8 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
-import { apiGet, apiPatch, useApiData } from "@/lib/api/data-client";
+import { apiGet, apiPatch } from "@/lib/api/data-client";
 import { useAuth } from "@/hooks/use-auth";
 import { useRedirectToPortalHome } from "@/hooks/use-portal-redirect";
 
@@ -59,67 +58,38 @@ function AccountPage() {
     setCurrency(profile.preferred_currency);
   }, [profile]);
 
-  const viaApi = useApiData();
   const { data: currencies } = useQuery({
     queryKey: ["currencies"],
     queryFn: async () => {
-      if (viaApi) {
-        // Active currencies from the catalogue, in the table's order.
-        const rows =
-          await apiGet<{ code: string; name: string; symbol: string }[]>("/catalogue/currencies");
-        return rows.map(({ code, name, symbol }) => ({ code, name, symbol }));
-      }
-      const { data, error } = await supabase
-        .from("currencies")
-        .select("code, name, symbol")
-        .eq("is_active", true)
-        .order("sort_order");
-      if (error) throw error;
-      return data;
+      // Active currencies from the catalogue, in the table's order.
+      const rows =
+        await apiGet<{ code: string; name: string; symbol: string }[]>("/catalogue/currencies");
+      return rows.map(({ code, name, symbol }) => ({ code, name, symbol }));
     },
   });
 
   const { data: permissionCatalog } = useQuery({
     queryKey: ["permission-catalog"],
     queryFn: async () => {
-      if (viaApi) {
-        return apiGet<{ key: string; label: string; category: string }[]>(
-          "/users/permissions/catalog",
-        );
-      }
-      const { data, error } = await supabase.from("permissions").select("key, label, category");
-      if (error) throw error;
-      return data;
+      return apiGet<{ key: string; label: string; category: string }[]>(
+        "/users/permissions/catalog",
+      );
     },
   });
 
   const save = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not signed in");
-      if (viaApi) {
-        // PATCH leaves omitted fields alone, so only filled ones are sent.
-        await apiPatch("/users/me", {
-          ...(fullName ? { fullName } : {}),
-          ...(phone ? { phone } : {}),
-          ...(countryCode ? { countryCode } : {}),
-          timezone,
-          preferredCurrency: currency,
-          onboardingCompleted: true,
-        });
-        return;
-      }
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: fullName || null,
-          phone: phone || null,
-          country_code: countryCode || null,
-          timezone,
-          preferred_currency: currency,
-          onboarding_completed: true,
-        })
-        .eq("id", user.id);
-      if (error) throw error;
+      // PATCH leaves omitted fields alone, so only filled ones are sent.
+      await apiPatch("/users/me", {
+        ...(fullName ? { fullName } : {}),
+        ...(phone ? { phone } : {}),
+        ...(countryCode ? { countryCode } : {}),
+        timezone,
+        preferredCurrency: currency,
+        onboardingCompleted: true,
+      });
+      return;
     },
     onSuccess: async () => {
       await refresh();
