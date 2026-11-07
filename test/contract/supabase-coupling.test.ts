@@ -53,97 +53,38 @@ const RPC_PATTERN = /(?:\.rpc|governanceRpc(?:<[^>]*>)?)\(\s*"([a-z_]+)"/g;
 const TABLE_PATTERN = /(?:\.from|governanceTable(?:<[^>]*>)?)\(\s*"([a-z_]+)"/g;
 
 const EXPECTED_RPCS = [
-  "admin_dashboard_summary",
   "admin_invite_create",
   "admin_invite_redeem",
-  "admin_invite_revoke",
-  "admin_reject_payout",
-  "admin_report_summary",
-  "admin_request_action",
-  "admin_resolve_dispute",
-  "admin_review_action",
-  "admin_set_user_permission",
-  "admin_set_user_roles",
-  "booking_quote",
   "clear_must_change_password",
-  "ensure_tutor_record",
   "is_super_admin",
-  "my_conversations",
   "my_permissions",
-  "parent_child_progress",
-  "parent_dashboard_summary",
-  "pay_for_booking",
-  "public_country_facets",
-  "public_curriculum_facets",
-  "public_search_suggestions",
-  "public_subject_facets",
-  "public_tutor_cards",
-  "public_tutor_detail",
-  "public_tutor_reviews",
-  "public_tutor_search",
-  "raise_dispute",
-  "tutor_available_slots",
-  "tutor_bookings",
-  "tutor_dashboard_summary",
-  "tutor_earnings_records",
-  "tutor_earnings_summary",
-  "tutor_end_class",
-  "tutor_open_class",
-  "tutor_rating_categories",
-  "tutor_rating_summary",
-  "tutor_request_payout",
-  "tutor_respond_booking",
-  "tutor_reviews",
-  "tutor_start_class",
-  "tutor_start_conversation",
-  "tutor_students",
-  "tutor_submit_verification",
 ];
 
 const EXPECTED_TABLES = [
-  "admin_action_requests",
-  "admin_invitations",
-  "assignments",
-  "audit_logs",
-  "availability_windows",
   "bookings",
-  "cancellation_policies",
   "commission_rules",
-  "conversation_participants",
   "currencies",
   "curricula",
-  "disputes",
   "education_levels",
-  "learning_resources",
-  "lesson_notes",
-  "messages",
   "notification_templates",
   "notifications",
-  "payments",
-  "payouts",
   "permissions",
   "platform_settings",
   "profiles",
-  "ratings",
   "role_permissions",
   "students",
   "subjects",
   "tutor_agencies",
-  "tutor_documents",
-  "tutor_subjects",
-  "tutor_verification_progress",
   "tutors",
-  "user_permissions",
   "user_roles",
-  "verification_steps",
 ];
 
 describe("Supabase coupling inventory", () => {
-  it("calls exactly the 45 stored procedures on record", () => {
+  it("calls exactly the 5 stored procedures on record", () => {
     expect([...collect(RPC_PATTERN)].sort()).toEqual(EXPECTED_RPCS);
   });
 
-  it("reads exactly the 35 tables and views on record", () => {
+  it("reads exactly the 16 tables and views on record", () => {
     expect([...collect(TABLE_PATTERN)].sort()).toEqual(EXPECTED_TABLES);
   });
 

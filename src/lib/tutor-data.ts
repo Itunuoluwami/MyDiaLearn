@@ -1,8 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { apiDelete, apiGet, apiPatch, apiPost, apiUpload, useApiData } from "@/lib/api/data-client";
+import { apiDelete, apiGet, apiPatch, apiPost, apiUpload } from "@/lib/api/data-client";
 import type { Database } from "@/integrations/supabase/types";
 
 export type TutorRow = Database["public"]["Tables"]["tutors"]["Row"];
@@ -252,35 +251,13 @@ function toDocument(d: ApiTutorDocument): TutorDocument {
 export function useTutorRecord() {
   const { user, loading } = useAuth();
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
 
   return useQuery({
     queryKey: ["tutor-record", user?.id],
     enabled: Boolean(user?.id) && !loading,
     queryFn: async (): Promise<TutorRow | null> => {
-      if (viaApi) {
-        // GET /tutors/me creates the record on first access.
-        return toTutorRow(await apiGet<ApiTutorProfile>("/tutors/me"));
-      }
-
-      const existing = await supabase
-        .from("tutors")
-        .select("*")
-        .eq("profile_id", user!.id)
-        .maybeSingle();
-      if (existing.error) throw existing.error;
-      if (existing.data) return existing.data as TutorRow;
-
-      const created = await supabase.rpc("ensure_tutor_record");
-      if (created.error) throw created.error;
-      const reread = await supabase
-        .from("tutors")
-        .select("*")
-        .eq("profile_id", user!.id)
-        .maybeSingle();
-      if (reread.error) throw reread.error;
-      void queryClient.invalidateQueries({ queryKey: ["tutor-summary"] });
-      return (reread.data ?? null) as TutorRow | null;
+      // GET /tutors/me creates the record on first access.
+      return toTutorRow(await apiGet<ApiTutorProfile>("/tutors/me"));
     },
   });
 }
@@ -288,17 +265,12 @@ export function useTutorRecord() {
 export function useUpdateTutor() {
   const queryClient = useQueryClient();
   const { data: tutor } = useTutorRecord();
-  const viaApi = useApiData();
 
   return useMutation({
     mutationFn: async (patch: TutorUpdate) => {
       if (!tutor?.id) throw new Error("Tutor profile is not ready yet.");
-      if (viaApi) {
-        await apiPatch("/tutors/me", toUpdateBody(patch));
-        return;
-      }
-      const { error } = await supabase.from("tutors").update(patch).eq("id", tutor.id);
-      if (error) throw error;
+      await apiPatch("/tutors/me", toUpdateBody(patch));
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["tutor-record"] });
@@ -313,18 +285,12 @@ export function useUpdateTutor() {
 
 export function useTutorSummary() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["tutor-summary", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async (): Promise<TutorSummary | null> => {
-      if (viaApi) {
-        const row = await apiGet<Record<string, unknown> | null>("/tutors/me/dashboard");
-        return row ? toSummary(row) : null;
-      }
-      const { data, error } = await supabase.rpc("tutor_dashboard_summary");
-      if (error) throw error;
-      return data?.[0] ?? null;
+      const row = await apiGet<Record<string, unknown> | null>("/tutors/me/dashboard");
+      return row ? toSummary(row) : null;
     },
   });
 }
@@ -335,7 +301,6 @@ export function useTutorBookings(params?: {
   statuses?: BookingStatus[];
 }) {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: [
       "tutor-bookings",
@@ -346,61 +311,37 @@ export function useTutorBookings(params?: {
     ],
     enabled: Boolean(user?.id),
     queryFn: async (): Promise<TutorBooking[]> => {
-      if (viaApi) {
-        const search = new URLSearchParams();
-        if (params?.from) search.set("from", params.from);
-        if (params?.to) search.set("to", params.to);
-        if (params?.statuses?.length) search.set("statuses", params.statuses.join(","));
-        const query = search.toString();
-        const rows = await apiGet<Record<string, unknown>[]>(
-          `/bookings/tutor-schedule${query ? `?${query}` : ""}`,
-        );
-        return rows.map(toTutorBooking);
-      }
-      const { data, error } = await supabase.rpc("tutor_bookings", {
-        ...(params?.from ? { p_from: params.from } : {}),
-        ...(params?.to ? { p_to: params.to } : {}),
-        ...(params?.statuses ? { p_statuses: params.statuses } : {}),
-      });
-      if (error) throw error;
-      return data ?? [];
+      const search = new URLSearchParams();
+      if (params?.from) search.set("from", params.from);
+      if (params?.to) search.set("to", params.to);
+      if (params?.statuses?.length) search.set("statuses", params.statuses.join(","));
+      const query = search.toString();
+      const rows = await apiGet<Record<string, unknown>[]>(
+        `/bookings/tutor-schedule${query ? `?${query}` : ""}`,
+      );
+      return rows.map(toTutorBooking);
     },
   });
 }
 
 export function useTutorStudents() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["tutor-students", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async (): Promise<TutorStudent[]> => {
-      if (viaApi) {
-        // The API caps a page at 100; the Supabase path used the function default.
-        const rows = await apiGet<Record<string, unknown>[]>("/tutors/me/students?limit=100");
-        return rows.map(toTutorStudent);
-      }
-      const { data, error } = await supabase.rpc("tutor_students", {});
-      if (error) throw error;
-      return data ?? [];
+      // The API caps a page at 100; the Supabase path used the function default.
+      const rows = await apiGet<Record<string, unknown>[]>("/tutors/me/students?limit=100");
+      return rows.map(toTutorStudent);
     },
   });
 }
 
 export function useRespondToBooking() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ bookingId, accept }: { bookingId: string; accept: boolean }) => {
-      if (viaApi) {
-        return apiPost<unknown>(`/bookings/${bookingId}/respond`, { accept });
-      }
-      const { data, error } = await supabase.rpc("tutor_respond_booking", {
-        p_booking_id: bookingId,
-        p_accept: accept,
-      });
-      if (error) throw error;
-      return data;
+      return apiPost<unknown>(`/bookings/${bookingId}/respond`, { accept });
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["tutor-bookings"] });
@@ -416,21 +357,12 @@ export function useRespondToBooking() {
 
 export function useMyTutorSubjects() {
   const { data: tutor } = useTutorRecord();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["tutor-my-subjects", tutor?.id],
     enabled: Boolean(tutor?.id),
     queryFn: async (): Promise<MyTutorSubject[]> => {
-      if (viaApi) {
-        const rows = await apiGet<ApiTutorSubject[]>("/tutors/me/subjects");
-        return rows.map(toMySubject);
-      }
-      const { data, error } = await supabase
-        .from("tutor_subjects")
-        .select("id, subject_id, education_level_id, subjects(name), education_levels(name)")
-        .eq("tutor_id", tutor!.id);
-      if (error) throw error;
-      return (data ?? []) as MyTutorSubject[];
+      const rows = await apiGet<ApiTutorSubject[]>("/tutors/me/subjects");
+      return rows.map(toMySubject);
     },
   });
 }
@@ -438,23 +370,14 @@ export function useMyTutorSubjects() {
 export function useAddTutorSubject() {
   const queryClient = useQueryClient();
   const { data: tutor } = useTutorRecord();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: { subjectId: string; educationLevelId: string | null }) => {
       if (!tutor?.id) throw new Error("Tutor profile is not ready yet.");
-      if (viaApi) {
-        await apiPost("/tutors/me/subjects", {
-          subjectId: input.subjectId,
-          ...(input.educationLevelId ? { educationLevelId: input.educationLevelId } : {}),
-        });
-        return;
-      }
-      const { error } = await supabase.from("tutor_subjects").insert({
-        tutor_id: tutor.id,
-        subject_id: input.subjectId,
-        education_level_id: input.educationLevelId,
+      await apiPost("/tutors/me/subjects", {
+        subjectId: input.subjectId,
+        ...(input.educationLevelId ? { educationLevelId: input.educationLevelId } : {}),
       });
-      if (error) throw error;
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["tutor-my-subjects"] });
@@ -465,15 +388,10 @@ export function useAddTutorSubject() {
 
 export function useRemoveTutorSubject() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (id: string) => {
-      if (viaApi) {
-        await apiDelete(`/tutors/me/subjects/${id}`);
-        return;
-      }
-      const { error } = await supabase.from("tutor_subjects").delete().eq("id", id);
-      if (error) throw error;
+      await apiDelete(`/tutors/me/subjects/${id}`);
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["tutor-my-subjects"] });
@@ -488,23 +406,12 @@ export function useRemoveTutorSubject() {
 
 export function useAvailabilityWindows() {
   const { data: tutor } = useTutorRecord();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["tutor-availability", tutor?.id],
     enabled: Boolean(tutor?.id),
     queryFn: async (): Promise<AvailabilityWindow[]> => {
-      if (viaApi) {
-        const rows = await apiGet<ApiAvailabilityWindow[]>("/tutors/me/availability");
-        return rows.map(toWindow);
-      }
-      const { data, error } = await supabase
-        .from("availability_windows")
-        .select("id, day_of_week, start_time, end_time, timezone, is_active")
-        .eq("tutor_id", tutor!.id)
-        .order("day_of_week")
-        .order("start_time");
-      if (error) throw error;
-      return data ?? [];
+      const rows = await apiGet<ApiAvailabilityWindow[]>("/tutors/me/availability");
+      return rows.map(toWindow);
     },
   });
 }
@@ -512,23 +419,12 @@ export function useAvailabilityWindows() {
 export function useAddAvailabilityWindow() {
   const queryClient = useQueryClient();
   const { data: tutor } = useTutorRecord();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: { dayOfWeek: number; startTime: string; endTime: string }) => {
       if (!tutor?.id) throw new Error("Tutor profile is not ready yet.");
-      if (viaApi) {
-        // The server stamps the tutor's own timezone on the window.
-        await apiPost("/tutors/me/availability/window", input);
-        return;
-      }
-      const { error } = await supabase.from("availability_windows").insert({
-        tutor_id: tutor.id,
-        day_of_week: input.dayOfWeek,
-        start_time: input.startTime,
-        end_time: input.endTime,
-        timezone: tutor.timezone,
-      });
-      if (error) throw error;
+      // The server stamps the tutor's own timezone on the window.
+      await apiPost("/tutors/me/availability/window", input);
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["tutor-availability"] });
@@ -539,18 +435,10 @@ export function useAddAvailabilityWindow() {
 
 export function useUpdateAvailabilityWindow() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: { id: string; isActive: boolean }) => {
-      if (viaApi) {
-        await apiPatch(`/tutors/me/availability/${input.id}`, { isActive: input.isActive });
-        return;
-      }
-      const { error } = await supabase
-        .from("availability_windows")
-        .update({ is_active: input.isActive })
-        .eq("id", input.id);
-      if (error) throw error;
+      await apiPatch(`/tutors/me/availability/${input.id}`, { isActive: input.isActive });
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["tutor-availability"] });
@@ -561,15 +449,10 @@ export function useUpdateAvailabilityWindow() {
 
 export function useDeleteAvailabilityWindow() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (id: string) => {
-      if (viaApi) {
-        await apiDelete(`/tutors/me/availability/${id}`);
-        return;
-      }
-      const { error } = await supabase.from("availability_windows").delete().eq("id", id);
-      if (error) throw error;
+      await apiDelete(`/tutors/me/availability/${id}`);
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["tutor-availability"] });
@@ -587,85 +470,53 @@ export function useDeleteAvailabilityWindow() {
 
 export function useVerificationSteps() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
-    queryKey: ["verification-steps", "tutor", viaApi ? user?.id : null],
-    enabled: !viaApi || Boolean(user?.id),
+    queryKey: ["verification-steps", "tutor", user?.id],
+    enabled: Boolean(user?.id),
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<VerificationStep[]> => {
-      if (viaApi) {
-        const rows = await apiGet<ApiVerificationStep[]>("/tutors/me/verification");
-        return rows.map((s) => ({
-          id: s.id,
-          code: s.code,
-          name: s.name,
-          description: s.description,
-          is_required: s.isRequired,
-          sort_order: s.sortOrder,
-        }));
-      }
-      const { data, error } = await supabase
-        .from("verification_steps")
-        .select("id, code, name, description, is_required, sort_order")
-        .eq("is_active", true)
-        .eq("applies_to", "tutor")
-        .order("sort_order");
-      if (error) throw error;
-      return data ?? [];
+      const rows = await apiGet<ApiVerificationStep[]>("/tutors/me/verification");
+      return rows.map((s) => ({
+        id: s.id,
+        code: s.code,
+        name: s.name,
+        description: s.description,
+        is_required: s.isRequired,
+        sort_order: s.sortOrder,
+      }));
     },
   });
 }
 
 export function useVerificationProgress() {
   const { data: tutor } = useTutorRecord();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["tutor-verification-progress", tutor?.id],
     enabled: Boolean(tutor?.id),
     queryFn: async (): Promise<VerificationProgress[]> => {
-      if (viaApi) {
-        const rows = await apiGet<ApiVerificationStep[]>("/tutors/me/verification");
-        return rows
-          .filter((s) => s.status !== null)
-          .map((s) => ({
-            // The merged view has no progress-row id; the step id is unique per tutor.
-            id: s.id,
-            step_id: s.id,
-            status: s.status!,
-            reviewer_notes: s.reviewerNotes,
-            reviewed_at: s.reviewedAt,
-          }));
-      }
-      const { data, error } = await supabase
-        .from("tutor_verification_progress")
-        .select("id, step_id, status, reviewer_notes, reviewed_at")
-        .eq("tutor_id", tutor!.id);
-      if (error) throw error;
-      return data ?? [];
+      const rows = await apiGet<ApiVerificationStep[]>("/tutors/me/verification");
+      return rows
+        .filter((s) => s.status !== null)
+        .map((s) => ({
+          // The merged view has no progress-row id; the step id is unique per tutor.
+          id: s.id,
+          step_id: s.id,
+          status: s.status!,
+          reviewer_notes: s.reviewerNotes,
+          reviewed_at: s.reviewedAt,
+        }));
     },
   });
 }
 
 export function useTutorDocuments() {
   const { data: tutor } = useTutorRecord();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["tutor-documents", tutor?.id],
     enabled: Boolean(tutor?.id),
     queryFn: async (): Promise<TutorDocument[]> => {
-      if (viaApi) {
-        const rows = await apiGet<ApiTutorDocument[]>("/tutors/me/documents");
-        return rows.map(toDocument);
-      }
-      const { data, error } = await supabase
-        .from("tutor_documents")
-        .select(
-          "id, step_id, label, storage_path, mime_type, size_bytes, status, reviewer_notes, created_at",
-        )
-        .eq("tutor_id", tutor!.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
+      const rows = await apiGet<ApiTutorDocument[]>("/tutors/me/documents");
+      return rows.map(toDocument);
     },
   });
 }
@@ -673,39 +524,18 @@ export function useTutorDocuments() {
 export function useUploadTutorDocument() {
   const queryClient = useQueryClient();
   const { data: tutor } = useTutorRecord();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: { file: File; label: string; stepId?: string | null }) => {
       if (!tutor?.id) throw new Error("Tutor profile is not ready yet.");
-      if (viaApi) {
-        const uploaded = await apiUpload("tutor-documents", input.file);
-        await apiPost("/tutors/me/documents", {
-          label: input.label,
-          storagePath: uploaded.storagePath,
-          sizeBytes: uploaded.sizeBytes,
-          ...(input.stepId ? { stepId: input.stepId } : {}),
-          ...(uploaded.mimeType ? { mimeType: uploaded.mimeType } : {}),
-        });
-        return;
-      }
-      const extension = input.file.name.split(".").pop()?.toLowerCase() ?? "bin";
-      const path = `${tutor.id}/${crypto.randomUUID()}.${extension}`;
-
-      const upload = await supabase.storage.from("tutor-documents").upload(path, input.file, {
-        ...(input.file.type ? { contentType: input.file.type } : {}),
-        upsert: false,
-      });
-      if (upload.error) throw upload.error;
-
-      const { error } = await supabase.from("tutor_documents").insert({
-        tutor_id: tutor.id,
-        step_id: input.stepId ?? null,
+      const uploaded = await apiUpload("tutor-documents", input.file);
+      await apiPost("/tutors/me/documents", {
         label: input.label,
-        storage_path: path,
-        mime_type: input.file.type || null,
-        size_bytes: input.file.size,
+        storagePath: uploaded.storagePath,
+        sizeBytes: uploaded.sizeBytes,
+        ...(input.stepId ? { stepId: input.stepId } : {}),
+        ...(uploaded.mimeType ? { mimeType: uploaded.mimeType } : {}),
       });
-      if (error) throw error;
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["tutor-documents"] });
@@ -715,16 +545,10 @@ export function useUploadTutorDocument() {
 
 export function useDeleteTutorDocument() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (doc: { id: string; storage_path: string }) => {
-      if (viaApi) {
-        await apiDelete(`/tutors/me/documents/${doc.id}`);
-        return;
-      }
-      await supabase.storage.from("tutor-documents").remove([doc.storage_path]);
-      const { error } = await supabase.from("tutor_documents").delete().eq("id", doc.id);
-      if (error) throw error;
+      await apiDelete(`/tutors/me/documents/${doc.id}`);
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["tutor-documents"] });
@@ -734,19 +558,13 @@ export function useDeleteTutorDocument() {
 
 export function useSubmitVerification() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async () => {
-      if (viaApi) {
-        const result = await apiPost<{ status: VerificationStatus }>(
-          "/tutors/me/verification/submit",
-          {},
-        );
-        return result.status;
-      }
-      const { data, error } = await supabase.rpc("tutor_submit_verification");
-      if (error) throw error;
-      return data;
+      const result = await apiPost<{ status: VerificationStatus }>(
+        "/tutors/me/verification/submit",
+        {},
+      );
+      return result.status;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["tutor-record"] });

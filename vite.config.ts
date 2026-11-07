@@ -25,7 +25,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 function readAllowedHosts(): string[] {
   // Prefer the environment, so a one-off tunnel can be allowed inline:
   //   ALLOWED_DEV_HOSTS=abc123.ngrok-free.app bun run dev
-  let raw = process.env.ALLOWED_DEV_HOSTS ?? "";
+  let raw = process.env["ALLOWED_DEV_HOSTS"] ?? "";
 
   // Otherwise fall back to .env, so the value survives however the dev server
   // is started — a launcher that does not pass custom environment variables

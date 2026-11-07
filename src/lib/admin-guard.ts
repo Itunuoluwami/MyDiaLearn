@@ -1,7 +1,6 @@
 import { redirect } from "@tanstack/react-router";
 
-import { supabase } from "@/integrations/supabase/client";
-import { isApiConfigured } from "@/lib/api/client";
+import {} from "@/lib/api/client";
 import { apiGet } from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
 import { portalHome } from "@/lib/portal-home";
@@ -58,23 +57,10 @@ async function loadAdminContext(): Promise<AdminContext | null> {
     return cache.value;
   }
 
-  let roles: AppRole[];
-  let mustChangePassword: boolean;
-
-  if (authClient.provider === "nestjs" && isApiConfigured()) {
-    // One call: /users/me carries the roles and the password-change flag.
-    const me = await apiGet<{ roles: AppRole[]; mustChangePassword: boolean }>("/users/me");
-    roles = me.roles;
-    mustChangePassword = me.mustChangePassword === true;
-  } else {
-    const [{ data: roleRows }, { data: profileRow }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", user.id),
-      supabase.from("profiles").select("must_change_password").eq("id", user.id).maybeSingle(),
-    ]);
-    roles = ((roleRows ?? []) as { role: AppRole }[]).map((row) => row.role);
-    mustChangePassword =
-      (profileRow as { must_change_password?: boolean } | null)?.must_change_password === true;
-  }
+  // One call: /users/me carries the roles and the password-change flag.
+  const me = await apiGet<{ roles: AppRole[]; mustChangePassword: boolean }>("/users/me");
+  const roles = me.roles;
+  const mustChangePassword = me.mustChangePassword === true;
 
   const value: AdminContext = {
     userId: user.id,

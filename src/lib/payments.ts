@@ -1,9 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { ApiError } from "@/lib/api/client";
-import { apiPost, useApiData } from "@/lib/api/data-client";
+import { apiPost } from "@/lib/api/data-client";
 
 export type PaymentRow = Database["public"]["Tables"]["payments"]["Row"];
 
@@ -61,33 +60,27 @@ function toPaymentRow(p: ApiPayment): PaymentRow {
  */
 export function usePayForBooking() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (bookingId: string) => {
-      if (viaApi) {
-        try {
-          const result = await apiPost<ApiPayment>("/payments", { bookingId });
-          if (result.checkoutUrl) {
-            // A redirect-based provider: the charge completes on its page, and
-            // the server confirms it by webhook or verification afterwards —
-            // never from this browser. The simulated provider never sets this.
-            window.location.assign(result.checkoutUrl);
-          }
-          return toPaymentRow(result);
-        } catch (error) {
-          if (
-            error instanceof ApiError &&
-            error.status === 409 &&
-            /already been paid/i.test(error.message)
-          ) {
-            throw new Error("ALREADY_PAID");
-          }
-          throw error;
+      try {
+        const result = await apiPost<ApiPayment>("/payments", { bookingId });
+        if (result.checkoutUrl) {
+          // A redirect-based provider: the charge completes on its page, and
+          // the server confirms it by webhook or verification afterwards —
+          // never from this browser. The simulated provider never sets this.
+          window.location.assign(result.checkoutUrl);
         }
+        return toPaymentRow(result);
+      } catch (error) {
+        if (
+          error instanceof ApiError &&
+          error.status === 409 &&
+          /already been paid/i.test(error.message)
+        ) {
+          throw new Error("ALREADY_PAID");
+        }
+        throw error;
       }
-      const { data, error } = await supabase.rpc("pay_for_booking", { p_booking_id: bookingId });
-      if (error) throw error;
-      return data as PaymentRow;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["parent-bookings"] });

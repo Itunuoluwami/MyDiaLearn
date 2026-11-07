@@ -1,7 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { supabase } from "@/integrations/supabase/client";
-import { apiPost, useApiData } from "@/lib/api/data-client";
+import { apiPost } from "@/lib/api/data-client";
 import type { Database } from "@/integrations/supabase/types";
 
 export type DisputeCategory = Database["public"]["Enums"]["dispute_category"];
@@ -31,27 +30,17 @@ export const DISPUTE_CATEGORY_OPTIONS: DisputeCategory[] = [
  * authorization logic.
  */
 export function useRaiseDispute() {
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: {
       bookingId: string;
       category: DisputeCategory;
       description: string;
     }) => {
-      if (viaApi) {
-        const result = await apiPost<{ id: string }>(`/bookings/${input.bookingId}/disputes`, {
-          category: input.category,
-          description: input.description,
-        });
-        return result.id;
-      }
-      const { data, error } = await supabase.rpc("raise_dispute", {
-        p_booking_id: input.bookingId,
-        p_category: input.category,
-        p_description: input.description,
+      const result = await apiPost<{ id: string }>(`/bookings/${input.bookingId}/disputes`, {
+        category: input.category,
+        description: input.description,
       });
-      if (error) throw error;
-      return data;
+      return result.id;
     },
   });
 }

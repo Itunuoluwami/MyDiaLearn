@@ -1,15 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { supabase } from "@/integrations/supabase/client";
 import { apiRequest } from "@/lib/api/client";
-import {
-  API_BASE_URL,
-  API_FILE_PREFIX,
-  apiGet,
-  apiPatch,
-  apiPost,
-  useApiData,
-} from "@/lib/api/data-client";
+import { API_BASE_URL, API_FILE_PREFIX, apiGet, apiPatch, apiPost } from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
 import { governanceRpc, governanceTable } from "@/integrations/supabase/governance-types";
 import type { Database } from "@/integrations/supabase/types";
@@ -62,16 +54,11 @@ function numericRow<T>(row: Record<string, unknown>, textKeys: readonly string[]
 }
 
 export function useAdminSummary() {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-summary"],
     queryFn: async (): Promise<AdminSummaryRow | null> => {
-      if (viaApi) {
-        const row = await apiGet<Record<string, unknown> | null>("/admin/dashboard");
-        return row ? numericRow<AdminSummaryRow>(row, ["gmv_currency"]) : null;
-      }
-      const rows = await governanceRpc<AdminSummaryRow[] | null>("admin_dashboard_summary");
-      return rows?.[0] ?? null;
+      const row = await apiGet<Record<string, unknown> | null>("/admin/dashboard");
+      return row ? numericRow<AdminSummaryRow>(row, ["gmv_currency"]) : null;
     },
   });
 }
@@ -112,51 +99,26 @@ export function useAdminUsers(params?: {
 }) {
   const search = params?.search?.trim() ?? "";
   const role = params?.role ?? "all";
-  const viaApi = useApiData();
 
   return useQuery({
     queryKey: ["admin-users", search, role, params?.from ?? null, params?.to ?? null],
     queryFn: async (): Promise<AdminUserRow[]> => {
-      if (viaApi) {
-        const query = new URLSearchParams();
-        if (search) query.set("search", search);
-        if (role !== "all") query.set("role", role);
-        if (params?.from) query.set("from", params.from);
-        if (params?.to) query.set("to", params.to);
-        const rows = await apiGet<ApiAdminUser[]>(`/admin/users?${query.toString()}`);
-        return rows.map((u) => ({
-          id: u.id,
-          full_name: u.fullName,
-          email: u.email,
-          primary_role: u.primaryRole,
-          is_active: u.isActive,
-          onboarding_completed: u.onboardingCompleted,
-          created_at: u.createdAt,
-          user_roles: u.roles.map((r) => ({ role: r })),
-        }));
-      }
-      let query = supabase
-        .from("profiles")
-        .select(
-          "id, full_name, email, primary_role, is_active, onboarding_completed, created_at, user_roles(role)",
-        )
-        .order("created_at", { ascending: false })
-        .limit(200);
-
-      if (search) {
-        query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
-      }
-      if (role !== "all") {
-        // types.ts predates super_admin, so the generated column type is
-        // narrower than AppRole. The value is valid at the database.
-        query = query.eq("primary_role", role as Database["public"]["Enums"]["app_role"]);
-      }
-      if (params?.from) query = query.gte("created_at", params.from);
-      if (params?.to) query = query.lte("created_at", params.to);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []) as AdminUserRow[];
+      const query = new URLSearchParams();
+      if (search) query.set("search", search);
+      if (role !== "all") query.set("role", role);
+      if (params?.from) query.set("from", params.from);
+      if (params?.to) query.set("to", params.to);
+      const rows = await apiGet<ApiAdminUser[]>(`/admin/users?${query.toString()}`);
+      return rows.map((u) => ({
+        id: u.id,
+        full_name: u.fullName,
+        email: u.email,
+        primary_role: u.primaryRole,
+        is_active: u.isActive,
+        onboarding_completed: u.onboardingCompleted,
+        created_at: u.createdAt,
+        user_roles: u.roles.map((r) => ({ role: r })),
+      }));
     },
   });
 }
@@ -168,19 +130,12 @@ export type AdminUser = AdminUserRow;
  * Resolves to a request id — nothing has happened yet when this returns. */
 export function useSuspendUser() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      if (viaApi) {
-        const result = await apiPost<{ requestId: string }>(`/admin/users/${id}/suspend`, {
-          isActive,
-        });
-        return result.requestId;
-      }
-      return governanceRpc<string>("admin_request_action", {
-        p_action: "profile.suspend",
-        p_payload: { profile_id: id, is_active: isActive },
+      const result = await apiPost<{ requestId: string }>(`/admin/users/${id}/suspend`, {
+        isActive,
       });
+      return result.requestId;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
@@ -198,17 +153,10 @@ export function useSuspendUser() {
  * failed with 42501 every time. */
 export function useUpdateUserRoles() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ userId, roles }: { userId: string; roles: AppRole[] }) => {
-      if (viaApi) {
-        await apiPost(`/users/${userId}/roles`, { roles });
-        return;
-      }
-      await governanceRpc<void>("admin_set_user_roles", {
-        p_user_id: userId,
-        p_roles: roles,
-      });
+      await apiPost(`/users/${userId}/roles`, { roles });
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-users"] });
@@ -259,42 +207,23 @@ interface ApiQueueItem {
 
 export function useVerificationQueue(status?: VerificationStatus | "all") {
   const filter = status ?? "pending";
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-verification-queue", filter],
     queryFn: async (): Promise<VerificationQueueItem[]> => {
-      if (viaApi) {
-        const rows = await apiGet<ApiQueueItem[]>(`/admin/verification?status=${filter}`);
-        return rows.map((t) => ({
-          id: t.id,
-          profile_id: t.profileId,
-          headline: t.headline,
-          verification_status: t.verificationStatus,
-          is_listed: t.isListed,
-          submitted_at: t.submittedAt,
-          years_experience: t.yearsExperience,
-          hourly_rate: t.hourlyRate === null ? null : Number(t.hourlyRate),
-          currency: t.currency,
-          profiles: { full_name: t.fullName, email: t.email, avatar_url: t.avatarUrl },
-          agency_name: t.agencyName,
-        })) as VerificationQueueItem[];
-      }
-      let query = supabase
-        .from("tutors")
-        .select(
-          "id, profile_id, headline, verification_status, is_listed, submitted_at, years_experience, hourly_rate, currency, profiles(full_name, email, avatar_url)",
-        )
-        .order("submitted_at", { ascending: true, nullsFirst: false });
-
-      if (filter !== "all") {
-        query = query.eq("verification_status", filter);
-      } else {
-        query = query.neq("verification_status", "unverified");
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []) as VerificationQueueItem[];
+      const rows = await apiGet<ApiQueueItem[]>(`/admin/verification?status=${filter}`);
+      return rows.map((t) => ({
+        id: t.id,
+        profile_id: t.profileId,
+        headline: t.headline,
+        verification_status: t.verificationStatus,
+        is_listed: t.isListed,
+        submitted_at: t.submittedAt,
+        years_experience: t.yearsExperience,
+        hourly_rate: t.hourlyRate === null ? null : Number(t.hourlyRate),
+        currency: t.currency,
+        profiles: { full_name: t.fullName, email: t.email, avatar_url: t.avatarUrl },
+        agency_name: t.agencyName,
+      })) as VerificationQueueItem[];
     },
   });
 }
@@ -327,55 +256,25 @@ export interface TutorVerificationDetail {
 }
 
 export function useTutorVerificationDetail(tutorId: string | null) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-verification-detail", tutorId],
     enabled: Boolean(tutorId),
     queryFn: async (): Promise<TutorVerificationDetail> => {
-      if (viaApi) {
-        const detail = await apiGet<{
-          steps: StepRow[];
-          progress: ProgressRow[];
-          documents: (Omit<DocumentRow, "storage_path"> & { has_file: boolean })[];
-        }>(`/admin/verification/${tutorId}`);
-        return {
-          steps: detail.steps.map((step) => ({ ...step, sort_order: Number(step.sort_order) })),
-          progress: detail.progress,
-          // Storage keys are not exposed. A marker carrying the document id
-          // stands in; useDocumentUrl exchanges it for a signed link.
-          documents: detail.documents.map(({ has_file: hasFile, ...doc }) => ({
-            ...doc,
-            size_bytes: doc.size_bytes === null ? null : Number(doc.size_bytes),
-            storage_path: hasFile ? `${API_FILE_PREFIX}${doc.id}` : "",
-          })),
-        };
-      }
-      const [steps, progress, documents] = await Promise.all([
-        supabase
-          .from("verification_steps")
-          .select("id, code, name, description, is_required, sort_order")
-          .eq("applies_to", "tutor")
-          .eq("is_active", true)
-          .order("sort_order"),
-        supabase
-          .from("tutor_verification_progress")
-          .select("id, step_id, status, reviewer_notes, reviewed_at")
-          .eq("tutor_id", tutorId!),
-        supabase
-          .from("tutor_documents")
-          .select(
-            "id, step_id, label, storage_path, mime_type, size_bytes, status, reviewer_notes, created_at",
-          )
-          .eq("tutor_id", tutorId!)
-          .order("created_at", { ascending: false }),
-      ]);
-      if (steps.error) throw steps.error;
-      if (progress.error) throw progress.error;
-      if (documents.error) throw documents.error;
+      const detail = await apiGet<{
+        steps: StepRow[];
+        progress: ProgressRow[];
+        documents: (Omit<DocumentRow, "storage_path"> & { has_file: boolean })[];
+      }>(`/admin/verification/${tutorId}`);
       return {
-        steps: steps.data ?? [],
-        progress: progress.data ?? [],
-        documents: documents.data ?? [],
+        steps: detail.steps.map((step) => ({ ...step, sort_order: Number(step.sort_order) })),
+        progress: detail.progress,
+        // Storage keys are not exposed. A marker carrying the document id
+        // stands in; useDocumentUrl exchanges it for a signed link.
+        documents: detail.documents.map(({ has_file: hasFile, ...doc }) => ({
+          ...doc,
+          size_bytes: doc.size_bytes === null ? null : Number(doc.size_bytes),
+          storage_path: hasFile ? `${API_FILE_PREFIX}${doc.id}` : "",
+        })),
       };
     },
   });
@@ -383,7 +282,6 @@ export function useTutorVerificationDetail(tutorId: string | null) {
 
 export function useReviewVerificationStep() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: {
       tutorId: string;
@@ -392,40 +290,12 @@ export function useReviewVerificationStep() {
       status: VerificationStatus;
       reviewerNotes?: string | null;
     }) => {
-      if (viaApi) {
-        // One progress row per tutor and step; the server inserts or updates.
-        await apiPut(`/admin/verification/${input.tutorId}/steps/${input.stepId}`, {
-          status: input.status,
-          ...(input.reviewerNotes ? { reviewerNotes: input.reviewerNotes } : {}),
-        });
-        return;
-      }
-      const {
-        data: { user },
-      } = await authClient.getUser();
-
-      if (input.progressId) {
-        const { error } = await supabase
-          .from("tutor_verification_progress")
-          .update({
-            status: input.status,
-            reviewer_notes: input.reviewerNotes ?? null,
-            reviewed_at: new Date().toISOString(),
-            reviewed_by: user?.id ?? null,
-          })
-          .eq("id", input.progressId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("tutor_verification_progress").insert({
-          tutor_id: input.tutorId,
-          step_id: input.stepId,
-          status: input.status,
-          reviewer_notes: input.reviewerNotes ?? null,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: user?.id ?? null,
-        });
-        if (error) throw error;
-      }
+      // One progress row per tutor and step; the server inserts or updates.
+      await apiPut(`/admin/verification/${input.tutorId}/steps/${input.stepId}`, {
+        status: input.status,
+        ...(input.reviewerNotes ? { reviewerNotes: input.reviewerNotes } : {}),
+      });
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-verification-detail"] });
@@ -435,33 +305,17 @@ export function useReviewVerificationStep() {
 
 export function useReviewTutorDocument() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: {
       documentId: string;
       status: VerificationStatus;
       reviewerNotes?: string | null;
     }) => {
-      if (viaApi) {
-        await apiPatch(`/admin/verification/documents/${input.documentId}`, {
-          status: input.status,
-          ...(input.reviewerNotes ? { reviewerNotes: input.reviewerNotes } : {}),
-        });
-        return;
-      }
-      const {
-        data: { user },
-      } = await authClient.getUser();
-      const { error } = await supabase
-        .from("tutor_documents")
-        .update({
-          status: input.status,
-          reviewer_notes: input.reviewerNotes ?? null,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: user?.id ?? null,
-        })
-        .eq("id", input.documentId);
-      if (error) throw error;
+      await apiPatch(`/admin/verification/documents/${input.documentId}`, {
+        status: input.status,
+        ...(input.reviewerNotes ? { reviewerNotes: input.reviewerNotes } : {}),
+      });
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-verification-detail"] });
@@ -470,7 +324,6 @@ export function useReviewTutorDocument() {
 }
 
 export function useDocumentUrl() {
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (storagePath: string) => {
       if (storagePath.startsWith(API_FILE_PREFIX)) {
@@ -479,14 +332,9 @@ export function useDocumentUrl() {
         );
         return new URL(url, API_BASE_URL || window.location.origin).toString();
       }
-      if (viaApi || !storagePath) {
-        throw new Error("This document has no uploaded file.");
-      }
-      const { data, error } = await supabase.storage
-        .from("tutor-documents")
-        .createSignedUrl(storagePath, 60 * 5);
-      if (error) throw error;
-      return data.signedUrl;
+      // Documents are served exclusively through the API's signed links now,
+      // so anything without an API storage path has no retrievable file.
+      throw new Error("This document has no uploaded file.");
     },
   });
 }
@@ -497,18 +345,10 @@ export function useDocumentUrl() {
  * explicitly turns is_listed back on to actually make the tutor bookable. */
 export function useApproveTutor() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (tutorId: string) => {
-      if (viaApi) {
-        await apiPost(`/admin/verification/${tutorId}/approve`, {});
-        return;
-      }
-      const { error } = await supabase
-        .from("tutors")
-        .update({ verification_status: "verified", is_listed: true })
-        .eq("id", tutorId);
-      if (error) throw error;
+      await apiPost(`/admin/verification/${tutorId}/approve`, {});
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-verification-queue"] });
@@ -524,18 +364,10 @@ export function useApproveTutor() {
  * UI). This is the one write path: admin sets it, here or in Users. */
 export function useSetTutorHourlyRate() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ tutorId, hourlyRate }: { tutorId: string; hourlyRate: number }) => {
-      if (viaApi) {
-        await apiPatch(`/admin/tutors/${tutorId}/hourly-rate`, { hourlyRate });
-        return;
-      }
-      const { error } = await supabase
-        .from("tutors")
-        .update({ hourly_rate: hourlyRate })
-        .eq("id", tutorId);
-      if (error) throw error;
+      await apiPatch(`/admin/tutors/${tutorId}/hourly-rate`, { hourlyRate });
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-verification-queue"] });
@@ -546,18 +378,10 @@ export function useSetTutorHourlyRate() {
 
 export function useRejectTutor() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ tutorId, reason }: { tutorId: string; reason?: string }) => {
-      if (viaApi) {
-        await apiPost(`/admin/verification/${tutorId}/reject`, reason ? { reason } : {});
-        return;
-      }
-      const { error } = await supabase
-        .from("tutors")
-        .update({ verification_status: "rejected", is_listed: false })
-        .eq("id", tutorId);
-      if (error) throw error;
+      await apiPost(`/admin/verification/${tutorId}/reject`, reason ? { reason } : {});
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-verification-queue"] });
@@ -644,42 +468,16 @@ export function useAdminBookings(params?: {
 }) {
   const search = params?.search?.trim() ?? "";
   const status = params?.status ?? "all";
-  const viaApi = useApiData();
 
   return useQuery({
     queryKey: ["admin-bookings", search, status, params?.from ?? null, params?.to ?? null],
     queryFn: async (): Promise<AdminBooking[]> => {
-      if (viaApi) {
-        const query = new URLSearchParams({ status });
-        if (search) query.set("search", search);
-        if (params?.from) query.set("from", params.from);
-        if (params?.to) query.set("to", params.to);
-        const rows = await apiGet<Record<string, unknown>[]>(`/admin/bookings?${query.toString()}`);
-        return rows.map(toAdminBooking);
-      }
-      let query = supabase
-        .from("bookings")
-        .select(ADMIN_BOOKING_SELECT)
-        .order("starts_at", { ascending: false })
-        .limit(200);
-      if (status !== "all") query = query.eq("status", status);
-      if (params?.from) query = query.gte("starts_at", params.from);
-      if (params?.to) query = query.lte("starts_at", params.to);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      let rows = (data ?? []) as AdminBooking[];
-
-      if (search) {
-        const needle = search.toLowerCase();
-        rows = rows.filter((row) => {
-          const studentName =
-            `${row.students?.first_name ?? ""} ${row.students?.last_name ?? ""}`.toLowerCase();
-          const tutorName = (row.tutors?.profiles?.full_name ?? "").toLowerCase();
-          return studentName.includes(needle) || tutorName.includes(needle);
-        });
-      }
-      return rows;
+      const query = new URLSearchParams({ status });
+      if (search) query.set("search", search);
+      if (params?.from) query.set("from", params.from);
+      if (params?.to) query.set("to", params.to);
+      const rows = await apiGet<Record<string, unknown>[]>(`/admin/bookings?${query.toString()}`);
+      return rows.map(toAdminBooking);
     },
   });
 }
@@ -688,15 +486,10 @@ export function useAdminBookings(params?: {
  * useAdminCancelBooking() so the refund calculation isn't bypassed. */
 export function useAdminUpdateBookingStatus() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: BookingStatus }) => {
-      if (viaApi) {
-        await apiPatch(`/admin/bookings/${id}/status`, { status });
-        return;
-      }
-      const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
-      if (error) throw error;
+      await apiPatch(`/admin/bookings/${id}/status`, { status });
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
@@ -711,33 +504,22 @@ export function useAdminUpdateBookingStatus() {
  * the hook resolves to the request id. */
 export function useAdminCancelBooking() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: {
       bookingId: string;
       reason: string;
       refundPercentage?: number | null;
     }) => {
-      if (viaApi) {
-        const result = await apiPost<{ requestId: string }>(
-          `/admin/bookings/${input.bookingId}/cancel`,
-          {
-            reason: input.reason,
-            ...(input.refundPercentage === null || input.refundPercentage === undefined
-              ? {}
-              : { refundPercentage: input.refundPercentage }),
-          },
-        );
-        return result.requestId;
-      }
-      return governanceRpc<string>("admin_request_action", {
-        p_action: "booking.cancel_with_refund",
-        p_payload: {
-          booking_id: input.bookingId,
+      const result = await apiPost<{ requestId: string }>(
+        `/admin/bookings/${input.bookingId}/cancel`,
+        {
           reason: input.reason,
-          refund_percentage: input.refundPercentage ?? null,
+          ...(input.refundPercentage === null || input.refundPercentage === undefined
+            ? {}
+            : { refundPercentage: input.refundPercentage }),
         },
-      });
+      );
+      return result.requestId;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
@@ -816,66 +598,26 @@ export function useAdminPayments(params?: {
   to?: string;
 }) {
   const status = params?.status ?? "all";
-  const viaApi = useApiData();
 
   return useQuery({
     queryKey: ["admin-payments", status, params?.from ?? null, params?.to ?? null],
     queryFn: async (): Promise<AdminPayment[]> => {
-      if (viaApi) {
-        // "flagged" is computed server-side: failed, or stuck for over a day.
-        const query = new URLSearchParams({ status });
-        if (params?.from) query.set("from", params.from);
-        if (params?.to) query.set("to", params.to);
-        const rows = await apiGet<Record<string, unknown>[]>(`/admin/payments?${query.toString()}`);
-        return rows.map(toAdminPayment);
-      }
-      let query = supabase
-        .from("payments")
-        .select(ADMIN_PAYMENT_SELECT)
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (status !== "all" && status !== "flagged") query = query.eq("status", status);
-      if (params?.from) query = query.gte("created_at", params.from);
-      if (params?.to) query = query.lte("created_at", params.to);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      let rows = (data ?? []) as AdminPayment[];
-
-      // "Flagged" isn't a stored column — nothing in this schema tracks it —
-      // so it's a filter: failed payments, plus pending/processing ones
-      // stuck for more than 24 hours.
-      if (status === "flagged") {
-        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-        rows = rows.filter(
-          (row) =>
-            row.status === "failed" ||
-            (["pending", "processing"].includes(row.status) &&
-              new Date(row.created_at).getTime() < cutoff),
-        );
-      }
-      return rows;
+      // "flagged" is computed server-side: failed, or stuck for over a day.
+      const query = new URLSearchParams({ status });
+      if (params?.from) query.set("from", params.from);
+      if (params?.to) query.set("to", params.to);
+      const rows = await apiGet<Record<string, unknown>[]>(`/admin/payments?${query.toString()}`);
+      return rows.map(toAdminPayment);
     },
   });
 }
 
 export function useAdminRefunds() {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-refunds"],
     queryFn: async (): Promise<AdminPayment[]> => {
-      if (viaApi) {
-        const rows = await apiGet<Record<string, unknown>[]>("/admin/payments?status=refunded");
-        return rows.map(toAdminPayment);
-      }
-      const { data, error } = await supabase
-        .from("payments")
-        .select(ADMIN_PAYMENT_SELECT)
-        .gt("refunded_amount", 0)
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error) throw error;
-      return (data ?? []) as AdminPayment[];
+      const rows = await apiGet<Record<string, unknown>[]>("/admin/payments?status=refunded");
+      return rows.map(toAdminPayment);
     },
   });
 }
@@ -885,7 +627,6 @@ export function useAdminRefunds() {
  * stale by anything that happens while the request waits. */
 export function useIssueRefund() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({
       paymentId,
@@ -896,17 +637,11 @@ export function useIssueRefund() {
       amount: number;
       reason?: string;
     }) => {
-      if (viaApi) {
-        const result = await apiPost<{ requestId: string }>(`/admin/payments/${paymentId}/refund`, {
-          amount,
-          ...(reason ? { reason } : {}),
-        });
-        return result.requestId;
-      }
-      return governanceRpc<string>("admin_request_action", {
-        p_action: "payment.refund",
-        p_payload: { payment_id: paymentId, amount, reason: reason ?? null },
+      const result = await apiPost<{ requestId: string }>(`/admin/payments/${paymentId}/refund`, {
+        amount,
+        ...(reason ? { reason } : {}),
       });
+      return result.requestId;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["governance-action-requests"] });
@@ -939,39 +674,26 @@ const ADMIN_PAYOUT_SELECT =
 
 export function useAdminPayouts(params?: { status?: PayoutStatus | "all" }) {
   const status = params?.status ?? "all";
-  const viaApi = useApiData();
 
   return useQuery({
     queryKey: ["admin-payouts", status],
     queryFn: async (): Promise<AdminPayout[]> => {
-      if (viaApi) {
-        const rows = await apiGet<Record<string, unknown>[]>(`/admin/payouts?status=${status}`);
-        return rows.map((row) => {
-          const r = row as Record<string, string | number | null>;
-          return {
-            id: r["id"] as string,
-            tutor_id: r["tutor_id"] as string,
-            amount: Number(r["amount"]),
-            currency: r["currency"] as string,
-            status: r["status"] as PayoutStatus,
-            reference: r["reference"] as string | null,
-            notes: r["notes"] as string | null,
-            requested_at: r["requested_at"] as string,
-            settled_at: r["settled_at"] as string | null,
-            tutors: { profiles: { full_name: r["tutor_name"] as string | null } },
-          };
-        });
-      }
-      let query = supabase
-        .from("payouts")
-        .select(ADMIN_PAYOUT_SELECT)
-        .order("requested_at", { ascending: false })
-        .limit(200);
-      if (status !== "all") query = query.eq("status", status);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []) as AdminPayout[];
+      const rows = await apiGet<Record<string, unknown>[]>(`/admin/payouts?status=${status}`);
+      return rows.map((row) => {
+        const r = row as Record<string, string | number | null>;
+        return {
+          id: r["id"] as string,
+          tutor_id: r["tutor_id"] as string,
+          amount: Number(r["amount"]),
+          currency: r["currency"] as string,
+          status: r["status"] as PayoutStatus,
+          reference: r["reference"] as string | null,
+          notes: r["notes"] as string | null,
+          requested_at: r["requested_at"] as string,
+          settled_at: r["settled_at"] as string | null,
+          tutors: { profiles: { full_name: r["tutor_name"] as string | null } },
+        };
+      });
     },
   });
 }
@@ -979,17 +701,10 @@ export function useAdminPayouts(params?: { status?: PayoutStatus | "all" }) {
 /** Settling a payout moves money out, so it needs a second approver. */
 export function useSettlePayout() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (id: string) => {
-      if (viaApi) {
-        const result = await apiPost<{ requestId: string }>(`/admin/payouts/${id}/settle`, {});
-        return result.requestId;
-      }
-      return governanceRpc<string>("admin_request_action", {
-        p_action: "payout.settle",
-        p_payload: { payout_id: id },
-      });
+      const result = await apiPost<{ requestId: string }>(`/admin/payouts/${id}/settle`, {});
+      return result.requestId;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-payouts"] });
@@ -1001,14 +716,10 @@ export function useSettlePayout() {
 /** Rejecting moves no money, so it stays single-step. */
 export function useRejectPayout() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (id: string) => {
-      if (viaApi) {
-        await apiPost(`/admin/payouts/${id}/reject`, {});
-        return;
-      }
-      await governanceRpc<void>("admin_reject_payout", { p_payout_id: id, p_notes: null });
+      await apiPost(`/admin/payouts/${id}/reject`, {});
+      return;
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-payouts"] }),
   });
@@ -1041,63 +752,44 @@ const ADMIN_DISPUTE_SELECT =
 
 export function useAdminDisputes(status?: DisputeStatus | "all") {
   const filter = status ?? "open";
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-disputes", filter],
     queryFn: async (): Promise<AdminDispute[]> => {
-      if (viaApi) {
-        const rows = await apiGet<Record<string, unknown>[]>(`/admin/disputes?status=${filter}`);
-        return rows.map((row) => {
-          const r = row as Record<string, string | null>;
-          return {
-            id: r["id"] as string,
-            booking_id: r["booking_id"] as string,
-            category: r["category"] as DisputeCategory,
-            status: r["status"] as DisputeStatus,
-            description: r["description"] as string,
-            resolution_notes: r["resolution_notes"] ?? null,
-            resolved_at: r["resolved_at"] ?? null,
-            created_at: r["created_at"] as string,
-            raised_by_profile: { full_name: r["raised_by_name"] ?? null },
-            against_profile: r["against_name"] ? { full_name: r["against_name"] } : null,
-            bookings: r["booking_starts_at"]
-              ? {
-                  starts_at: r["booking_starts_at"],
-                  subjects: r["subject_name"] ? { name: r["subject_name"] } : null,
-                }
-              : null,
-          };
-        });
-      }
-      let query = governanceTable<AdminDispute>("disputes")
-        .select(ADMIN_DISPUTE_SELECT)
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (filter !== "all") query = query.eq("status", filter);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data ?? [];
+      const rows = await apiGet<Record<string, unknown>[]>(`/admin/disputes?status=${filter}`);
+      return rows.map((row) => {
+        const r = row as Record<string, string | null>;
+        return {
+          id: r["id"] as string,
+          booking_id: r["booking_id"] as string,
+          category: r["category"] as DisputeCategory,
+          status: r["status"] as DisputeStatus,
+          description: r["description"] as string,
+          resolution_notes: r["resolution_notes"] ?? null,
+          resolved_at: r["resolved_at"] ?? null,
+          created_at: r["created_at"] as string,
+          raised_by_profile: { full_name: r["raised_by_name"] ?? null },
+          against_profile: r["against_name"] ? { full_name: r["against_name"] } : null,
+          bookings: r["booking_starts_at"]
+            ? {
+                starts_at: r["booking_starts_at"],
+                subjects: r["subject_name"] ? { name: r["subject_name"] } : null,
+              }
+            : null,
+        };
+      });
     },
   });
 }
 
 export function useResolveDispute() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: { disputeId: string; status: DisputeStatus; notes?: string }) => {
-      if (viaApi) {
-        await apiPost(`/admin/disputes/${input.disputeId}/resolve`, {
-          status: input.status,
-          ...(input.notes ? { notes: input.notes } : {}),
-        });
-        return;
-      }
-      await governanceRpc<void>("admin_resolve_dispute", {
-        p_dispute_id: input.disputeId,
-        p_status: input.status,
-        p_resolution_notes: input.notes ?? null,
+      await apiPost(`/admin/disputes/${input.disputeId}/resolve`, {
+        status: input.status,
+        ...(input.notes ? { notes: input.notes } : {}),
       });
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-disputes"] });
@@ -1122,58 +814,34 @@ export interface ModerationReview {
 }
 
 export function useModerationReviews(params?: { onlyPublished?: boolean }) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-moderation-reviews", params?.onlyPublished ?? "all"],
     queryFn: async (): Promise<ModerationReview[]> => {
-      if (viaApi) {
-        const query =
-          params?.onlyPublished === undefined ? "" : `?published=${params.onlyPublished}`;
-        const rows = await apiGet<Record<string, unknown>[]>(`/admin/moderation/reviews${query}`);
-        return rows.map((row) => {
-          const r = row as Record<string, string | number | boolean | null>;
-          return {
-            id: r["id"] as string,
-            score: Number(r["score"]),
-            comment: r["comment"] as string | null,
-            is_published: r["is_published"] as boolean,
-            created_at: r["created_at"] as string,
-            tutor_id: r["tutor_id"] as string,
-            tutors: { profiles: { full_name: r["tutor_name"] as string | null } },
-            profiles: { full_name: r["rater_name"] as string | null },
-          };
-        });
-      }
-      let query = supabase
-        .from("ratings")
-        .select(
-          "id, score, comment, is_published, created_at, tutor_id, tutors(profiles(full_name)), profiles!rater_id(full_name)",
-        )
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (params?.onlyPublished !== undefined)
-        query = query.eq("is_published", params.onlyPublished);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []) as unknown as ModerationReview[];
+      const query = params?.onlyPublished === undefined ? "" : `?published=${params.onlyPublished}`;
+      const rows = await apiGet<Record<string, unknown>[]>(`/admin/moderation/reviews${query}`);
+      return rows.map((row) => {
+        const r = row as Record<string, string | number | boolean | null>;
+        return {
+          id: r["id"] as string,
+          score: Number(r["score"]),
+          comment: r["comment"] as string | null,
+          is_published: r["is_published"] as boolean,
+          created_at: r["created_at"] as string,
+          tutor_id: r["tutor_id"] as string,
+          tutors: { profiles: { full_name: r["tutor_name"] as string | null } },
+          profiles: { full_name: r["rater_name"] as string | null },
+        };
+      });
     },
   });
 }
 
 export function useSetReviewPublished() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({ id, isPublished }: { id: string; isPublished: boolean }) => {
-      if (viaApi) {
-        await apiPatch(`/admin/moderation/reviews/${id}`, { isPublished });
-        return;
-      }
-      const { error } = await supabase
-        .from("ratings")
-        .update({ is_published: isPublished })
-        .eq("id", id);
-      if (error) throw error;
+      await apiPatch(`/admin/moderation/reviews/${id}`, { isPublished });
+      return;
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["admin-moderation-reviews"] }),
   });
@@ -1191,45 +859,31 @@ export interface ModerationMessage {
 
 export function useModerationMessages(search?: string) {
   const needle = search?.trim() ?? "";
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-moderation-messages", needle],
     enabled: needle.length > 1,
     queryFn: async (): Promise<ModerationMessage[]> => {
-      if (viaApi) {
-        const rows = await apiGet<Record<string, unknown>[]>(
-          `/admin/moderation/messages?search=${encodeURIComponent(needle)}`,
-        );
-        return rows.map((row) => {
-          const r = row as Record<string, string | boolean | null>;
-          return {
-            id: r["id"] as string,
-            body: r["body"] as string,
-            sender_id: r["sender_id"] as string,
-            is_hidden: r["is_hidden"] as boolean,
-            created_at: r["created_at"] as string,
-            conversation_id: r["conversation_id"] as string,
-            profiles: { full_name: r["sender_name"] as string | null },
-          };
-        });
-      }
-      const { data, error } = await supabase
-        .from("messages")
-        .select(
-          "id, body, sender_id, is_hidden, created_at, conversation_id, profiles!sender_id(full_name)",
-        )
-        .ilike("body", `%${needle}%`)
-        .order("created_at", { ascending: false })
-        .limit(100);
-      if (error) throw error;
-      return (data ?? []) as unknown as ModerationMessage[];
+      const rows = await apiGet<Record<string, unknown>[]>(
+        `/admin/moderation/messages?search=${encodeURIComponent(needle)}`,
+      );
+      return rows.map((row) => {
+        const r = row as Record<string, string | boolean | null>;
+        return {
+          id: r["id"] as string,
+          body: r["body"] as string,
+          sender_id: r["sender_id"] as string,
+          is_hidden: r["is_hidden"] as boolean,
+          created_at: r["created_at"] as string,
+          conversation_id: r["conversation_id"] as string,
+          profiles: { full_name: r["sender_name"] as string | null },
+        };
+      });
     },
   });
 }
 
 export function useSetMessageHidden() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async ({
       id,
@@ -1240,18 +894,11 @@ export function useSetMessageHidden() {
       isHidden: boolean;
       reason?: string;
     }) => {
-      if (viaApi) {
-        await apiPatch(`/admin/moderation/messages/${id}`, {
-          isHidden,
-          ...(isHidden && reason ? { reason } : {}),
-        });
-        return;
-      }
-      const { error } = await supabase
-        .from("messages")
-        .update({ is_hidden: isHidden, hidden_reason: isHidden ? (reason ?? null) : null })
-        .eq("id", id);
-      if (error) throw error;
+      await apiPatch(`/admin/moderation/messages/${id}`, {
+        isHidden,
+        ...(isHidden && reason ? { reason } : {}),
+      });
+      return;
     },
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: ["admin-moderation-messages"] }),
@@ -1280,22 +927,14 @@ export interface AdminReportSummary {
 }
 
 export function useAdminReportSummary(from: string, to: string) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-report-summary", from, to],
     enabled: Boolean(from && to),
     queryFn: async (): Promise<AdminReportSummary | null> => {
-      if (viaApi) {
-        const row = await apiGet<Record<string, unknown> | null>(
-          `/admin/reports/summary?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
-        );
-        return row ? numericRow<AdminReportSummary>(row, ["gmv_currency"]) : null;
-      }
-      const rows = await governanceRpc<AdminReportSummary[] | null>("admin_report_summary", {
-        p_from: from,
-        p_to: to,
-      });
-      return rows?.[0] ?? null;
+      const row = await apiGet<Record<string, unknown> | null>(
+        `/admin/reports/summary?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+      );
+      return row ? numericRow<AdminReportSummary>(row, ["gmv_currency"]) : null;
     },
   });
 }
@@ -1352,23 +991,19 @@ export interface AdminAgencyDetail {
 const AGENCIES_API_ONLY = "Agency review needs the DiaLearn API.";
 
 export function useAdminAgencies(status: VerificationStatus | "all") {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-agencies", status],
     queryFn: async () => {
-      if (!viaApi) throw new Error(AGENCIES_API_ONLY);
       return apiGet<AdminAgencyRow[]>(`/admin/agencies?status=${status}`);
     },
   });
 }
 
 export function useAdminAgency(agencyId: string | null) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["admin-agency", agencyId],
     enabled: Boolean(agencyId),
     queryFn: async () => {
-      if (!viaApi) throw new Error(AGENCIES_API_ONLY);
       return apiGet<AdminAgencyDetail>(`/admin/agencies/${agencyId}`);
     },
   });

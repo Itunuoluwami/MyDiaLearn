@@ -1,8 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { supabase } from "@/integrations/supabase/client";
 import { apiRequest } from "@/lib/api/client";
-import { apiGet, apiPost, useApiData } from "@/lib/api/data-client";
+import { apiGet, apiPost } from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
 import {
   governanceRpc,
@@ -33,27 +32,16 @@ export interface AdminAccount {
 
 /** Everyone holding admin or super_admin, for the Admins screen. */
 export function useAdminAccounts() {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["governance-admin-accounts"],
     queryFn: async (): Promise<AdminAccount[]> => {
-      if (viaApi) {
-        const rows = await apiGet<
-          (Omit<AdminAccount, "user_roles"> & { roles: GovernanceRole[] })[]
-        >("/admin/governance/accounts");
-        return rows.map(({ roles, ...account }) => ({
-          ...account,
-          user_roles: roles.map((role) => ({ role })),
-        }));
-      }
-      const { data, error } = await governanceTable<AdminAccount>("profiles")
-        .select(
-          "id, full_name, email, is_active, must_change_password, created_at, user_roles!inner(role)",
-        )
-        .in("user_roles.role", ["admin", "super_admin"])
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
+      const rows = await apiGet<(Omit<AdminAccount, "user_roles"> & { roles: GovernanceRole[] })[]>(
+        "/admin/governance/accounts",
+      );
+      return rows.map(({ roles, ...account }) => ({
+        ...account,
+        user_roles: roles.map((role) => ({ role })),
+      }));
     },
   });
 }
@@ -67,33 +55,20 @@ export function isSuperAdminAccount(account: AdminAccount) {
 /* ------------------------------------------------------------------ */
 
 export function useAdminInvitations() {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["governance-invitations"],
     queryFn: async (): Promise<AdminInvitationRow[]> => {
-      if (viaApi) return apiGet<AdminInvitationRow[]>("/admin/governance/invitations");
-      const { data, error } = await governanceTable<AdminInvitationRow>("admin_invitations")
-        .select(
-          "id, email, invited_by, role, permission_keys, otp_expires_at, status, accepted_at, created_at, updated_at",
-        )
-        .order("created_at", { ascending: false })
-        .limit(100);
-      if (error) throw error;
-      return data ?? [];
+      return apiGet<AdminInvitationRow[]>("/admin/governance/invitations");
     },
   });
 }
 
 export function useRevokeInvitation() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (invitationId: string) => {
-      if (viaApi) {
-        await apiPost(`/admin/governance/invitations/${invitationId}/revoke`, {});
-        return;
-      }
-      await governanceRpc<void>("admin_invite_revoke", { p_invitation_id: invitationId });
+      await apiPost(`/admin/governance/invitations/${invitationId}/revoke`, {});
+      return;
     },
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["governance-invitations"] }),
   });
@@ -105,37 +80,22 @@ export function useRevokeInvitation() {
 
 /** The full permission catalogue, for building the grant/deny matrix. */
 export function usePermissionCatalog() {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["governance-permission-catalog"],
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<PermissionRow[]> => {
-      if (viaApi) return apiGet<PermissionRow[]>("/admin/governance/permissions");
-      const { data, error } = await governanceTable<PermissionRow>("permissions")
-        .select("key, label, description, category")
-        .order("category")
-        .order("key");
-      if (error) throw error;
-      return data ?? [];
+      return apiGet<PermissionRow[]>("/admin/governance/permissions");
     },
   });
 }
 
 /** Per-user overrides. Absence of a row means "inherit from the role". */
 export function useUserPermissions(userId: string | null) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["governance-user-permissions", userId],
     enabled: Boolean(userId),
     queryFn: async (): Promise<UserPermissionRow[]> => {
-      if (viaApi) {
-        return apiGet<UserPermissionRow[]>(`/admin/governance/users/${userId}/permissions`);
-      }
-      const { data, error } = await governanceTable<UserPermissionRow>("user_permissions")
-        .select("id, user_id, permission_key, granted, granted_by, created_at")
-        .eq("user_id", userId);
-      if (error) throw error;
-      return data ?? [];
+      return apiGet<UserPermissionRow[]>(`/admin/governance/users/${userId}/permissions`);
     },
   });
 }
@@ -143,25 +103,17 @@ export function useUserPermissions(userId: string | null) {
 /** `granted: null` clears the override and falls back to the role grant. */
 export function useSetUserPermission() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: {
       userId: string;
       permissionKey: string;
       granted: boolean | null;
     }) => {
-      if (viaApi) {
-        await apiPut(
-          `/admin/governance/users/${input.userId}/permissions/${encodeURIComponent(input.permissionKey)}`,
-          { granted: input.granted },
-        );
-        return;
-      }
-      await governanceRpc<void>("admin_set_user_permission", {
-        p_user_id: input.userId,
-        p_permission_key: input.permissionKey,
-        p_granted: input.granted,
-      });
+      await apiPut(
+        `/admin/governance/users/${input.userId}/permissions/${encodeURIComponent(input.permissionKey)}`,
+        { granted: input.granted },
+      );
+      return;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["governance-user-permissions"] });
@@ -175,24 +127,17 @@ export function useSetUserPermission() {
 
 export function useRequestElevatedRole() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: {
       userId: string;
       role: "admin" | "super_admin";
       revoke?: boolean;
     }) => {
-      if (viaApi) {
-        const result = await apiPost<{ requestId: string }>(
-          `/admin/governance/users/${input.userId}/elevated-role`,
-          { role: input.role, revoke: input.revoke ?? false },
-        );
-        return result.requestId;
-      }
-      return governanceRpc<string>("admin_request_action", {
-        p_action: "user_roles.grant_elevated" satisfies AdminRequestAction,
-        p_payload: { user_id: input.userId, role: input.role, revoke: input.revoke ?? false },
-      });
+      const result = await apiPost<{ requestId: string }>(
+        `/admin/governance/users/${input.userId}/elevated-role`,
+        { role: input.role, revoke: input.revoke ?? false },
+      );
+      return result.requestId;
     },
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: ["governance-action-requests"] }),
@@ -217,33 +162,18 @@ type ApiActionRequest = AdminActionRequestRow & {
 
 export function useActionRequests(status?: AdminRequestStatus | "all") {
   const filter = status ?? "pending";
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["governance-action-requests", filter],
     queryFn: async (): Promise<ActionRequest[]> => {
-      if (viaApi) {
-        const rows = await apiGet<ApiActionRequest[]>(
-          `/admin/governance/requests?status=${filter}`,
-        );
-        return rows.map(
-          ({ requester_name, requester_email, reviewer_name, reviewer_email, ...row }) => ({
-            ...row,
-            requester: { full_name: requester_name, email: requester_email },
-            reviewer:
-              row.reviewed_by === null ? null : { full_name: reviewer_name, email: reviewer_email },
-          }),
-        );
-      }
-      let query = governanceTable<ActionRequest>("admin_action_requests")
-        .select(
-          "id, action, payload, requested_by, requested_at, status, reviewed_by, reviewed_at, review_notes, executed_at, execution_error, created_at, updated_at, requester:profiles!requested_by(full_name, email), reviewer:profiles!reviewed_by(full_name, email)",
-        )
-        .order("requested_at", { ascending: false })
-        .limit(200);
-      if (filter !== "all") query = query.eq("status", filter);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data ?? [];
+      const rows = await apiGet<ApiActionRequest[]>(`/admin/governance/requests?status=${filter}`);
+      return rows.map(
+        ({ requester_name, requester_email, reviewer_name, reviewer_email, ...row }) => ({
+          ...row,
+          requester: { full_name: requester_name, email: requester_email },
+          reviewer:
+            row.reviewed_by === null ? null : { full_name: reviewer_name, email: reviewer_email },
+        }),
+      );
     },
   });
 }
@@ -251,17 +181,10 @@ export function useActionRequests(status?: AdminRequestStatus | "all") {
 /** Submit an action for a second admin to approve. */
 export function useRequestAction() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: { action: AdminRequestAction; payload: Record<string, unknown> }) => {
-      if (viaApi) {
-        const result = await apiPost<{ requestId: string }>("/admin/governance/requests", input);
-        return result.requestId;
-      }
-      return governanceRpc<string>("admin_request_action", {
-        p_action: input.action,
-        p_payload: input.payload,
-      });
+      const result = await apiPost<{ requestId: string }>("/admin/governance/requests", input);
+      return result.requestId;
     },
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: ["governance-action-requests"] }),
@@ -270,24 +193,16 @@ export function useRequestAction() {
 
 export function useReviewActionRequest() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: {
       requestId: string;
       approve: boolean;
       notes?: string | undefined;
     }) => {
-      if (viaApi) {
-        return apiPost<AdminActionRequestRow>(
-          `/admin/governance/requests/${input.requestId}/review`,
-          { approve: input.approve, ...(input.notes ? { notes: input.notes } : {}) },
-        );
-      }
-      return governanceRpc<AdminActionRequestRow>("admin_review_action", {
-        p_request_id: input.requestId,
-        p_approve: input.approve,
-        p_notes: input.notes ?? null,
-      });
+      return apiPost<AdminActionRequestRow>(
+        `/admin/governance/requests/${input.requestId}/review`,
+        { approve: input.approve, ...(input.notes ? { notes: input.notes } : {}) },
+      );
     },
     onSuccess: () => {
       // An approval executes the real effect, so everything it could have
@@ -318,7 +233,6 @@ export interface AuditLogFilters {
 }
 
 export function useAuditLogs(filters: AuditLogFilters = {}) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: [
       "governance-audit-logs",
@@ -329,31 +243,13 @@ export function useAuditLogs(filters: AuditLogFilters = {}) {
       filters.to ?? null,
     ],
     queryFn: async (): Promise<AuditLogRow[]> => {
-      if (viaApi) {
-        const query = new URLSearchParams();
-        if (filters.action) query.set("action", filters.action);
-        if (filters.entityType) query.set("entityType", filters.entityType);
-        if (filters.actorEmail) query.set("actorEmail", filters.actorEmail);
-        if (filters.from) query.set("from", filters.from);
-        if (filters.to) query.set("to", filters.to);
-        return apiGet<AuditLogRow[]>(`/admin/governance/audit-logs?${query.toString()}`);
-      }
-      let query = governanceTable<AuditLogRow>("audit_logs")
-        .select(
-          "id, actor_id, actor_email, action, entity_type, entity_id, before, after, metadata, ip, created_at",
-        )
-        .order("created_at", { ascending: false })
-        .limit(300);
-
-      if (filters.action) query = query.ilike("action", `%${filters.action}%`);
-      if (filters.entityType) query = query.eq("entity_type", filters.entityType);
-      if (filters.actorEmail) query = query.ilike("actor_email", `%${filters.actorEmail}%`);
-      if (filters.from) query = query.gte("created_at", filters.from);
-      if (filters.to) query = query.lte("created_at", filters.to);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data ?? [];
+      const query = new URLSearchParams();
+      if (filters.action) query.set("action", filters.action);
+      if (filters.entityType) query.set("entityType", filters.entityType);
+      if (filters.actorEmail) query.set("actorEmail", filters.actorEmail);
+      if (filters.from) query.set("from", filters.from);
+      if (filters.to) query.set("to", filters.to);
+      return apiGet<AuditLogRow[]>(`/admin/governance/audit-logs?${query.toString()}`);
     },
   });
 }
@@ -371,28 +267,21 @@ export function useAuditLogs(filters: AuditLogFilters = {}) {
  */
 export function useChangeOwnPassword() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (
       input: string | { password: string; currentPassword: string; email: string },
     ) => {
-      if (viaApi) {
-        if (typeof input === "string") throw new Error("Enter your current password.");
-        await apiPost("/auth/password/change", {
-          currentPassword: input.currentPassword,
-          newPassword: input.password,
-        });
-        const { error } = await authClient.signInWithPassword({
-          email: input.email,
-          password: input.password,
-        });
-        if (error) throw error;
-        return;
-      }
-      const password = typeof input === "string" ? input : input.password;
-      const { error } = await supabase.auth.updateUser({ password });
+      if (typeof input === "string") throw new Error("Enter your current password.");
+      await apiPost("/auth/password/change", {
+        currentPassword: input.currentPassword,
+        newPassword: input.password,
+      });
+      const { error } = await authClient.signInWithPassword({
+        email: input.email,
+        password: input.password,
+      });
       if (error) throw error;
-      await governanceRpc<void>("clear_must_change_password");
+      return;
     },
     onSuccess: () => void queryClient.invalidateQueries(),
   });

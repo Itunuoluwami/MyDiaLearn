@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "@/hooks/use-auth";
-import { apiDelete, apiGet, apiPatch, apiPost, useApiData } from "@/lib/api/data-client";
+import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api/data-client";
 import type { VerificationStatus } from "@/lib/tutor-data";
 
 /**
@@ -13,10 +13,6 @@ import type { VerificationStatus } from "@/lib/tutor-data";
  */
 
 const API_ONLY = "Agency accounts need the DiaLearn API. Switch the app to the NestJS provider.";
-
-function requireApi(viaApi: boolean) {
-  if (!viaApi) throw new Error(API_ONLY);
-}
 
 /* ------------------------------------------------------------------ */
 /* Types (API shapes; money stays a string, as the API sends it)       */
@@ -177,12 +173,10 @@ export interface ManagedTutorStep {
 
 export function useAgency() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["agency", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
-      requireApi(viaApi);
       return apiGet<Agency>("/agencies/me");
     },
   });
@@ -190,12 +184,10 @@ export function useAgency() {
 
 export function useAgencyDashboard() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["agency-dashboard", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
-      requireApi(viaApi);
       return apiGet<AgencyDashboard>("/agencies/me/dashboard");
     },
   });
@@ -203,10 +195,8 @@ export function useAgencyDashboard() {
 
 export function useUpdateAgency() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (patch: Partial<Omit<Agency, "id" | "verificationStatus">>) => {
-      requireApi(viaApi);
       return apiPatch<Agency>("/agencies/me", patch);
     },
     onSuccess: () => {
@@ -218,10 +208,8 @@ export function useUpdateAgency() {
 
 export function useSubmitAgencyVerification() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async () => {
-      requireApi(viaApi);
       return apiPost<{ status: VerificationStatus }>("/agencies/me/verification/submit", {});
     },
     onSuccess: () => {
@@ -237,12 +225,10 @@ export function useSubmitAgencyVerification() {
 
 export function useAgencyTutors() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["agency-tutors", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
-      requireApi(viaApi);
       return apiGet<AgencyTutor[]>("/agencies/me/tutors");
     },
   });
@@ -250,10 +236,8 @@ export function useAgencyTutors() {
 
 export function useAddAgencyTutor() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: { fullName: string; email: string; timezone?: string }) => {
-      requireApi(viaApi);
       return apiPost<{ tutorId: string; emailed: boolean }>("/agencies/me/tutors", input);
     },
     onSuccess: () => {
@@ -265,10 +249,8 @@ export function useAddAgencyTutor() {
 
 export function useRemoveAgencyTutor() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (tutorId: string) => {
-      requireApi(viaApi);
       await apiDelete(`/agencies/me/tutors/${tutorId}`);
     },
     onSuccess: () => {
@@ -289,11 +271,9 @@ function useManagedInvalidate(tutorId: string) {
 }
 
 export function useManagedTutorProfile(tutorId: string) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["agency-tutor", tutorId, "profile"],
     queryFn: async () => {
-      requireApi(viaApi);
       return apiGet<ManagedTutorProfile>(`${tutorBase(tutorId)}/profile`);
     },
   });
@@ -301,10 +281,8 @@ export function useManagedTutorProfile(tutorId: string) {
 
 export function useUpdateManagedTutorProfile(tutorId: string) {
   const invalidate = useManagedInvalidate(tutorId);
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (patch: Record<string, unknown>) => {
-      requireApi(viaApi);
       return apiPatch<ManagedTutorProfile>(`${tutorBase(tutorId)}/profile`, patch);
     },
     onSuccess: invalidate,
@@ -312,11 +290,9 @@ export function useUpdateManagedTutorProfile(tutorId: string) {
 }
 
 export function useManagedTutorSubjects(tutorId: string) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["agency-tutor", tutorId, "subjects"],
     queryFn: async () => {
-      requireApi(viaApi);
       return apiGet<ManagedTutorSubject[]>(`${tutorBase(tutorId)}/subjects`);
     },
   });
@@ -324,10 +300,8 @@ export function useManagedTutorSubjects(tutorId: string) {
 
 export function useAddManagedTutorSubject(tutorId: string) {
   const invalidate = useManagedInvalidate(tutorId);
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: { subjectId: string; educationLevelId: string | null }) => {
-      requireApi(viaApi);
       await apiPost(`${tutorBase(tutorId)}/subjects`, {
         subjectId: input.subjectId,
         ...(input.educationLevelId ? { educationLevelId: input.educationLevelId } : {}),
@@ -339,10 +313,8 @@ export function useAddManagedTutorSubject(tutorId: string) {
 
 export function useRemoveManagedTutorSubject(tutorId: string) {
   const invalidate = useManagedInvalidate(tutorId);
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (id: string) => {
-      requireApi(viaApi);
       await apiDelete(`${tutorBase(tutorId)}/subjects/${id}`);
     },
     onSuccess: invalidate,
@@ -350,11 +322,9 @@ export function useRemoveManagedTutorSubject(tutorId: string) {
 }
 
 export function useManagedTutorAvailability(tutorId: string) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["agency-tutor", tutorId, "availability"],
     queryFn: async () => {
-      requireApi(viaApi);
       return apiGet<ManagedTutorWindow[]>(`${tutorBase(tutorId)}/availability`);
     },
   });
@@ -362,10 +332,8 @@ export function useManagedTutorAvailability(tutorId: string) {
 
 export function useAddManagedTutorWindow(tutorId: string) {
   const invalidate = useManagedInvalidate(tutorId);
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: { dayOfWeek: number; startTime: string; endTime: string }) => {
-      requireApi(viaApi);
       await apiPost(`${tutorBase(tutorId)}/availability`, input);
     },
     onSuccess: invalidate,
@@ -374,10 +342,8 @@ export function useAddManagedTutorWindow(tutorId: string) {
 
 export function useSetManagedTutorWindow(tutorId: string) {
   const invalidate = useManagedInvalidate(tutorId);
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (input: { id: string; isActive: boolean }) => {
-      requireApi(viaApi);
       await apiPatch(`${tutorBase(tutorId)}/availability/${input.id}`, {
         isActive: input.isActive,
       });
@@ -388,10 +354,8 @@ export function useSetManagedTutorWindow(tutorId: string) {
 
 export function useDeleteManagedTutorWindow(tutorId: string) {
   const invalidate = useManagedInvalidate(tutorId);
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (id: string) => {
-      requireApi(viaApi);
       await apiDelete(`${tutorBase(tutorId)}/availability/${id}`);
     },
     onSuccess: invalidate,
@@ -399,11 +363,9 @@ export function useDeleteManagedTutorWindow(tutorId: string) {
 }
 
 export function useManagedTutorVerification(tutorId: string) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["agency-tutor", tutorId, "verification"],
     queryFn: async () => {
-      requireApi(viaApi);
       return apiGet<ManagedTutorStep[]>(`${tutorBase(tutorId)}/verification`);
     },
   });
@@ -411,10 +373,8 @@ export function useManagedTutorVerification(tutorId: string) {
 
 export function useSubmitManagedTutorVerification(tutorId: string) {
   const invalidate = useManagedInvalidate(tutorId);
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async () => {
-      requireApi(viaApi);
       return apiPost<{ status: VerificationStatus }>(
         `${tutorBase(tutorId)}/verification/submit`,
         {},
@@ -430,12 +390,10 @@ export function useSubmitManagedTutorVerification(tutorId: string) {
 
 export function useAgencyBookings(params: { status: string }) {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["agency-bookings", user?.id, params.status],
     enabled: Boolean(user?.id),
     queryFn: async () => {
-      requireApi(viaApi);
       return apiGet<AgencyBooking[]>(`/agencies/me/bookings?status=${params.status}`);
     },
   });
@@ -443,12 +401,10 @@ export function useAgencyBookings(params: { status: string }) {
 
 export function useAgencyEarnings() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["agency-earnings", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
-      requireApi(viaApi);
       return apiGet<AgencyEarnings | null>("/agencies/me/earnings");
     },
   });
@@ -456,12 +412,10 @@ export function useAgencyEarnings() {
 
 export function useAgencyPayouts() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["agency-payouts", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
-      requireApi(viaApi);
       return apiGet<AgencyPayout[]>("/agencies/me/payouts");
     },
   });
@@ -469,10 +423,8 @@ export function useAgencyPayouts() {
 
 export function useRequestAgencyPayout() {
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   return useMutation({
     mutationFn: async (amount: number) => {
-      requireApi(viaApi);
       return apiPost<{ id: string }>("/agencies/me/payouts", { amount });
     },
     onSuccess: () => {

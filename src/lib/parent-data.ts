@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { supabase } from "@/integrations/supabase/client";
-import { apiGet, apiPost, useApiData } from "@/lib/api/data-client";
+import { apiGet, apiPost } from "@/lib/api/data-client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -33,32 +32,42 @@ export type BookingQuote = Database["public"]["Functions"]["booking_quote"]["Ret
 
 export function useChildren() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["parent-children", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
-      if (viaApi) {
-        const res = await apiGet<{ data: ApiChild[] }>("/parents/me/children?limit=100");
-        return res.data.map(toChildShape) as unknown as Child[];
-      }
-      return fetchChildrenSupabase();
+      const res = await apiGet<{ data: ApiChild[] }>("/parents/me/children?limit=100");
+      return res.data.map(toChildShape) as unknown as Child[];
     },
   });
 }
 
-async function fetchChildrenSupabase() {
-  const { data, error } = await supabase
-    .from("students")
-    .select(
-      "id, first_name, last_name, date_of_birth, gender, avatar_url, school_name, learning_goals, special_needs, timezone, curriculum_id, education_level_id, can_self_login, can_book_lessons, can_message_tutors, is_active, created_at, curricula(name), education_levels(name)",
-    )
-    .order("created_at");
-  if (error) throw error;
-  return data ?? [];
-}
+/** Mirrors the booking_status enum. Consumers switch on it exhaustively. */
+export type ParentBookingStatus =
+  "pending" | "confirmed" | "in_progress" | "completed" | "cancelled" | "rejected" | "no_show";
 
-export type Child = NonNullable<Awaited<ReturnType<typeof fetchChildrenSupabase>>>[number];
+/** A learner, as the parent portal consumes it. Mirrors toChildShape(). */
+export interface Child {
+  id: string;
+  first_name: string;
+  last_name: string | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  avatar_url: string | null;
+  school_name: string | null;
+  learning_goals: string | null;
+  special_needs: string | null;
+  timezone: string;
+  curriculum_id: string | null;
+  education_level_id: string | null;
+  can_self_login: boolean;
+  can_book_lessons: boolean;
+  can_message_tutors: boolean;
+  is_active: boolean;
+  created_at: string;
+  curricula: { name: string } | null;
+  education_levels: { name: string } | null;
+}
 
 export function childName(child: Pick<Child, "first_name" | "last_name"> | null | undefined) {
   if (!child) return "";
@@ -87,38 +96,47 @@ export function isBookingPaid(booking: Pick<Booking, "payments">) {
 
 export function useBookings(options?: { studentId?: string | undefined }) {
   const { user } = useAuth();
-  const viaApi = useApiData();
   const studentId = options?.studentId;
   return useQuery({
     queryKey: ["parent-bookings", user?.id, studentId ?? "all"],
     enabled: Boolean(user?.id),
     queryFn: async () => {
-      if (viaApi) {
-        const qs = new URLSearchParams({ limit: "100" });
-        if (studentId) qs.set("studentId", studentId);
-        const res = await apiGet<{ data: ApiBooking[] }>(`/bookings?${qs.toString()}`);
-        return res.data.map(toBookingShape) as unknown as Booking[];
-      }
-      return fetchBookingsSupabase(studentId);
+      const qs = new URLSearchParams({ limit: "100" });
+      if (studentId) qs.set("studentId", studentId);
+      const res = await apiGet<{ data: ApiBooking[] }>(`/bookings?${qs.toString()}`);
+      return res.data.map(toBookingShape) as unknown as Booking[];
     },
   });
 }
 
-async function fetchBookingsSupabase(studentId?: string) {
-  let query = supabase.from("bookings").select(BOOKING_SELECT).order("starts_at", {
-    ascending: false,
-  });
-  if (studentId) query = query.eq("student_id", studentId);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data ?? [];
+/** A booking, as the parent portal consumes it. Mirrors toBookingShape(). */
+export interface Booking {
+  id: string;
+  student_id: string;
+  tutor_id: string;
+  booked_by: string;
+  subject_id: string | null;
+  starts_at: string;
+  ends_at: string;
+  duration_minutes: number;
+  booking_timezone: string;
+  hourly_rate: number;
+  currency: string;
+  total_amount: number;
+  status: ParentBookingStatus;
+  student_notes: string | null;
+  cancellation_policy_id: string | null;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
+  created_at: string;
+  subjects: { name: string } | null;
+  education_levels: { name: string } | null;
+  class_sessions: { meeting_url: string | null; status: string | null }[];
+  payments: { status: string }[];
 }
-
-export type Booking = NonNullable<Awaited<ReturnType<typeof fetchBookingsSupabase>>>[number];
 
 /** Resolves display info for a set of tutor ids through a backend function. */
 export function useTutorCards(ids: (string | null | undefined)[]) {
-  const viaApi = useApiData();
   const unique = useMemo(
     () => [...new Set(ids.filter((id): id is string => Boolean(id)))].sort(),
     [ids],
@@ -128,10 +146,7 @@ export function useTutorCards(ids: (string | null | undefined)[]) {
     enabled: unique.length > 0,
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      if (viaApi) return apiPost<TutorCard[]>("/catalogue/tutors/cards", { ids: unique });
-      const { data, error } = await supabase.rpc("public_tutor_cards", { p_ids: unique });
-      if (error) throw error;
-      return data ?? [];
+      return apiPost<TutorCard[]>("/catalogue/tutors/cards", { ids: unique });
     },
   });
 
@@ -155,31 +170,21 @@ export function useTutorCard(tutorId: string | undefined) {
 
 export function useParentSummary() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["parent-summary", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
-      if (viaApi) return apiGet<ParentSummary | null>("/parents/me/dashboard").catch(() => null);
-      const { data, error } = await supabase.rpc("parent_dashboard_summary");
-      if (error) throw error;
-      return (data?.[0] ?? null) as ParentSummary | null;
+      return apiGet<ParentSummary | null>("/parents/me/dashboard").catch(() => null);
     },
   });
 }
 
 export function useChildProgress(studentId: string | undefined) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["parent-child-progress", studentId],
     enabled: Boolean(studentId),
     queryFn: async () => {
-      if (viaApi) return apiGet<ChildProgressRow[]>(`/students/${studentId}/progress`);
-      const { data, error } = await supabase.rpc("parent_child_progress", {
-        p_student_id: studentId!,
-      });
-      if (error) throw error;
-      return data ?? [];
+      return apiGet<ChildProgressRow[]>(`/students/${studentId}/progress`);
     },
   });
 }
@@ -190,45 +195,35 @@ export function useChildProgress(studentId: string | undefined) {
 
 export function usePayments() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["parent-payments", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
-      if (viaApi) {
-        const res = await apiGet<{ data: unknown[] }>("/payments?limit=100");
-        return res.data as unknown as Payment[];
-      }
-      return fetchPaymentsSupabase();
+      const res = await apiGet<{ data: unknown[] }>("/payments?limit=100");
+      return res.data as unknown as Payment[];
     },
   });
 }
 
-async function fetchPaymentsSupabase() {
-  const { data, error } = await supabase
-    .from("payments")
-    .select(
-      "id, booking_id, tutor_id, amount, currency, platform_fee, commission_amount, exchange_rate, status, provider, provider_reference, paid_at, refunded_amount, created_at, bookings(starts_at, duration_minutes, student_id, subject_id, subjects(name), students(first_name, last_name))",
-    )
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
+/** A payment row as /payments returns it. */
+export interface Payment {
+  id: string;
+  booking_id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  paid_at: string | null;
+  created_at: string;
 }
-
-export type Payment = NonNullable<Awaited<ReturnType<typeof fetchPaymentsSupabase>>>[number];
 
 export function useNotifications() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["parent-notifications", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async () => {
-      if (viaApi) {
-        const res = await apiGet<{ data: ApiNotification[] }>("/notifications?limit=100");
-        return res.data.map(toNotificationShape) as unknown as ParentNotification[];
-      }
-      return fetchNotificationsSupabase();
+      const res = await apiGet<{ data: ApiNotification[] }>("/notifications?limit=100");
+      return res.data.map(toNotificationShape) as unknown as ParentNotification[];
     },
   });
 }
@@ -246,21 +241,12 @@ type MyRating = {
 
 export function useMyRatings() {
   const { user } = useAuth();
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["parent-ratings", user?.id],
     enabled: Boolean(user?.id),
     queryFn: async (): Promise<MyRating[]> => {
-      if (viaApi) {
-        const rows = await apiGet<MyRating[]>("/bookings/my-ratings");
-        return rows.map((r) => ({ ...r, score: Number(r.score) }));
-      }
-      const { data, error } = await supabase
-        .from("ratings")
-        .select("id, booking_id, tutor_id, score, comment, created_at")
-        .eq("rater_id", user!.id);
-      if (error) throw error;
-      return data ?? [];
+      const rows = await apiGet<MyRating[]>("/bookings/my-ratings");
+      return rows.map((r) => ({ ...r, score: Number(r.score) }));
     },
   });
 }
@@ -270,77 +256,45 @@ export function useMyRatings() {
 /* ------------------------------------------------------------------ */
 
 export function useCurriculaOptions() {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["config-curricula"],
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<{ id: string; name: string; country_code: string | null }[]> => {
-      if (viaApi) {
-        // Active curricula, already in sort order.
-        const rows =
-          await apiGet<{ id: string; name: string; country_code: string | null }[]>(
-            "/catalogue/curricula",
-          );
-        return rows.map(({ id, name, country_code }) => ({ id, name, country_code }));
-      }
-      const { data, error } = await supabase
-        .from("curricula")
-        .select("id, name, country_code")
-        .eq("is_active", true)
-        .order("sort_order");
-      if (error) throw error;
-      return data ?? [];
+      // Active curricula, already in sort order.
+      const rows =
+        await apiGet<{ id: string; name: string; country_code: string | null }[]>(
+          "/catalogue/curricula",
+        );
+      return rows.map(({ id, name, country_code }) => ({ id, name, country_code }));
     },
   });
 }
 
 export function useLevelOptions(curriculumId?: string | undefined) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["config-levels", curriculumId ?? "all"],
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<{ id: string; name: string; curriculum_id: string | null }[]> => {
-      if (viaApi) {
-        const rows = await apiGet<{ id: string; name: string; curriculum_id: string | null }[]>(
-          "/catalogue/education-levels",
-        );
-        return rows
-          .filter((row) => !curriculumId || row.curriculum_id === curriculumId)
-          .map(({ id, name, curriculum_id }) => ({ id, name, curriculum_id }));
-      }
-      let query = supabase
-        .from("education_levels")
-        .select("id, name, curriculum_id")
-        .eq("is_active", true)
-        .order("sort_order");
-      if (curriculumId) query = query.eq("curriculum_id", curriculumId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data ?? [];
+      const rows = await apiGet<{ id: string; name: string; curriculum_id: string | null }[]>(
+        "/catalogue/education-levels",
+      );
+      return rows
+        .filter((row) => !curriculumId || row.curriculum_id === curriculumId)
+        .map(({ id, name, curriculum_id }) => ({ id, name, curriculum_id }));
     },
   });
 }
 
 export function useSubjectOptions() {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["config-subjects"],
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<{ id: string; name: string; category: string | null }[]> => {
-      if (viaApi) {
-        const rows =
-          await apiGet<{ id: string; name: string; category: string | null }[]>(
-            "/catalogue/subjects",
-          );
-        return rows.map(({ id, name, category }) => ({ id, name, category }));
-      }
-      const { data, error } = await supabase
-        .from("subjects")
-        .select("id, name, category")
-        .eq("is_active", true)
-        .order("sort_order");
-      if (error) throw error;
-      return data ?? [];
+      const rows =
+        await apiGet<{ id: string; name: string; category: string | null }[]>(
+          "/catalogue/subjects",
+        );
+      return rows.map(({ id, name, category }) => ({ id, name, category }));
     },
   });
 }
@@ -353,33 +307,24 @@ type TutorSubjectOption = {
 };
 
 export function useTutorSubjects(tutorId: string | undefined) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["tutor-subjects", tutorId],
     enabled: Boolean(tutorId),
     queryFn: async (): Promise<TutorSubjectOption[]> => {
-      if (viaApi) {
-        const rows = await apiGet<
-          {
-            subject_id: string;
-            education_level_id: string | null;
-            subject_name: string;
-            level_name: string | null;
-          }[]
-        >(`/catalogue/tutors/${tutorId}/subjects`);
-        return rows.map((r) => ({
-          subject_id: r.subject_id,
-          education_level_id: r.education_level_id,
-          subjects: { name: r.subject_name },
-          education_levels: r.level_name ? { name: r.level_name } : null,
-        }));
-      }
-      const { data, error } = await supabase
-        .from("tutor_subjects")
-        .select("subject_id, education_level_id, subjects(name), education_levels(name)")
-        .eq("tutor_id", tutorId!);
-      if (error) throw error;
-      return data ?? [];
+      const rows = await apiGet<
+        {
+          subject_id: string;
+          education_level_id: string | null;
+          subject_name: string;
+          level_name: string | null;
+        }[]
+      >(`/catalogue/tutors/${tutorId}/subjects`);
+      return rows.map((r) => ({
+        subject_id: r.subject_id,
+        education_level_id: r.education_level_id,
+        subjects: { name: r.subject_name },
+        education_levels: r.level_name ? { name: r.level_name } : null,
+      }));
     },
   });
 }
@@ -393,66 +338,39 @@ type CancellationPolicy = {
 };
 
 export function useCancellationPolicy(policyId?: string | null) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["cancellation-policy", policyId ?? "default"],
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<CancellationPolicy | null> => {
-      if (viaApi) {
-        const rows = await apiGet<(CancellationPolicy & { is_default: boolean })[]>(
-          "/catalogue/cancellation-policies",
-        );
-        const match = rows.find((row) => (policyId ? row.id === policyId : row.is_default));
-        if (!match) return null;
-        const { is_default: _isDefault, ...policy } = match;
-        return {
-          ...policy,
-          hours_before: Number(policy.hours_before),
-          refund_percentage: Number(policy.refund_percentage),
-        };
-      }
-      let query = supabase
-        .from("cancellation_policies")
-        .select("id, name, hours_before, refund_percentage, description")
-        .eq("is_active", true);
-      query = policyId ? query.eq("id", policyId) : query.eq("is_default", true);
-      const { data, error } = await query.limit(1);
-      if (error) throw error;
-      return data?.[0] ?? null;
+      const rows = await apiGet<(CancellationPolicy & { is_default: boolean })[]>(
+        "/catalogue/cancellation-policies",
+      );
+      const match = rows.find((row) => (policyId ? row.id === policyId : row.is_default));
+      if (!match) return null;
+      const { is_default: _isDefault, ...policy } = match;
+      return {
+        ...policy,
+        hours_before: Number(policy.hours_before),
+        refund_percentage: Number(policy.refund_percentage),
+      };
     },
   });
 }
 
 /** Lesson duration options come from admin settings, never from a hardcoded list. */
 export function useDurationOptions() {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["config-durations"],
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<number[]> => {
-      if (viaApi) {
-        // Your database keeps these under booking.allowed_durations, the key
-        // the API validates bookings against; the Supabase path read an older
-        // key that does not exist there.
-        const settings = await apiGet<Record<string, unknown>>("/catalogue/settings");
-        const value = settings["booking.allowed_durations"];
-        return Array.isArray(value)
-          ? value.map((item) => Number(item)).filter((item) => Number.isFinite(item) && item > 0)
-          : [];
-      }
-      const { data, error } = await supabase
-        .from("platform_settings")
-        .select("value")
-        .eq("key", "booking.duration_options")
-        .maybeSingle();
-      if (error) throw error;
-      const value = data?.value;
-      if (Array.isArray(value)) {
-        return value
-          .map((item) => Number(item))
-          .filter((item) => Number.isFinite(item) && item > 0);
-      }
-      return [];
+      // Your database keeps these under booking.allowed_durations, the key
+      // the API validates bookings against; the Supabase path read an older
+      // key that does not exist there.
+      const settings = await apiGet<Record<string, unknown>>("/catalogue/settings");
+      const value = settings["booking.allowed_durations"];
+      return Array.isArray(value)
+        ? value.map((item) => Number(item)).filter((item) => Number.isFinite(item) && item > 0)
+        : [];
     },
   });
 }
@@ -467,78 +385,59 @@ export function useAvailableSlots(params: {
   durationMinutes?: number | undefined;
   enabled?: boolean;
 }) {
-  const viaApi = useApiData();
   const { tutorId, days = 21, durationMinutes } = params;
   return useQuery({
     queryKey: ["tutor-slots", tutorId, days, durationMinutes ?? null],
     enabled: Boolean(tutorId) && params.enabled !== false && Boolean(durationMinutes),
     staleTime: 30 * 1000,
     queryFn: async () => {
-      if (viaApi) {
-        const qs = new URLSearchParams({
-          tutorId: params.tutorId ?? "",
-          durationMinutes: String(params.durationMinutes ?? 60),
-          days: String(params.days ?? 14),
-        });
-        const slots = await apiGet<{ startsAt: string; endsAt: string }[]>(
-          `/bookings/available-slots?${qs.toString()}`,
-        );
-        // Map to the snake_case shape the RPC returned.
-        return slots.map((sl) => ({
-          starts_at: sl.startsAt,
-          ends_at: sl.endsAt,
-        })) as unknown as AvailabilitySlot[];
-      }
-      const { data, error } = await supabase.rpc("tutor_available_slots", {
-        p_tutor_id: tutorId!,
-        p_days: days,
-        p_duration_minutes: durationMinutes!,
+      const qs = new URLSearchParams({
+        tutorId: params.tutorId ?? "",
+        durationMinutes: String(params.durationMinutes ?? 60),
+        days: String(params.days ?? 14),
       });
-      if (error) throw error;
-      return data ?? [];
+      const slots = await apiGet<{ startsAt: string; endsAt: string }[]>(
+        `/bookings/available-slots?${qs.toString()}`,
+      );
+      // Map to the snake_case shape the RPC returned.
+      return slots.map((sl) => ({
+        starts_at: sl.startsAt,
+        ends_at: sl.endsAt,
+      })) as unknown as AvailabilitySlot[];
     },
   });
 }
 
 export function useBookingQuote(tutorId: string | undefined, durationMinutes: number | undefined) {
-  const viaApi = useApiData();
   return useQuery({
     queryKey: ["booking-quote", tutorId, durationMinutes],
     enabled: Boolean(tutorId) && Boolean(durationMinutes),
     queryFn: async () => {
-      if (viaApi) {
-        const q = await apiPost<{
-          currency: string;
-          hourlyRate: string;
-          durationMinutes: number;
-          lessonAmount: string;
-          platformFee: string;
-          processingFee: string;
-          commissionAmount: string;
-          totalAmount: string;
-          commissionRuleId: string | null;
-          cancellationPolicyId: string | null;
-        }>("/payments/quote", { tutorId: tutorId!, durationMinutes: durationMinutes! });
-        // Map camelCase API fields to the snake_case RPC shape the UI reads.
-        return {
-          currency: q.currency,
-          hourly_rate: Number(q.hourlyRate),
-          duration_minutes: q.durationMinutes,
-          lesson_amount: Number(q.lessonAmount),
-          platform_fee: Number(q.platformFee),
-          processing_fee: Number(q.processingFee),
-          commission_amount: Number(q.commissionAmount),
-          total_amount: Number(q.totalAmount),
-          commission_rule_id: q.commissionRuleId,
-          cancellation_policy_id: q.cancellationPolicyId,
-        } as unknown as BookingQuote;
-      }
-      const { data, error } = await supabase.rpc("booking_quote", {
-        p_tutor_id: tutorId!,
-        p_duration_minutes: durationMinutes!,
-      });
-      if (error) throw error;
-      return (data?.[0] ?? null) as BookingQuote | null;
+      const q = await apiPost<{
+        currency: string;
+        hourlyRate: string;
+        durationMinutes: number;
+        lessonAmount: string;
+        platformFee: string;
+        processingFee: string;
+        commissionAmount: string;
+        totalAmount: string;
+        commissionRuleId: string | null;
+        cancellationPolicyId: string | null;
+      }>("/payments/quote", { tutorId: tutorId!, durationMinutes: durationMinutes! });
+      // Map camelCase API fields to the snake_case RPC shape the UI reads.
+      return {
+        currency: q.currency,
+        hourly_rate: Number(q.hourlyRate),
+        duration_minutes: q.durationMinutes,
+        lesson_amount: Number(q.lessonAmount),
+        platform_fee: Number(q.platformFee),
+        processing_fee: Number(q.processingFee),
+        commission_amount: Number(q.commissionAmount),
+        total_amount: Number(q.totalAmount),
+        commission_rule_id: q.commissionRuleId,
+        cancellation_policy_id: q.cancellationPolicyId,
+      } as unknown as BookingQuote;
     },
   });
 }
@@ -650,21 +549,20 @@ export function isJoinable(booking: Pick<Booking, "starts_at" | "ends_at" | "sta
   return until <= 15 && !ended;
 }
 
-async function fetchNotificationsSupabase() {
-  const { data, error } = await supabase
-    .from("notifications")
-    .select(
-      "id, trigger_key, channel, title, body, data, link, read_at, sent_at, created_at, notification_templates(trigger_key, description)",
-    )
-    .order("created_at", { ascending: false })
-    .limit(100);
-  if (error) throw error;
-  return data ?? [];
+/** A notification, as the parent portal consumes it. Mirrors toNotificationShape(). */
+export interface ParentNotification {
+  id: string;
+  trigger_key: string | null;
+  channel: string;
+  title: string | null;
+  body: string | null;
+  data: unknown;
+  link: string | null;
+  read_at: string | null;
+  sent_at: string;
+  created_at: string;
+  notification_templates: unknown;
 }
-
-export type ParentNotification = NonNullable<
-  Awaited<ReturnType<typeof fetchNotificationsSupabase>>
->[number];
 
 /* ------------------------------------------------------------------ */
 /* API response adapters                                               */
