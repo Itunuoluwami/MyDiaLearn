@@ -57,7 +57,6 @@ const EXPECTED_RPCS = [
   "admin_invite_redeem",
   "clear_must_change_password",
   "is_super_admin",
-  "my_permissions",
 ];
 
 const EXPECTED_TABLES = [
@@ -67,20 +66,18 @@ const EXPECTED_TABLES = [
   "notification_templates",
   "platform_settings",
   "profiles",
-  "role_permissions",
   "students",
   "subjects",
   "tutor_agencies",
   "tutors",
-  "user_roles",
 ];
 
 describe("Supabase coupling inventory", () => {
-  it("calls exactly the 5 stored procedures on record", () => {
+  it("calls exactly the 4 stored procedures on record", () => {
     expect([...collect(RPC_PATTERN)].sort()).toEqual(EXPECTED_RPCS);
   });
 
-  it("reads exactly the 12 tables and views on record", () => {
+  it("reads exactly the 10 tables and views on record", () => {
     expect([...collect(TABLE_PATTERN)].sort()).toEqual(EXPECTED_TABLES);
   });
 

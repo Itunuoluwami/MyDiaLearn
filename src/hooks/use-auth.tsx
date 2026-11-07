@@ -1,10 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { AuthUser as User, Session } from "@/lib/auth/types";
 
-import { supabase } from "@/integrations/supabase/client";
 import { authClient } from "@/lib/auth";
-import { governanceRpc } from "@/integrations/supabase/governance-types";
 import type { Database } from "@/integrations/supabase/types";
 
 /**
@@ -115,54 +113,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const claims = session?.user.user_metadata as
       { roles?: string[]; permissions?: string[] } | undefined;
 
-    if (authClient.provider === "nestjs") {
-      // Fetch the profile, roles and permissions from the API in one call.
-      // /users/me resolves permissions through the same my_permissions() the
-      // Supabase path used, so the two providers produce the same identity —
-      // and the account screen renders real fields rather than blanks.
-      try {
-        const me = await fetchCurrentUser(session);
-        setProfile(me.profile);
-        setRoles(me.roles);
-        setPermissions(me.permissions);
-      } catch {
-        // Fall back to the token claims, so a transient API blip degrades to a
-        // usable session (correct roles, empty profile) rather than a logout.
-        setProfile(null);
-        setRoles((claims?.roles ?? []) as AppRole[]);
-        setPermissions(claims?.permissions ?? []);
-      }
-      return;
-    }
-
-    const [{ data: profileRow }, { data: roleRows }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", userId),
-    ]);
-
-    const nextRoles = (roleRows ?? []).map((row) => row.role);
-    setProfile(profileRow ?? null);
-    setRoles(nextRoles);
-
-    if (nextRoles.length === 0) {
-      setPermissions([]);
-      return;
-    }
-
-    // Resolved server-side rather than by reading role_permissions here: the
-    // browser cannot see per-user overrides in user_permissions, and cannot
-    // know that a super admin implicitly holds every permission.
+    // Profile, roles and permissions in one call. /users/me resolves
+    // permissions through my_permissions(), so the account screen renders
+    // real fields rather than blanks.
     try {
-      const resolved = await governanceRpc<string[]>("my_permissions");
-      setPermissions(resolved ?? []);
+      const me = await fetchCurrentUser(session);
+      setProfile(me.profile);
+      setRoles(me.roles);
+      setPermissions(me.permissions);
     } catch {
-      // my_permissions() ships with the 20260907* migrations. Until they are
-      // applied, fall back to the role-level set so the portal keeps working.
-      const { data: permissionRows } = await supabase
-        .from("role_permissions")
-        .select("permission_key")
-        .in("role", nextRoles);
-      setPermissions([...new Set((permissionRows ?? []).map((row) => row.permission_key))]);
+      // Fall back to the token claims, so a transient API blip degrades to a
+      // usable session (correct roles, empty profile) rather than a logout.
+      setProfile(null);
+      setRoles((claims?.roles ?? []) as AppRole[]);
+      setPermissions(claims?.permissions ?? []);
     }
   }, []);
 

@@ -1,12 +1,50 @@
-import type { Session, User } from "@supabase/supabase-js";
+/**
+ * The authenticated account.
+ *
+ * Declared here rather than imported from a vendor SDK: this is DiaLearn's own
+ * session shape, and the app should not take its core identity type from a
+ * client it no longer uses. The snake_case field names are kept because every
+ * screen already reads them.
+ */
+export interface AuthUser {
+  id: string;
+  email: string;
+  aud: string;
+  role: string;
+  email_confirmed_at: string | null;
+  app_metadata: { provider: string; roles: string[] };
+  user_metadata: {
+    full_name: string | null;
+    roles: string[];
+    permissions: string[];
+    must_change_password: boolean;
+  };
+  created_at: string;
+}
+
+export interface Session {
+  access_token: string;
+  token_type: "bearer";
+  expires_in: number;
+  /** Epoch seconds. */
+  expires_at: number;
+  /**
+   * Always empty. The real refresh token is an httpOnly cookie the page
+   * cannot read; the field exists because callers destructure it.
+   */
+  refresh_token: string;
+  user: AuthUser;
+}
+
+/** Retained so existing call sites keep compiling. */
+export type User = AuthUser;
 
 /**
  * The authentication surface the application uses.
  *
- * Deliberately shaped like `supabase.auth`. The point of this phase is to make
- * the provider swappable *without* touching a single screen, and the cheapest
- * way to do that is to keep the call signatures the UI already uses. Every form
- * changes one import and nothing else.
+ * The call signatures were originally modelled on `supabase.auth` so the
+ * provider could be swapped without touching a screen. That swap is done; the
+ * shape is kept because it is what every form already speaks.
  *
  * Errors are returned, not thrown, for the same reason: the existing forms all
  * branch on `{ error }` and inspect `error.message`.
@@ -79,5 +117,5 @@ export interface AuthClient {
   };
 
   /** Which implementation is active. Useful in diagnostics and tests. */
-  readonly provider: "supabase" | "nestjs";
+  readonly provider: "nestjs";
 }

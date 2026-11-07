@@ -1,4 +1,4 @@
-import type { Session, User } from "@supabase/supabase-js";
+import type { AuthUser, Session } from "./types";
 
 import { ApiError, apiRequest } from "@/lib/api/client";
 import type { AuthChangeEvent, AuthClient, AuthError, AuthResult, AuthSubscription } from "./types";
@@ -77,7 +77,7 @@ function toSession(api: ApiSession): Session {
       must_change_password: api.user.mustChangePassword,
     },
     created_at: "",
-  } as unknown as User;
+  } satisfies AuthUser;
 
   return {
     access_token: api.accessToken,
@@ -88,7 +88,7 @@ function toSession(api: ApiSession): Session {
     // readable here. Nothing in the app reads this field.
     refresh_token: "",
     user,
-  } as unknown as Session;
+  } satisfies Session;
 }
 
 function scheduleRefresh(session: Session): void {
