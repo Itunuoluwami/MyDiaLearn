@@ -2,11 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "@/hooks/use-auth";
 import { apiDelete, apiGet, apiPatch, apiPost, apiUpload } from "@/lib/api/data-client";
+import type { BookingStatus, VerificationStatus } from "@/lib/domain-types";
+export type { BookingStatus, VerificationStatus } from "@/lib/domain-types";
 import type { Database } from "@/integrations/supabase/types";
 
 export type TutorRow = Database["public"]["Tables"]["tutors"]["Row"];
-export type BookingStatus = Database["public"]["Enums"]["booking_status"];
-export type VerificationStatus = Database["public"]["Enums"]["verification_status"];
 
 type FnReturns<T extends keyof Database["public"]["Functions"]> =
   Database["public"]["Functions"][T]["Returns"];

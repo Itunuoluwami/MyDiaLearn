@@ -52,12 +52,7 @@ const RPC_PATTERN = /(?:\.rpc|governanceRpc(?:<[^>]*>)?)\(\s*"([a-z_]+)"/g;
  *  hyphens and so never match this character class. */
 const TABLE_PATTERN = /(?:\.from|governanceTable(?:<[^>]*>)?)\(\s*"([a-z_]+)"/g;
 
-const EXPECTED_RPCS = [
-  "admin_invite_create",
-  "admin_invite_redeem",
-  "clear_must_change_password",
-  "is_super_admin",
-];
+const EXPECTED_RPCS: string[] = [];
 
 const EXPECTED_TABLES = ["profiles"];
 

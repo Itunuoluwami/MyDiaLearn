@@ -1,15 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { AuthUser as User, Session } from "@/lib/auth/types";
+import type { AppRole } from "@/lib/domain-types";
 
 import { authClient } from "@/lib/auth";
 import type { Database } from "@/integrations/supabase/types";
 
-/**
- * `super_admin` was added to the enum in 20260907090000 but `types.ts` has not
- * been regenerated since, so it is unioned in here to keep role checks honest.
- */
-export type AppRole = Database["public"]["Enums"]["app_role"] | "super_admin";
+export type { AppRole } from "@/lib/domain-types";
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export interface AuthContextValue {

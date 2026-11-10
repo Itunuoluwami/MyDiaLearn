@@ -4,8 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Check, Loader2 } from "lucide-react";
 import type { z } from "zod";
 
-import { supabase } from "@/integrations/supabase/client";
-import { governanceRpc } from "@/integrations/supabase/governance-types";
 import { friendlyAdminError, redeemInvitationViaApi } from "@/lib/admin-governance";
 import { apiPost, useApiData } from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
@@ -43,7 +41,6 @@ const STRENGTH_TONE = [
  */
 export function AcceptInviteForm({ email, onSuccess }: { email: string; onSuccess: () => void }) {
   const [formError, setFormError] = useState<string | null>(null);
-  const viaApi = useApiData();
   const [currentPassword, setCurrentPassword] = useState("");
   const [currentError, setCurrentError] = useState<string | null>(null);
 
@@ -69,15 +66,14 @@ export function AcceptInviteForm({ email, onSuccess }: { email: string; onSucces
       .replace(/[\s-]/g, "")
       .toUpperCase();
 
-    if (viaApi && !currentPassword) {
+    if (!currentPassword) {
       setCurrentError("Enter the password you signed in with.");
       return;
     }
     setCurrentError(null);
 
     try {
-      if (viaApi) await redeemInvitationViaApi(email, otp);
-      else await governanceRpc<string>("admin_invite_redeem", { p_email: email, p_otp: otp });
+      await redeemInvitationViaApi(email, otp);
     } catch (error) {
       const raw = String((error as { message?: string })?.message ?? "").toUpperCase();
       if (raw.includes("INVALID_OTP")) {
@@ -91,44 +87,27 @@ export function AcceptInviteForm({ email, onSuccess }: { email: string; onSucces
       return;
     }
 
-    if (viaApi) {
-      try {
-        await apiPost("/auth/password/change", {
-          currentPassword,
-          newPassword: values.password,
-        });
-      } catch (error) {
-        const raw = String((error as { message?: string })?.message ?? "").toLowerCase();
-        setFormError(
-          raw.includes("current password is incorrect")
-            ? "Your admin access is set up, but the current password was wrong so the new one wasn't saved. Set it from Security."
-            : "Your admin access is set up, but we couldn't save that password. Set one from Security after signing in.",
-        );
-        return;
-      }
-      const { error } = await authClient.signInWithPassword({ email, password: values.password });
-      if (error) {
-        setFormError("Your password was changed. Please sign in again with the new one.");
-        return;
-      }
-      onSuccess();
-      return;
-    }
-
-    const { error: passwordError } = await supabase.auth.updateUser({ password: values.password });
-    if (passwordError) {
-      // The role is granted at this point, so this is recoverable: they can
+    try {
+      await apiPost("/auth/password/change", {
+        currentPassword,
+        newPassword: values.password,
+      });
+    } catch (error) {
+      // The role is granted by this point, so this is recoverable: they can
       // finish setting a password from Security once inside.
+      const raw = String((error as { message?: string })?.message ?? "").toLowerCase();
       setFormError(
-        "Your admin access is set up, but we couldn't save that password. Try again, or set one from Security after signing in.",
+        raw.includes("current password is incorrect")
+          ? "Your admin access is set up, but the current password was wrong so the new one wasn't saved. Set it from Security."
+          : "Your admin access is set up, but we couldn't save that password. Set one from Security after signing in.",
       );
       return;
     }
 
-    try {
-      await governanceRpc<void>("clear_must_change_password");
-    } catch {
-      // Non-fatal: the guard will simply route them to Security to try again.
+    const { error } = await authClient.signInWithPassword({ email, password: values.password });
+    if (error) {
+      setFormError("Your password was changed. Please sign in again with the new one.");
+      return;
     }
 
     onSuccess();
@@ -146,25 +125,23 @@ export function AcceptInviteForm({ email, onSuccess }: { email: string; onSucces
         </p>
       ) : null}
 
-      {viaApi ? (
-        <div className="space-y-2">
-          <Label htmlFor="invite-current-password">Current password</Label>
-          <PasswordInput
-            id="invite-current-password"
-            autoComplete="current-password"
-            value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)}
-            aria-invalid={Boolean(currentError)}
-            aria-describedby={currentError ? "invite-current-password-error" : undefined}
-            className={cn("h-11", currentError && "border-destructive")}
-          />
-          {currentError ? (
-            <p id="invite-current-password-error" role="alert" className="text-xs text-destructive">
-              {currentError}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
+      <div className="space-y-2">
+        <Label htmlFor="invite-current-password">Current password</Label>
+        <PasswordInput
+          id="invite-current-password"
+          autoComplete="current-password"
+          value={currentPassword}
+          onChange={(event) => setCurrentPassword(event.target.value)}
+          aria-invalid={Boolean(currentError)}
+          aria-describedby={currentError ? "invite-current-password-error" : undefined}
+          className={cn("h-11", currentError && "border-destructive")}
+        />
+        {currentError ? (
+          <p id="invite-current-password-error" role="alert" className="text-xs text-destructive">
+            {currentError}
+          </p>
+        ) : null}
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="invite-otp">One-time password</Label>

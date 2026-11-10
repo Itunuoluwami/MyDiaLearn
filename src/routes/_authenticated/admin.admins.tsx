@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import {
   Copy,
   Loader2,
@@ -16,7 +15,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { adminBeforeLoad } from "@/lib/admin-guard";
-import { inviteAdmin } from "@/lib/admin-invite.functions";
 import {
   INVITATION_STATUS_LABEL,
   INVITATION_STATUS_TONE,
@@ -32,7 +30,6 @@ import {
   type AdminAccount,
   inviteAdminViaApi,
 } from "@/lib/admin-governance";
-import { useApiData } from "@/lib/api/data-client";
 import type { PermissionRow } from "@/integrations/supabase/governance-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,8 +90,6 @@ export const Route = createFileRoute("/_authenticated/admin/admins")({
 /* ------------------------------------------------------------------ */
 
 function InviteDialog({ onClose }: { onClose: () => void }) {
-  const send = useServerFn(inviteAdmin);
-  const viaApi = useApiData();
   const catalog = usePermissionCatalog();
 
   const [email, setEmail] = useState("");
@@ -123,36 +118,20 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
     setFormError(null);
     setPending(true);
 
-    // Under the API the backend creates the invitation and emails the code;
-    // the Supabase path keeps its server function.
-    const result = viaApi
-      ? await inviteAdminViaApi({
-          email: email.trim().toLowerCase(),
-          role,
-          permissionKeys: [...selected],
-        }).then(
-          (created) => ({ ok: true as const, ...created }),
-          (error: unknown) => ({ ok: false as const, formError: friendlyAdminError(error) }),
-        )
-      : await send({
-          data: {
-            email,
-            role,
-            permissionKeys: [...selected],
-            origin: window.location.origin,
-          },
-        }).catch(() => null);
+    // The backend creates the invitation and emails the one-time code.
+    const result = await inviteAdminViaApi({
+      email: email.trim().toLowerCase(),
+      role,
+      permissionKeys: [...selected],
+    }).then(
+      (created) => ({ ok: true as const, ...created }),
+      (error: unknown) => ({ ok: false as const, formError: friendlyAdminError(error) }),
+    );
 
     setPending(false);
 
-    if (!result) {
-      setFormError("Something went wrong. Please check your connection and try again.");
-      return;
-    }
     if (!result.ok) {
-      setFormError(
-        "formError" in result ? result.formError : (Object.values(result.fieldErrors)[0] ?? null),
-      );
+      setFormError(result.formError);
       return;
     }
 
@@ -164,8 +143,8 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    // No mail went out (an existing account under Supabase, or email not
-    // configured on the API) — show the code once so it can be passed on.
+    // No mail went out — email is not configured, or the address already has
+    // an account. Show the code once so it can be passed on by hand.
     setIssuedOtp(result.otp ?? null);
   }
 

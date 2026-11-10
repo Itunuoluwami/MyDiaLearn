@@ -1,6 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiRequest } from "@/lib/api/client";
+import type {
+  BookingStatus,
+  PaymentStatus,
+  PayoutStatus,
+  VerificationStatus,
+} from "@/lib/domain-types";
+export type {
+  BookingStatus,
+  PaymentStatus,
+  PayoutStatus,
+  VerificationStatus,
+} from "@/lib/domain-types";
 import { API_BASE_URL, API_FILE_PREFIX, apiGet, apiPatch, apiPost } from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
 import { governanceRpc, governanceTable } from "@/integrations/supabase/governance-types";
@@ -9,7 +21,6 @@ import type { AppRole as AuthAppRole } from "@/hooks/use-auth";
 
 /** Re-exported so `super_admin` is included; see the note in use-auth.tsx. */
 export type AppRole = AuthAppRole;
-export type VerificationStatus = Database["public"]["Enums"]["verification_status"];
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 /** PUT with the session token; data-client has no apiPut. */
@@ -394,10 +405,6 @@ export function useRejectTutor() {
 /* ------------------------------------------------------------------ */
 /* Bookings (Phase 2)                                                    */
 /* ------------------------------------------------------------------ */
-
-export type BookingStatus = Database["public"]["Enums"]["booking_status"];
-export type PaymentStatus = Database["public"]["Enums"]["payment_status"];
-export type PayoutStatus = Database["public"]["Enums"]["payout_status"];
 
 type BookingRowDb = Database["public"]["Tables"]["bookings"]["Row"];
 

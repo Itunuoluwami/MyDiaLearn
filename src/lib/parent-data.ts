@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { apiGet, apiPost } from "@/lib/api/data-client";
+import type { BookingStatus, PaymentStatus, VerificationStatus } from "@/lib/domain-types";
+export type { BookingStatus, PaymentStatus, VerificationStatus } from "@/lib/domain-types";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -12,10 +14,6 @@ import { useAuth } from "@/hooks/use-auth";
  * admin-configured settings. Nothing is derived or hardcoded in the frontend
  * beyond display formatting.
  */
-
-export type BookingStatus = Database["public"]["Enums"]["booking_status"];
-export type PaymentStatus = Database["public"]["Enums"]["payment_status"];
-export type VerificationStatus = Database["public"]["Enums"]["verification_status"];
 
 export type TutorCard = Database["public"]["Functions"]["public_tutor_cards"]["Returns"][number];
 export type ParentSummary =
@@ -131,7 +129,13 @@ export interface Booking {
   created_at: string;
   subjects: { name: string } | null;
   education_levels: { name: string } | null;
-  class_sessions: { meeting_url: string | null; status: string | null }[];
+  class_sessions: {
+    id: string | null;
+    meeting_url: string | null;
+    status: string | null;
+    tutor_notes: string | null;
+    homework: string | null;
+  }[];
   payments: { status: string }[];
 }
 
@@ -637,6 +641,9 @@ interface ApiBooking {
   paid: boolean;
   sessionMeetingUrl: string | null;
   sessionStatus: string | null;
+  sessionId: string | null;
+  sessionTutorNotes: string | null;
+  sessionHomework: string | null;
   studentNotes: string | null;
   cancelledAt: string | null;
   cancellationReason: string | null;
@@ -666,8 +673,16 @@ function toBookingShape(b: ApiBooking): Record<string, unknown> {
     subjects: b.subjectName ? { name: b.subjectName } : null,
     education_levels: null,
     class_sessions:
-      b.sessionMeetingUrl || b.sessionStatus
-        ? [{ meeting_url: b.sessionMeetingUrl, status: b.sessionStatus }]
+      b.sessionMeetingUrl || b.sessionStatus || b.sessionId
+        ? [
+            {
+              id: b.sessionId,
+              meeting_url: b.sessionMeetingUrl,
+              status: b.sessionStatus,
+              tutor_notes: b.sessionTutorNotes,
+              homework: b.sessionHomework,
+            },
+          ]
         : [],
     payments: b.paid ? [{ status: "paid" }] : [],
   };

@@ -11,12 +11,10 @@ import {
   openApiFile,
 } from "@/lib/api/data-client";
 import { apiRequest } from "@/lib/api/client";
+import type { AssignmentStatus, PayoutStatus, ResourceType } from "@/lib/domain-types";
+export type { AssignmentStatus, PayoutStatus, ResourceType } from "@/lib/domain-types";
 import { authClient } from "@/lib/auth";
 import { useTutorRecord } from "@/lib/tutor-data";
-
-export type ResourceType = Database["public"]["Enums"]["resource_type"];
-export type AssignmentStatus = Database["public"]["Enums"]["assignment_status"];
-export type PayoutStatus = Database["public"]["Enums"]["payout_status"];
 
 type Tables = Database["public"]["Tables"];
 type FnRow<T extends keyof Database["public"]["Functions"]> =

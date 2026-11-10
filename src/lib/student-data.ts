@@ -3,13 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 import { ApiError } from "@/lib/api/client";
+import type { AssignmentStatus, BookingStatus, PaymentStatus } from "@/lib/domain-types";
+export type { AssignmentStatus, BookingStatus } from "@/lib/domain-types";
 import { apiGet, apiPost } from "@/lib/api/data-client";
 
 type Tables = Database["public"]["Tables"];
 
 export type StudentRow = Tables["students"]["Row"];
-export type BookingStatus = Database["public"]["Enums"]["booking_status"];
-export type AssignmentStatus = Database["public"]["Enums"]["assignment_status"];
 
 const STUDENT_RECORD_SELECT = "*, curricula(name), education_levels(name)";
 
@@ -38,7 +38,7 @@ export type StudentBooking = Pick<
     Tables["class_sessions"]["Row"],
     "id" | "meeting_url" | "status" | "tutor_notes" | "homework"
   >[];
-  payments: { status: Database["public"]["Enums"]["payment_status"] }[];
+  payments: { status: PaymentStatus }[];
 };
 
 export type StudentAssignment = Tables["assignments"]["Row"] & {

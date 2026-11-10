@@ -1,7 +1,7 @@
 /**
  * Typecheck as a ratchet, not a gate.
  *
- * The repo carries 19 pre-existing type errors, almost all caused by
+ * The repo carries 11 pre-existing type errors, almost all caused by
  * src/integrations/supabase/types.ts being generated before the 20260903* and
  * 20260907* migrations. Failing CI on them would make it red from day one and
  * train everyone to ignore it. Failing on any INCREASE keeps it useful now and
@@ -12,7 +12,7 @@
  */
 import { spawnSync } from "node:child_process";
 
-const BASELINE = 19;
+const BASELINE = 11;
 
 const result = spawnSync("npx", ["tsc", "--noEmit"], { encoding: "utf8" });
 const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
