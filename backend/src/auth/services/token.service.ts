@@ -114,11 +114,24 @@ export class TokenService {
    *
    * So a token revoked as `rotated` within GRACE_MS is reported as
    * `concurrent`: the family survives and the caller may mint a fresh token in
-   * it. The window is deliberately small, and it only forgives the single most
-   * recent rotation. A replay after it, or of any token revoked for another
-   * reason, still kills the family.
+   * it. A replay after the window, or of a token revoked for any other reason,
+   * still kills the family.
+   *
+   * The window has to cover more than the few milliseconds of an overlap. When
+   * a navigation is abandoned mid-flight the rotation still commits on the
+   * server, but the replacement `Set-Cookie` never reaches the browser — which
+   * then keeps presenting the spent token until something refreshes
+   * successfully. Measured against this app that gap ran to tens of seconds,
+   * so 20s was not enough and sessions still died.
+   *
+   * This is a mitigation, not the cure. The cure is to stop rotating so often:
+   * the access token lives only in memory, so every full page load spends a
+   * refresh token, and a session that merely browses burns through a chain
+   * hundreds long. Persisting the access token for its own lifetime, or
+   * refreshing only when it is actually near expiry, would make the race rare
+   * rather than routine.
    */
-  private static readonly GRACE_MS = 20_000;
+  private static readonly GRACE_MS = 120_000;
   async redeemRefreshToken(presented: string): Promise<RefreshOutcome> {
     const hash = this.passwords.hashToken(presented);
     const row = await this.refreshTokens.findByHash(hash);

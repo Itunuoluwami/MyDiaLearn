@@ -28,6 +28,7 @@ import { authClient } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { useNotifications } from "@/lib/parent-data";
 import { useTutorRecord, VERIFICATION_LABEL, VERIFICATION_TONE } from "@/lib/tutor-data";
+import type { VerificationStatus } from "@/lib/domain-types";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -106,7 +107,58 @@ function VerificationBanner() {
   if (tutor.verification_status === "verified" && tutor.is_listed) return null;
   if (isActive(pathname, "/tutor/verification")) return null;
 
-  const verified = tutor.verification_status === "verified";
+  // Every state this banner can be in says something different and sends the
+  // tutor somewhere different. It used to have two — verified or not — so a
+  // tutor who had just uploaded five documents and submitted was still told to
+  // "submit your documents", under a button offering to continue something
+  // with nothing left to do. Waiting, being asked for changes, and being
+  // suspended are each their own situation.
+  const copy: Record<
+    VerificationStatus,
+    { title: string; body: string; cta: string; to: "/tutor/profile" | "/tutor/verification" }
+  > = {
+    verified: {
+      title: "You're verified — switch your profile on to start receiving bookings",
+      body: "Publishing is your choice. Turn listing on from your teaching profile whenever you're ready.",
+      cta: "Open profile",
+      to: "/tutor/profile",
+    },
+    unverified: {
+      title: "Your profile is not visible to families yet",
+      body: "Complete your teaching profile and submit your documents. Our team verifies every tutor before they appear in search.",
+      cta: "Continue verification",
+      to: "/tutor/verification",
+    },
+    pending: {
+      title: "Your documents are with our review team",
+      body: "Nothing more to do for now. We'll let you know as soon as there's a decision, and your profile goes live once you're approved.",
+      cta: "View verification",
+      to: "/tutor/verification",
+    },
+    in_review: {
+      title: "Our team is reviewing your profile",
+      body: "A reviewer is going through your documents now. We'll be in touch if anything else is needed.",
+      cta: "View verification",
+      to: "/tutor/verification",
+    },
+    rejected: {
+      title: "Your verification needs changes before we can approve it",
+      body: "A reviewer has left notes on what to fix. Update the documents they flagged and submit again.",
+      cta: "See what to fix",
+      to: "/tutor/verification",
+    },
+    suspended: {
+      title: "Your profile is suspended",
+      body: "You cannot take new bookings while a profile is suspended. Contact the DiaLearn team if you think this is a mistake.",
+      cta: "View verification",
+      to: "/tutor/verification",
+    },
+  };
+
+  const status = tutor.verification_status as VerificationStatus;
+  const state = copy[status] ?? copy.unverified;
+  const verified = status === "verified";
+
   return (
     <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-secondary/40 bg-secondary-soft/70 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-start gap-3">
@@ -114,22 +166,12 @@ function VerificationBanner() {
           {verified ? <BadgeCheck className="size-5" /> : <ShieldCheck className="size-5" />}
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-semibold">
-            {verified
-              ? "You're verified — switch your profile on to start receiving bookings"
-              : "Your profile is not visible to families yet"}
-          </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {verified
-              ? "Publishing is your choice. Turn listing on from your teaching profile whenever you're ready."
-              : "Complete your teaching profile and submit your documents. Our team verifies every tutor before they appear in search."}
-          </p>
+          <p className="text-sm font-semibold">{state.title}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{state.body}</p>
         </div>
       </div>
       <Button asChild variant="cta" size="sm" className="min-h-11 shrink-0 sm:min-h-10">
-        <Link to={verified ? "/tutor/profile" : "/tutor/verification"}>
-          {verified ? "Open profile" : "Continue verification"}
-        </Link>
+        <Link to={state.to}>{state.cta}</Link>
       </Button>
     </div>
   );

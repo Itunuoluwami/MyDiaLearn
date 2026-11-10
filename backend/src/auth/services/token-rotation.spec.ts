@@ -63,9 +63,22 @@ describe('TokenService refresh-token rotation', () => {
     expect(revokeFamily).not.toHaveBeenCalled();
   });
 
-  it('kills the family for the same token replayed after the grace window', async () => {
+  it('forgives a rotation whose replacement cookie never arrived, within the window', async () => {
+    // An abandoned navigation commits the rotation but loses the Set-Cookie,
+    // so the browser keeps presenting the spent token for tens of seconds.
     const { service, revokeFamily } = harness({
       revoked_at: new Date(Date.now() - 60_000),
+      revoked_reason: 'rotated',
+    });
+    const outcome = await service.redeemRefreshToken('presented');
+
+    expect(outcome).toMatchObject({ kind: 'concurrent' });
+    expect(revokeFamily).not.toHaveBeenCalled();
+  });
+
+  it('kills the family for the same token replayed after the grace window', async () => {
+    const { service, revokeFamily } = harness({
+      revoked_at: new Date(Date.now() - 10 * 60_000),
       revoked_reason: 'rotated',
     });
     const outcome = await service.redeemRefreshToken('presented');

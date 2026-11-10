@@ -109,6 +109,28 @@ function clearSession(): void {
   refreshTimer = undefined;
 }
 
+/**
+ * Only the server saying "no" ends a session.
+ *
+ * A refresh can fail for two very different reasons, and treating them alike
+ * is what signed people out mid-task. A 401 or 403 is an answer: the cookie is
+ * expired, absent or revoked, and the session is genuinely over — the normal
+ * case for a signed-out visitor, not worth surfacing. Anything else is the
+ * request not arriving: the API down or restarting, the network dropping, or a
+ * 500 because the database pool could not start a transaction in time, which
+ * this deployment produces under load because every request takes an
+ * interactive transaction against a remote database.
+ *
+ * In that second case the session is probably still perfectly valid, so the
+ * tokens are kept, the scheduled refresh is left to try again, and nobody is
+ * thrown back to the sign-in screen over a blip.
+ */
+function endsTheSession(error: unknown): boolean {
+  if (error instanceof ApiError) return error.status === 401 || error.status === 403;
+  // A thrown non-ApiError is a network or parse failure, never a verdict.
+  return false;
+}
+
 async function refreshSession(event: AuthChangeEvent): Promise<boolean> {
   try {
     const api = await apiRequest<ApiSession>("/auth/refresh", { method: "POST", body: {} });
@@ -116,14 +138,25 @@ async function refreshSession(event: AuthChangeEvent): Promise<boolean> {
     scheduleRefresh(currentSession);
     emit(event);
     return true;
-  } catch {
-    // An expired or absent cookie is the normal case for a signed-out visitor,
-    // so this is not an error worth surfacing.
+  } catch (error) {
+    if (!endsTheSession(error)) {
+      // Keep whatever we have and let the timer come back to it.
+      if (currentSession) scheduleRetry();
+      return false;
+    }
     const had = currentSession !== null;
     clearSession();
     if (had) emit("SIGNED_OUT");
     return false;
   }
+}
+
+/** Comes back sooner than a full token lifetime after a failure that was not a verdict. */
+function scheduleRetry(): void {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => {
+    void refreshSession("TOKEN_REFRESHED");
+  }, 30_000);
 }
 
 /**
