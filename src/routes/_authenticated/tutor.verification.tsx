@@ -17,7 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  useAvailabilityWindows,
   useDeleteTutorDocument,
+  useMyTutorSubjects,
   useSubmitVerification,
   useTutorDocuments,
   useTutorRecord,
@@ -57,6 +59,8 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024;
 function TutorVerificationPage() {
   const tutor = useTutorRecord();
   const summary = useTutorSummary();
+  const mySubjects = useMyTutorSubjects();
+  const windows = useAvailabilityWindows();
   const steps = useVerificationSteps();
   const progress = useVerificationProgress();
   const documents = useTutorDocuments();
@@ -84,12 +88,33 @@ function TutorVerificationPage() {
     ? Math.round((coveredRequired / requiredSteps.length) * 100)
     : 0;
 
+  /**
+   * What the tutor must have before DiaLearn will look at them.
+   *
+   * This used to gate on `profile_complete`, which also requires an hourly
+   * rate — and the rate is not the tutor's to set. The profile screen disables
+   * that field and says DiaLearn sets it as part of verification, while the
+   * admin queue only lists tutors who have left `unverified`. So every new
+   * tutor was deadlocked: no rate until an admin sets one, no admin sees them
+   * until they submit, no submitting until there is a rate.
+   *
+   * `tutor_submit_verification()` — the actual rule — asks for none of that. It
+   * only refuses when the tutor is already verified, suspended or in review. So
+   * the button now checks what the tutor genuinely owns and what the reviewers
+   * need to see: a biography, a subject, availability, and the required
+   * documents.
+   */
+  const readyToReview =
+    Boolean(record?.biography && record.biography.trim().length > 40) &&
+    (mySubjects.data ?? []).length > 0 &&
+    (windows.data ?? []).some((w) => w.is_active);
+
   const canSubmit =
     Boolean(record) &&
     ["unverified", "rejected"].includes(record?.verification_status ?? "") &&
     coveredRequired === requiredSteps.length &&
     requiredSteps.length > 0 &&
-    Boolean(summary.data?.profile_complete);
+    readyToReview;
 
   async function handleUpload() {
     const file = fileRef.current?.files?.[0];
@@ -193,9 +218,9 @@ function TutorVerificationPage() {
             </span>
           </div>
 
-          {!summary.data?.profile_complete ? (
+          {!readyToReview ? (
             <p className="mt-4 rounded-xl bg-secondary-soft/70 p-3 text-xs text-muted-foreground">
-              Add your biography, hourly rate, subjects and availability before submitting.{" "}
+              Add your biography, subjects and availability before submitting.{" "}
               <Link to="/tutor/profile" className="font-semibold text-primary-deep underline">
                 Open teaching profile
               </Link>

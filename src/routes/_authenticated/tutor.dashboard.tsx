@@ -30,6 +30,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useEarningsSummary } from "@/lib/tutor-workspace";
 import { formatMoney } from "@/lib/parent-data";
 import {
+  useAvailabilityWindows,
+  useMyTutorSubjects,
   useRespondToBooking,
   useTutorBookings,
   useTutorRecord,
@@ -74,6 +76,8 @@ function TutorDashboardPage() {
   const bookings = useTutorBookings();
   const respond = useRespondToBooking();
   const earnings = useEarningsSummary();
+  const mySubjects = useMyTutorSubjects();
+  const windows = useAvailabilityWindows();
 
   const s = summary.data;
   const firstName = (profile?.full_name ?? "").split(" ")[0];
@@ -111,6 +115,16 @@ function TutorDashboardPage() {
     }
   }
 
+  // Each checklist row below has to answer for itself. `profile_complete` from
+  // the dashboard summary looks like the one for subjects and availability, but
+  // it also folds in the biography and the hourly rate — and those are already
+  // separate rows, the rate being one only DiaLearn can tick. A tutor who had
+  // added both their subject and their availability still saw the row unticked
+  // with nothing on the page explaining why, so it is read from the real thing.
+  const hasSubjects = (mySubjects.data ?? []).length > 0;
+  const hasAvailability = (windows.data ?? []).some((w) => w.is_active);
+  const teachingSetUp = hasSubjects && hasAvailability;
+
   const readiness = useMemo(() => {
     const t = tutor.data;
     if (!t) return 0;
@@ -118,11 +132,11 @@ function TutorDashboardPage() {
       Boolean(t.headline),
       Boolean(t.biography && t.biography.trim().length > 40),
       t.hourly_rate !== null,
-      Boolean(s?.profile_complete),
+      teachingSetUp,
       t.verification_status === "verified",
     ];
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
-  }, [tutor.data, s?.profile_complete]);
+  }, [tutor.data, teachingSetUp]);
 
   return (
     <TutorShell title="Dashboard">
@@ -276,8 +290,9 @@ function TutorDashboardPage() {
             />
             <ReadyItem done={tutor.data?.hourly_rate !== null} label="Hourly rate set" />
             <ReadyItem
-              done={Boolean(s?.profile_complete)}
+              done={teachingSetUp}
               label="Subjects and availability added"
+              href="/tutor/availability"
             />
             <ReadyItem
               done={tutor.data?.verification_status === "verified"}

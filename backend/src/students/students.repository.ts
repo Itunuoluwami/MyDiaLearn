@@ -115,6 +115,18 @@ export class StudentsRepository extends BaseRepository {
    * profile). `create` is false for callers without the student role: a parent
    * or tutor asking has no record, and must not be given one.
    *
+   * The three permission flags exist so a parent can decide what a child may do
+   * on their own. A learner who registered themselves has no parent, so there
+   * is nobody those restrictions could be waiting on — and this insert already
+   * reasons that way for `can_self_login`, which it sets true because the
+   * account self-registered. Leaving the other two at the column default was an
+   * oversight with a dead end behind it: a self-registered student could never
+   * book a lesson or message a tutor, and the only screen that grants either is
+   * the family screen, which needs the parent they do not have.
+   *
+   * Learners created BY a parent are unchanged — `create()` below takes all
+   * three from the parent and defaults them to false.
+   *
    * profile_id carries no unique index, so a transaction advisory lock keyed
    * on the user stops two first visits from creating two rows.
    */
@@ -144,13 +156,16 @@ export class StudentsRepository extends BaseRepository {
       if (again[0]) return again[0];
 
       await tx.$executeRaw`
-        insert into public.students (profile_id, first_name, last_name, timezone, can_self_login)
+        insert into public.students (
+          profile_id, first_name, last_name, timezone,
+          can_self_login, can_book_lessons, can_message_tutors
+        )
         select p.id,
                coalesce(nullif(split_part(btrim(coalesce(p.full_name, '')), ' ', 1), ''), 'Student'),
                nullif(btrim(substr(btrim(coalesce(p.full_name, '')),
                                    length(split_part(btrim(coalesce(p.full_name, '')), ' ', 1)) + 1)), ''),
                coalesce(nullif(p.timezone, ''), 'UTC'),
-               true
+               true, true, true
         from public.profiles p
         where p.id = ${userId}::uuid
       `;
