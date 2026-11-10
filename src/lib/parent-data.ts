@@ -197,27 +197,72 @@ export function useChildProgress(studentId: string | undefined) {
 /* Payments, notifications, ratings                                    */
 /* ------------------------------------------------------------------ */
 
-export function usePayments() {
-  const { user } = useAuth();
-  return useQuery({
-    queryKey: ["parent-payments", user?.id],
-    enabled: Boolean(user?.id),
-    queryFn: async () => {
-      const res = await apiGet<{ data: unknown[] }>("/payments?limit=100");
-      return res.data as unknown as Payment[];
-    },
-  });
+/** `/payments` on the wire: camelCase, and `numeric` as a decimal string. */
+interface ApiPayment {
+  id: string;
+  bookingId: string;
+  amount: string;
+  currency: string;
+  platformFee: string | null;
+  commissionAmount: string | null;
+  tutorPayout: string | null;
+  status: string;
+  provider: string | null;
+  providerReference: string | null;
+  refundedAmount: string | null;
+  paidAt: string | null;
+  createdAt: string;
 }
 
-/** A payment row as /payments returns it. */
+/**
+ * A payment, in the snake_case shape the parent screens read.
+ *
+ * This used to be produced by casting the response straight across, which was
+ * wrong in both directions: the API answers in camelCase, so `booking_id` and
+ * `paid_at` were always undefined, and `numeric` arrives as a string, so
+ * `amount` was never the number the type promised. Nothing had noticed because
+ * the payments screen did not exist yet.
+ */
 export interface Payment {
   id: string;
   booking_id: string;
   amount: number;
   currency: string;
-  status: string;
+  status: PaymentStatus;
+  platform_fee: number;
+  refunded_amount: number;
+  provider: string | null;
+  provider_reference: string | null;
   paid_at: string | null;
   created_at: string;
+}
+
+function toPayment(p: ApiPayment): Payment {
+  return {
+    id: p.id,
+    booking_id: p.bookingId,
+    amount: Number(p.amount ?? 0),
+    currency: p.currency,
+    status: p.status as PaymentStatus,
+    platform_fee: Number(p.platformFee ?? 0),
+    refunded_amount: Number(p.refundedAmount ?? 0),
+    provider: p.provider,
+    provider_reference: p.providerReference,
+    paid_at: p.paidAt,
+    created_at: p.createdAt,
+  };
+}
+
+export function usePayments() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["parent-payments", user?.id],
+    enabled: Boolean(user?.id),
+    queryFn: async (): Promise<Payment[]> => {
+      const res = await apiGet<{ data: ApiPayment[] }>("/payments?limit=100");
+      return (res.data ?? []).map(toPayment);
+    },
+  });
 }
 
 export function useNotifications() {
