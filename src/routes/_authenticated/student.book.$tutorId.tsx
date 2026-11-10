@@ -77,6 +77,14 @@ function StudentBookPage() {
     return [...map.values()];
   }, [tutorSubjects.data]);
 
+  // A tutor who teaches one subject offers no choice, so asking for one only
+  // creates a way to get it wrong: the chip looks selected enough that a
+  // learner books straight past it, and the lesson is stored with no subject.
+  // That is not harmless — per-subject progress is grouped by it, so those
+  // lessons never show up in a child's report at all.
+  const onlySubjectId = uniqueSubjects.length === 1 ? uniqueSubjects[0]?.id : undefined;
+  const effectiveSubjectId = subjectId ?? onlySubjectId;
+
   const grouped = useMemo(() => {
     const map = new Map<string, typeof slots.data>();
     for (const slot of slots.data ?? []) {
@@ -100,7 +108,7 @@ function StudentBookPage() {
 
       await requestBooking.mutateAsync({
         tutorId,
-        subjectId: subjectId ?? null,
+        subjectId: effectiveSubjectId ?? null,
         startsAt: selectedSlot.starts_at,
         endsAt: selectedSlot.ends_at,
         timezone,
@@ -165,7 +173,7 @@ function StudentBookPage() {
                     onClick={() => setSubjectId(item.id)}
                     className={cn(
                       "focus-ring min-h-11 rounded-full border-2 px-4 text-sm font-bold transition-all",
-                      subjectId === item.id
+                      effectiveSubjectId === item.id
                         ? "border-primary bg-primary text-primary-foreground shadow-sm"
                         : "border-border bg-card text-muted-foreground hover:border-primary/40",
                     )}
