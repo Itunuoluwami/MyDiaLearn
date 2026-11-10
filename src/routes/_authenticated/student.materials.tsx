@@ -235,6 +235,43 @@ function StudentMaterialsPage() {
               );
             })
           )}
+
+          {/* Work that is with the tutor.
+              `submitted` was computed and then never rendered, so a learner who
+              pressed Submit watched their assignment disappear: gone from
+              Assignments because it is no longer `assigned`, and not yet in
+              Completed because that is `reviewed`. It sat in a hole until the
+              tutor got round to it, with nothing to confirm it had even been
+              sent. It belongs here, where they just left it. */}
+          {submitted.length > 0 ? (
+            <div className="space-y-4 pt-2">
+              <p className="text-xs font-extrabold uppercase tracking-wide text-muted-foreground">
+                With your tutor
+              </p>
+              {submitted.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-start gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5"
+                >
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+                    <Clock className="size-6" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-extrabold text-foreground">{a.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {(a as typeof a & { subjects?: { name: string } | null }).subjects?.name}
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Submitted — waiting on feedback from your tutor.
+                    </p>
+                  </div>
+                  <Badge className="rounded-full bg-primary/10 text-xs font-bold text-primary">
+                    Submitted
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </TabsContent>
 
         {/* Materials Tab */}
