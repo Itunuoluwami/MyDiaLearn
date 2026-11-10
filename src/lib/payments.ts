@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { Database } from "@/integrations/supabase/types";
 import { ApiError } from "@/lib/api/client";
+import type { PaymentsRow } from "@/lib/database-types";
 import { apiPost } from "@/lib/api/data-client";
 
-export type PaymentRow = Database["public"]["Tables"]["payments"]["Row"];
+export type PaymentRow = PaymentsRow;
 
 /** The API's payment shape. Money stays a string on the wire (NUMERIC). */
 interface ApiPayment {

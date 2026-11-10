@@ -67,10 +67,7 @@ function StudentDashboardPage() {
   const liveNow = useMemo(() => upcoming.find((b) => isJoinable(b)), [upcoming]);
 
   const dueAssignments = useMemo(
-    () =>
-      (assignments.data ?? [])
-        .filter((a) => a.status === "assigned" || a.status === "pending")
-        .slice(0, 3),
+    () => (assignments.data ?? []).filter((a) => a.status === "assigned").slice(0, 3),
     [assignments.data],
   );
 

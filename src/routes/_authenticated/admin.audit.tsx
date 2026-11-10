@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { adminBeforeLoad } from "@/lib/admin-guard";
 import { humanizeAuditAction, useAuditLogs } from "@/lib/admin-governance";
-import type { AuditLogRow } from "@/integrations/supabase/governance-types";
+import type { AuditLogRow } from "@/lib/governance-types";
 import { downloadCsv, toCsv } from "@/lib/csv";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

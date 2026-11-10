@@ -3,7 +3,6 @@ import { useMutation } from "@tanstack/react-query";
 import { apiPost } from "@/lib/api/data-client";
 import type { DisputeCategory } from "@/lib/domain-types";
 export type { DisputeCategory } from "@/lib/domain-types";
-import type { Database } from "@/integrations/supabase/types";
 
 export const DISPUTE_CATEGORY_LABEL: Record<DisputeCategory, string> = {
   payment: "Payment issue",

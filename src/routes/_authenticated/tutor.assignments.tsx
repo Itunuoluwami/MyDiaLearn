@@ -127,7 +127,7 @@ function TutorAssignmentsPage() {
     try {
       await update.mutateAsync({
         id: row.id,
-        patch: { status: "assigned", assigned_at: new Date().toISOString() },
+        patch: { status: "assigned" },
       });
       toast.success("Assignment sent");
     } catch {
@@ -140,11 +140,7 @@ function TutorAssignmentsPage() {
     try {
       await update.mutateAsync({
         id: active.id,
-        patch: {
-          feedback: feedback.trim() || null,
-          status: "reviewed",
-          reviewed_at: new Date().toISOString(),
-        },
+        patch: { feedback: feedback.trim() || null, status: "reviewed" },
       });
       toast.success("Feedback shared with the learner");
       setActive(null);

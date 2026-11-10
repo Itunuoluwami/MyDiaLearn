@@ -4,8 +4,6 @@ import { apiRequest } from "@/lib/api/client";
 import { apiGet, apiPost } from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
 import {
-  governanceRpc,
-  governanceTable,
   type AdminActionRequestRow,
   type AdminInvitationRow,
   type AdminRequestAction,
@@ -14,7 +12,7 @@ import {
   type GovernanceRole,
   type PermissionRow,
   type UserPermissionRow,
-} from "@/integrations/supabase/governance-types";
+} from "@/lib/governance-types";
 
 /* ------------------------------------------------------------------ */
 /* Admin accounts                                                      */

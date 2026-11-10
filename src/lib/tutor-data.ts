@@ -3,33 +3,38 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { apiDelete, apiGet, apiPatch, apiPost, apiUpload } from "@/lib/api/data-client";
 import type { BookingStatus, VerificationStatus } from "@/lib/domain-types";
+import type {
+  AvailabilityWindowsRow,
+  TutorBookingsResult,
+  TutorDashboardSummaryResult,
+  TutorDocumentsRow,
+  TutorStudentsResult,
+  TutorSubjectsRow,
+  TutorVerificationProgressRow,
+  TutorsRow,
+  VerificationStepsRow,
+} from "@/lib/database-types";
 export type { BookingStatus, VerificationStatus } from "@/lib/domain-types";
-import type { Database } from "@/integrations/supabase/types";
 
-export type TutorRow = Database["public"]["Tables"]["tutors"]["Row"];
+export type TutorRow = TutorsRow;
 
-type FnReturns<T extends keyof Database["public"]["Functions"]> =
-  Database["public"]["Functions"][T]["Returns"];
-type TableRow<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Row"];
-
-export type TutorSummary = FnReturns<"tutor_dashboard_summary">[number];
-export type TutorBooking = FnReturns<"tutor_bookings">[number];
-export type TutorStudent = FnReturns<"tutor_students">[number];
+export type TutorSummary = TutorDashboardSummaryResult[number];
+export type TutorBooking = TutorBookingsResult[number];
+export type TutorStudent = TutorStudentsResult[number];
 export type AvailabilityWindow = Pick<
-  TableRow<"availability_windows">,
+  AvailabilityWindowsRow,
   "id" | "day_of_week" | "start_time" | "end_time" | "timezone" | "is_active"
 >;
 export type VerificationStep = Pick<
-  TableRow<"verification_steps">,
+  VerificationStepsRow,
   "id" | "code" | "name" | "description" | "is_required" | "sort_order"
 >;
 export type VerificationProgress = Pick<
-  TableRow<"tutor_verification_progress">,
+  TutorVerificationProgressRow,
   "id" | "step_id" | "status" | "reviewer_notes" | "reviewed_at"
 >;
 export type TutorDocument = Pick<
-  TableRow<"tutor_documents">,
+  TutorDocumentsRow,
   | "id"
   | "step_id"
   | "label"
@@ -40,10 +45,7 @@ export type TutorDocument = Pick<
   | "reviewer_notes"
   | "created_at"
 >;
-export type MyTutorSubject = Pick<
-  TableRow<"tutor_subjects">,
-  "id" | "subject_id" | "education_level_id"
-> & {
+export type MyTutorSubject = Pick<TutorSubjectsRow, "id" | "subject_id" | "education_level_id"> & {
   subjects: { name: string } | null;
   education_levels: { name: string } | null;
 };
@@ -165,7 +167,7 @@ const UPDATE_FIELD_MAP: Partial<Record<keyof TutorUpdate, string>> = {
   is_listed: "isListed",
 };
 
-type TutorUpdate = Database["public"]["Tables"]["tutors"]["Update"];
+type TutorUpdate = Partial<TutorsRow>;
 
 function toUpdateBody(patch: TutorUpdate): Record<string, unknown> {
   const body: Record<string, unknown> = {};

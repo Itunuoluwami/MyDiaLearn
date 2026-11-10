@@ -18,8 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { apiPatch, useApiData } from "@/lib/api/data-client";
+import { apiPatch } from "@/lib/api/data-client";
 
 import { TutorShell } from "@/components/tutor/TutorShell";
 import { CardSkeletonList, LoadError } from "@/components/parent/ui";
@@ -79,7 +78,6 @@ function TutorOnboardingPage() {
   const queryClient = useQueryClient();
   const tutor = useTutorRecord();
   const update = useUpdateTutor();
-  const viaApi = useApiData();
   const subjects = useSubjectOptions();
   const levels = useLevelOptions();
   const mySubjects = useMyTutorSubjects();
@@ -142,8 +140,14 @@ function TutorOnboardingPage() {
   }
 
   async function handleProfileNext() {
-    if (form.headline.trim().length < 8) return toast.error("Headline is too short.");
-    if (form.biography.trim().length < 40) return toast.error("Biography is too short.");
+    if (form.headline.trim().length < 8) {
+      toast.error("Headline is too short.");
+      return;
+    }
+    if (form.biography.trim().length < 40) {
+      toast.error("Biography is too short.");
+      return;
+    }
     try {
       await update.mutateAsync({
         headline: form.headline.trim(),
@@ -157,7 +161,10 @@ function TutorOnboardingPage() {
   }
 
   async function handleAddSubject() {
-    if (!subjectId) return toast.error("Choose a subject.");
+    if (!subjectId) {
+      toast.error("Choose a subject.");
+      return;
+    }
     try {
       await addSubject.mutateAsync({ subjectId, educationLevelId: levelId || null });
       setSubjectId("");
@@ -185,16 +192,11 @@ function TutorOnboardingPage() {
   async function handleLocationNext() {
     try {
       await update.mutateAsync({ timezone: form.timezone, onboarding_step: 5 });
-      if (user && viaApi) {
+      if (user) {
         await apiPatch("/users/me", {
           timezone: form.timezone,
           ...(form.country ? { countryCode: form.country } : {}),
         });
-      } else if (user) {
-        await supabase
-          .from("profiles")
-          .update({ timezone: form.timezone, country_code: form.country || null })
-          .eq("id", user.id);
       }
       setStep(5);
     } catch {
@@ -225,9 +227,18 @@ function TutorOnboardingPage() {
 
   async function handleDocUpload() {
     const file = fileRef.current?.files?.[0];
-    if (!file) return toast.error("Choose a file to upload.");
-    if (file.size > 10 * 1024 * 1024) return toast.error("File must be 10MB or smaller.");
-    if (docLabel.trim().length < 3) return toast.error("Provide a document name.");
+    if (!file) {
+      toast.error("Choose a file to upload.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File must be 10MB or smaller.");
+      return;
+    }
+    if (docLabel.trim().length < 3) {
+      toast.error("Provide a document name.");
+      return;
+    }
     try {
       await uploadDoc.mutateAsync({ file, label: docLabel.trim(), stepId: docStepId || null });
       setDocLabel("");

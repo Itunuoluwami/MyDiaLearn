@@ -1,15 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { apiGet } from "@/lib/api/data-client";
-import type { Database } from "@/integrations/supabase/types";
+import type {
+  CancellationPoliciesRow,
+  CommissionRulesRow,
+  EducationLevelsRow,
+  PublicCountryFacetsResult,
+  PublicCurriculumFacetsResult,
+  PublicSearchSuggestionsResult,
+  PublicSubjectFacetsResult,
+  PublicTutorDetailResult,
+  PublicTutorReviewsResult,
+  PublicTutorSearchResult,
+  VerificationStepsRow,
+} from "@/lib/database-types";
 
 /**
  * The API returns the same row shapes as the SQL functions and tables it wraps,
  * so the generated types stay the source of truth for both providers. This
  * keeps `PublicTutor` and friends unchanged for every consuming component.
  */
-type FnReturns<T extends keyof Database["public"]["Functions"]> =
-  Database["public"]["Functions"][T]["Returns"];
 
 /**
  * Read-only data layer for the public marketing site.
@@ -65,7 +75,7 @@ export function useSubjectFacets() {
   return useQuery({
     queryKey: ["public-subject-facets"],
     queryFn: async () => {
-      return apiGet<FnReturns<"public_subject_facets">>("/catalogue/subjects");
+      return apiGet<PublicSubjectFacetsResult>("/catalogue/subjects");
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -75,7 +85,7 @@ export function useCurriculumFacets() {
   return useQuery({
     queryKey: ["public-curriculum-facets"],
     queryFn: async () => {
-      return apiGet<FnReturns<"public_curriculum_facets">>("/catalogue/curricula");
+      return apiGet<PublicCurriculumFacetsResult>("/catalogue/curricula");
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -85,7 +95,7 @@ export function useCountryFacets() {
   return useQuery({
     queryKey: ["public-country-facets"],
     queryFn: async () => {
-      return apiGet<FnReturns<"public_country_facets">>("/catalogue/countries");
+      return apiGet<PublicCountryFacetsResult>("/catalogue/countries");
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -96,7 +106,7 @@ export function useEducationLevels(curriculumId?: string) {
     queryKey: ["public-education-levels", curriculumId ?? "all"],
     queryFn: async () => {
       type Level = Pick<
-        Database["public"]["Tables"]["education_levels"]["Row"],
+        EducationLevelsRow,
         "id" | "name" | "code" | "curriculum_id" | "sort_order"
       >;
       const rows = await apiGet<Level[]>("/catalogue/education-levels");
@@ -114,7 +124,7 @@ export function useSearchSuggestions(term: string) {
     queryKey: ["public-suggestions", q],
     enabled: q.length >= 2,
     queryFn: async () => {
-      return apiGet<FnReturns<"public_search_suggestions">>(
+      return apiGet<PublicSearchSuggestionsResult>(
         `/catalogue/suggestions?q=${encodeURIComponent(q)}&limit=8`,
       );
     },
@@ -170,7 +180,7 @@ export function useTutorSearch(params: TutorSearchParams) {
       if (params.language) qs.set("language", params.language);
       if (params.minRating != null) qs.set("minRating", String(params.minRating));
       if (params.maxPrice != null) qs.set("maxPrice", String(params.maxPrice));
-      const result = await apiGet<{ data: FnReturns<"public_tutor_search"> }>(
+      const result = await apiGet<{ data: PublicTutorSearchResult }>(
         `/catalogue/tutors?${qs.toString()}`,
       );
       return result.data;
@@ -184,7 +194,7 @@ export function useTutorDetail(tutorId: string) {
   return useQuery({
     queryKey: ["public-tutor-detail", tutorId],
     queryFn: async () => {
-      return apiGet<FnReturns<"public_tutor_detail">[number]>(`/catalogue/tutors/${tutorId}`).catch(
+      return apiGet<PublicTutorDetailResult[number]>(`/catalogue/tutors/${tutorId}`).catch(
         () => null,
       );
     },
@@ -195,9 +205,7 @@ export function useTutorReviews(tutorId: string) {
   return useQuery({
     queryKey: ["public-tutor-reviews", tutorId],
     queryFn: async () => {
-      return apiGet<FnReturns<"public_tutor_reviews">>(
-        `/catalogue/tutors/${tutorId}/reviews?limit=10`,
-      );
+      return apiGet<PublicTutorReviewsResult>(`/catalogue/tutors/${tutorId}/reviews?limit=10`);
     },
   });
 }
@@ -209,7 +217,7 @@ export function useCommissionExample() {
     queryKey: ["public-commission-example"],
     queryFn: async () => {
       type Commission = Pick<
-        Database["public"]["Tables"]["commission_rules"]["Row"],
+        CommissionRulesRow,
         | "name"
         | "model"
         | "percentage"
@@ -233,7 +241,7 @@ export function useCancellationPolicies() {
     queryFn: async () => {
       return apiGet<
         Pick<
-          Database["public"]["Tables"]["cancellation_policies"]["Row"],
+          CancellationPoliciesRow,
           "name" | "hours_before" | "refund_percentage" | "description" | "is_default"
         >[]
       >("/catalogue/cancellation-policies");
@@ -248,7 +256,7 @@ export function useVerificationSteps() {
     queryFn: async () => {
       return apiGet<
         Pick<
-          Database["public"]["Tables"]["verification_steps"]["Row"],
+          VerificationStepsRow,
           "id" | "name" | "description" | "applies_to" | "is_required" | "sort_order"
         >[]
       >("/catalogue/verification-steps");

@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "@/hooks/use-auth";
-import type { Database } from "@/integrations/supabase/types";
 import {
   API_FILE_PREFIX,
   apiDelete,
@@ -12,13 +11,23 @@ import {
 } from "@/lib/api/data-client";
 import { apiRequest } from "@/lib/api/client";
 import type { AssignmentStatus, PayoutStatus, ResourceType } from "@/lib/domain-types";
+import type {
+  AssignmentsRow,
+  LearningResourcesRow,
+  LessonNotesRow,
+  MessagesRow,
+  MyConversationsResult,
+  PayoutsRow,
+  TutorEarningsRecordsResult,
+  TutorEarningsSummaryResult,
+  TutorOpenClassResult,
+  TutorRatingCategoriesResult,
+  TutorRatingSummaryResult,
+  TutorReviewsResult,
+} from "@/lib/database-types";
 export type { AssignmentStatus, PayoutStatus, ResourceType } from "@/lib/domain-types";
 import { authClient } from "@/lib/auth";
 import { useTutorRecord } from "@/lib/tutor-data";
-
-type Tables = Database["public"]["Tables"];
-type FnRow<T extends keyof Database["public"]["Functions"]> =
-  Database["public"]["Functions"][T]["Returns"] extends (infer R)[] ? R : never;
 
 const RESOURCE_BUCKET = "learning-resources";
 
@@ -43,7 +52,7 @@ async function apiPut<T>(path: string, body: unknown): Promise<T> {
 /* Classroom (access is authorised in the database)                    */
 /* ------------------------------------------------------------------ */
 
-export type ClassSessionView = FnRow<"tutor_open_class">;
+export type ClassSessionView = TutorOpenClassResult[number];
 
 export function useClassSession(bookingId: string | undefined) {
   return useQuery({
@@ -92,7 +101,7 @@ export function useEndClass() {
 /* Lesson notes                                                        */
 /* ------------------------------------------------------------------ */
 
-export type LessonNote = Tables["lesson_notes"]["Row"];
+export type LessonNote = LessonNotesRow;
 
 interface ApiLessonNote {
   id: string;
@@ -159,7 +168,7 @@ export function useSaveLessonNote(bookingId: string | undefined) {
 /* Learning resources                                                  */
 /* ------------------------------------------------------------------ */
 
-export type LearningResource = Tables["learning_resources"]["Row"];
+export type LearningResource = LearningResourcesRow;
 export type LearningResourceRow = LearningResource & {
   subjects: { name: string } | null;
   students: { first_name: string } | null;
@@ -294,7 +303,7 @@ export function useSignedResourceUrl(path: string | null | undefined, seconds = 
 /* Assignments                                                         */
 /* ------------------------------------------------------------------ */
 
-export type AssignmentRow = Tables["assignments"]["Row"] & {
+export type AssignmentRow = AssignmentsRow & {
   students: { first_name: string; avatar_url: string | null } | null;
   subjects: { name: string } | null;
   learning_resources: { title: string } | null;
@@ -410,10 +419,19 @@ export function useCreateAssignment() {
  * Status changes the tutor makes. The API exposes them as actions rather than
  * a free-form patch: assigning a draft, and reviewing a submission.
  */
+/**
+ * The only assignment transitions the API exposes. The old Supabase flow took a
+ * free-form row patch; these two fields are all the handlers ever read.
+ */
+export interface AssignmentPatch {
+  status?: AssignmentStatus;
+  feedback?: string | null;
+}
+
 export function useUpdateAssignment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { id: string; patch: Tables["assignments"]["Update"] }) => {
+    mutationFn: async (input: { id: string; patch: AssignmentPatch }) => {
       if (input.patch.status === "assigned") {
         await apiPost(`/assignments/${input.id}/assign`, {});
         return;
@@ -437,9 +455,9 @@ export function useUpdateAssignment() {
 /* Earnings and payouts (all figures come from the backend)             */
 /* ------------------------------------------------------------------ */
 
-export type EarningsSummary = FnRow<"tutor_earnings_summary">;
-export type EarningsRecord = FnRow<"tutor_earnings_records">;
-export type PayoutRow = Tables["payouts"]["Row"];
+export type EarningsSummary = TutorEarningsSummaryResult[number];
+export type EarningsRecord = TutorEarningsRecordsResult[number];
+export type PayoutRow = PayoutsRow;
 
 interface ApiEarningsSummary {
   currency: string;
@@ -557,9 +575,9 @@ export function useRequestPayout() {
 /* Reviews                                                             */
 /* ------------------------------------------------------------------ */
 
-export type RatingSummary = FnRow<"tutor_rating_summary">;
-export type RatingCategory = FnRow<"tutor_rating_categories">;
-export type TutorReview = FnRow<"tutor_reviews">;
+export type RatingSummary = TutorRatingSummaryResult[number];
+export type RatingCategory = TutorRatingCategoriesResult[number];
+export type TutorReview = TutorReviewsResult[number];
 
 export function useRatingSummary() {
   const { user } = useAuth();
@@ -615,10 +633,9 @@ export function useTutorReviews(limit = 20) {
 /* Messaging                                                           */
 /* ------------------------------------------------------------------ */
 
-export type ConversationRow =
-  Database["public"]["Functions"]["my_conversations"]["Returns"][number];
+export type ConversationRow = MyConversationsResult[number];
 export type MessageRow = Pick<
-  Database["public"]["Tables"]["messages"]["Row"],
+  MessagesRow,
   "id" | "body" | "sender_id" | "created_at" | "attachment_path" | "attachment_name"
 >;
 

@@ -30,7 +30,7 @@ import {
   type AdminAccount,
   inviteAdminViaApi,
 } from "@/lib/admin-governance";
-import type { PermissionRow } from "@/integrations/supabase/governance-types";
+import type { PermissionRow } from "@/lib/governance-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

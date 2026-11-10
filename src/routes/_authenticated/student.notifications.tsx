@@ -39,7 +39,7 @@ function StudentNotificationsPage() {
     for (const [key, emoji] of Object.entries(EMOJI)) {
       if (title.toLowerCase().includes(key.replace("_", " "))) return emoji;
     }
-    return EMOJI.default;
+    return EMOJI["default"];
   }
 
   return (

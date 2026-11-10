@@ -130,7 +130,7 @@ function RefundDialog({ payment, onClose }: { payment: AdminPayment; onClose: ()
                 {
                   paymentId: payment.id,
                   amount: Number(amount),
-                  reason: reason.trim() || undefined,
+                  ...(reason.trim() ? { reason: reason.trim() } : {}),
                 },
                 {
                   onSuccess: () => {

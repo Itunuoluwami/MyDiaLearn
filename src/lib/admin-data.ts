@@ -7,6 +7,16 @@ import type {
   PayoutStatus,
   VerificationStatus,
 } from "@/lib/domain-types";
+import type {
+  BookingsRow,
+  PaymentsRow,
+  PayoutsRow,
+  ProfilesRow,
+  TutorDocumentsRow,
+  TutorVerificationProgressRow,
+  TutorsRow,
+  VerificationStepsRow,
+} from "@/lib/database-types";
 export type {
   BookingStatus,
   PaymentStatus,
@@ -15,13 +25,11 @@ export type {
 } from "@/lib/domain-types";
 import { API_BASE_URL, API_FILE_PREFIX, apiGet, apiPatch, apiPost } from "@/lib/api/data-client";
 import { authClient } from "@/lib/auth";
-import { governanceRpc, governanceTable } from "@/integrations/supabase/governance-types";
-import type { Database } from "@/integrations/supabase/types";
 import type { AppRole as AuthAppRole } from "@/hooks/use-auth";
 
 /** Re-exported so `super_admin` is included; see the note in use-auth.tsx. */
 export type AppRole = AuthAppRole;
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type Profile = ProfilesRow;
 
 /** PUT with the session token; data-client has no apiPut. */
 async function apiPut<T>(path: string, body: unknown): Promise<T> {
@@ -180,8 +188,8 @@ export function useUpdateUserRoles() {
 /* Tutor verification queue                                            */
 /* ------------------------------------------------------------------ */
 
-type TutorRow = Database["public"]["Tables"]["tutors"]["Row"];
-type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+type TutorRow = TutorsRow;
+type ProfileRow = ProfilesRow;
 
 export type VerificationQueueItem = Pick<
   TutorRow,
@@ -240,15 +248,15 @@ export function useVerificationQueue(status?: VerificationStatus | "all") {
 }
 
 type StepRow = Pick<
-  Database["public"]["Tables"]["verification_steps"]["Row"],
+  VerificationStepsRow,
   "id" | "code" | "name" | "description" | "is_required" | "sort_order"
 >;
 type ProgressRow = Pick<
-  Database["public"]["Tables"]["tutor_verification_progress"]["Row"],
+  TutorVerificationProgressRow,
   "id" | "step_id" | "status" | "reviewer_notes" | "reviewed_at"
 >;
 type DocumentRow = Pick<
-  Database["public"]["Tables"]["tutor_documents"]["Row"],
+  TutorDocumentsRow,
   | "id"
   | "step_id"
   | "label"
@@ -406,7 +414,7 @@ export function useRejectTutor() {
 /* Bookings (Phase 2)                                                    */
 /* ------------------------------------------------------------------ */
 
-type BookingRowDb = Database["public"]["Tables"]["bookings"]["Row"];
+type BookingRowDb = BookingsRow;
 
 export type AdminBooking = Pick<
   BookingRowDb,
@@ -542,7 +550,7 @@ export function useAdminCancelBooking() {
 /* Payments & refunds (Phase 2)                                         */
 /* ------------------------------------------------------------------ */
 
-type PaymentRowDb = Database["public"]["Tables"]["payments"]["Row"];
+type PaymentRowDb = PaymentsRow;
 
 export type AdminPayment = Pick<
   PaymentRowDb,
@@ -664,7 +672,7 @@ export function useIssueRefund() {
 /* ------------------------------------------------------------------ */
 
 export type AdminPayout = Pick<
-  Database["public"]["Tables"]["payouts"]["Row"],
+  PayoutsRow,
   | "id"
   | "tutor_id"
   | "amount"

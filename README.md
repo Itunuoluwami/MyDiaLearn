@@ -37,7 +37,7 @@ bun run dev             # http://localhost:8080
 | `bun run test`              | Vitest                                                |
 | `bun run test:watch`        | Vitest in watch mode                                  |
 | `bun run typecheck`         | Plain `tsc --noEmit`                                  |
-| `bun run typecheck:ratchet` | `tsc` against the known-error baseline — what CI runs |
+| `bun run typecheck` | `tsc --noEmit` — must be clean |
 
 ## Repository layout
 

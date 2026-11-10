@@ -3,8 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 
 import { apiGet, apiPost } from "@/lib/api/data-client";
 import type { BookingStatus, PaymentStatus, VerificationStatus } from "@/lib/domain-types";
+import type {
+  BookingQuoteResult,
+  ParentChildProgressResult,
+  ParentDashboardSummaryResult,
+  PublicTutorCardsResult,
+  TutorAvailableSlotsResult,
+} from "@/lib/database-types";
 export type { BookingStatus, PaymentStatus, VerificationStatus } from "@/lib/domain-types";
-import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 
 /**
@@ -15,14 +21,11 @@ import { useAuth } from "@/hooks/use-auth";
  * beyond display formatting.
  */
 
-export type TutorCard = Database["public"]["Functions"]["public_tutor_cards"]["Returns"][number];
-export type ParentSummary =
-  Database["public"]["Functions"]["parent_dashboard_summary"]["Returns"][number];
-export type ChildProgressRow =
-  Database["public"]["Functions"]["parent_child_progress"]["Returns"][number];
-export type AvailabilitySlot =
-  Database["public"]["Functions"]["tutor_available_slots"]["Returns"][number];
-export type BookingQuote = Database["public"]["Functions"]["booking_quote"]["Returns"][number];
+export type TutorCard = PublicTutorCardsResult[number];
+export type ParentSummary = ParentDashboardSummaryResult[number];
+export type ChildProgressRow = ParentChildProgressResult[number];
+export type AvailabilitySlot = TutorAvailableSlotsResult[number];
+export type BookingQuote = BookingQuoteResult[number];
 
 /* ------------------------------------------------------------------ */
 /* Children                                                            */

@@ -2,12 +2,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from "react";
 import type { AuthUser as User, Session } from "@/lib/auth/types";
 import type { AppRole } from "@/lib/domain-types";
+import type { ProfilesRow } from "@/lib/database-types";
 
 import { authClient } from "@/lib/auth";
-import type { Database } from "@/integrations/supabase/types";
 
 export type { AppRole } from "@/lib/domain-types";
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type Profile = ProfilesRow;
 
 export interface AuthContextValue {
   session: Session | null;
@@ -35,7 +35,7 @@ export interface AuthContextValue {
  * every consumer of AuthContext — the account screen, the portal guards — works
  * unchanged whichever provider is active.
  */
-const API_BASE = (import.meta.env["VITE_API_BASE_URL"] ?? "").replace(/\/+$/, "");
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
 
 interface ApiCurrentUser {
   id: string;

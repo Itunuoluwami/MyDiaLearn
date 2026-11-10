@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { ChevronRight, Loader2, Lock, Plus, ShieldCheck, UserRound, Users } from "lucide-react";
 
 import { apiPost, apiPatch } from "@/lib/api/data-client";
-import type { Database } from "@/integrations/supabase/types";
+import type { StudentsRow } from "@/lib/database-types";
 import { useAuth } from "@/hooks/use-auth";
 import { ParentShell } from "@/components/parent/ParentShell";
 import { CardSkeletonList, EmptyPanel, LoadError, SectionCard } from "@/components/parent/ui";
@@ -145,10 +145,7 @@ function ChildrenPage() {
     }: {
       id: string;
       patch: Partial<
-        Pick<
-          Database["public"]["Tables"]["students"]["Update"],
-          "can_self_login" | "can_book_lessons" | "can_message_tutors"
-        >
+        Pick<Partial<StudentsRow>, "can_self_login" | "can_book_lessons" | "can_message_tutors">
       >;
     }) => {
       await apiPatch(`/students/${id}`, {

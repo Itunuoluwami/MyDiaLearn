@@ -398,17 +398,16 @@ type TutorData = {
   full_name?: string | null;
   avatar_url?: string | null;
   headline?: string | null;
-  avg_rating?: number | null;
-  review_count?: number | null;
+  rating_avg?: number | null;
+  rating_count?: number | null;
   hourly_rate?: number | null;
   currency?: string | null;
   country_code?: string | null;
-  languages?: string[] | null;
   subjects?: string[] | null;
 };
 
 function TutorCard({ tutor, canBook }: { tutor: TutorData; canBook: boolean }) {
-  const stars = Math.round(Number(tutor.avg_rating ?? 0));
+  const stars = Math.round(Number(tutor.rating_avg ?? 0));
   return (
     <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-start gap-3">
@@ -438,8 +437,8 @@ function TutorCard({ tutor, canBook }: { tutor: TutorData; canBook: boolean }) {
                 )}
               />
             ))}
-            {Number(tutor.review_count ?? 0) > 0 && (
-              <span className="ml-1 text-xs text-muted-foreground">({tutor.review_count})</span>
+            {Number(tutor.rating_count ?? 0) > 0 && (
+              <span className="ml-1 text-xs text-muted-foreground">({tutor.rating_count})</span>
             )}
           </div>
         </div>

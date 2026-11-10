@@ -65,7 +65,10 @@ function StudentMaterialsPage() {
   async function handleSubmit(id: string) {
     const submissionText = text[id]?.trim() || undefined;
     try {
-      await submitAssignment.mutateAsync({ id, text: submissionText });
+      await submitAssignment.mutateAsync({
+        id,
+        ...(submissionText ? { text: submissionText } : {}),
+      });
       toast.success("Assignment submitted! 🎉");
       setSubmitting(null);
       setText((prev) => {
@@ -78,13 +81,13 @@ function StudentMaterialsPage() {
     }
   }
 
-  const pending = (allAssignments.data ?? []).filter(
-    (a) => a.status === "assigned" || a.status === "pending",
-  );
-  const submitted = (allAssignments.data ?? []).filter(
-    (a) => a.status === "submitted" || a.status === "under_review",
-  );
-  const completed = (allAssignments.data ?? []).filter((a) => a.status === "completed");
+  // `assignment_status` is draft | assigned | submitted | reviewed. The three
+  // tabs below are the learner's view of the last three: work to do, work
+  // waiting on the tutor, and work the tutor has given feedback on. Drafts are
+  // the tutor's own and never reach the learner.
+  const pending = (allAssignments.data ?? []).filter((a) => a.status === "assigned");
+  const submitted = (allAssignments.data ?? []).filter((a) => a.status === "submitted");
+  const completed = (allAssignments.data ?? []).filter((a) => a.status === "reviewed");
 
   return (
     <StudentShell

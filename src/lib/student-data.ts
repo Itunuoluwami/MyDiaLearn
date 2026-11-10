@@ -1,15 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
 import { ApiError } from "@/lib/api/client";
 import type { AssignmentStatus, BookingStatus, PaymentStatus } from "@/lib/domain-types";
+import type {
+  AssignmentsRow,
+  BookingsRow,
+  ClassSessionsRow,
+  LearningResourcesRow,
+  NotificationsRow,
+  StudentsRow,
+} from "@/lib/database-types";
 export type { AssignmentStatus, BookingStatus } from "@/lib/domain-types";
 import { apiGet, apiPost } from "@/lib/api/data-client";
 
-type Tables = Database["public"]["Tables"];
-
-export type StudentRow = Tables["students"]["Row"];
+export type StudentRow = StudentsRow;
 
 const STUDENT_RECORD_SELECT = "*, curricula(name), education_levels(name)";
 
@@ -19,7 +24,7 @@ type TutorRef = {
 };
 
 export type StudentBooking = Pick<
-  Tables["bookings"]["Row"],
+  BookingsRow,
   | "id"
   | "student_id"
   | "tutor_id"
@@ -35,23 +40,23 @@ export type StudentBooking = Pick<
   tutors: TutorRef | null;
   subjects: { name: string } | null;
   class_sessions: Pick<
-    Tables["class_sessions"]["Row"],
+    ClassSessionsRow,
     "id" | "meeting_url" | "status" | "tutor_notes" | "homework"
   >[];
   payments: { status: PaymentStatus }[];
 };
 
-export type StudentAssignment = Tables["assignments"]["Row"] & {
+export type StudentAssignment = AssignmentsRow & {
   tutors: TutorRef | null;
   subjects: { name: string } | null;
 };
 
-export type StudentMaterial = Tables["learning_resources"]["Row"] & {
+export type StudentMaterial = LearningResourcesRow & {
   tutors: TutorRef | null;
 };
 
 export type StudentNotification = Pick<
-  Tables["notifications"]["Row"],
+  NotificationsRow,
   "id" | "title" | "body" | "created_at" | "read_at"
 >;
 
@@ -99,7 +104,7 @@ interface ApiBooking {
   paid: boolean;
   sessionId: string | null;
   sessionMeetingUrl: string | null;
-  sessionStatus: Tables["class_sessions"]["Row"]["status"] | null;
+  sessionStatus: ClassSessionsRow["status"] | null;
   sessionTutorNotes: string | null;
   sessionHomework: string | null;
   tutorName: string | null;
@@ -130,7 +135,7 @@ interface ApiResource {
   id: string;
   title: string;
   description: string | null;
-  resourceType: Tables["learning_resources"]["Row"]["resource_type"];
+  resourceType: LearningResourcesRow["resource_type"];
   externalUrl: string | null;
   hasFile: boolean;
   subjectId: string | null;

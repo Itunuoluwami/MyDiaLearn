@@ -37,7 +37,7 @@ export class ApiError extends Error {
  * API_PREFIX is configurable on the backend — hardcoding "/api" here would
  * break the moment someone changed it.
  */
-const RAW_BASE = import.meta.env["VITE_API_BASE_URL"] ?? "";
+const RAW_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 /** Trailing slashes produce `//api/...`, which some proxies treat as a new path. */
 export const API_BASE_URL = RAW_BASE.replace(/\/+$/, "");
