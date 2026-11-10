@@ -396,7 +396,8 @@ export type MyConversationsResult = {
 
 export type ParentChildProgressResult = {
   attended_count: number;
-  avg_rating: number;
+  /** `numeric` — a decimal string. */
+  avg_rating: string;
   cancelled_count: number;
   completed_lessons: number;
   learning_minutes: number;
@@ -409,12 +410,15 @@ export type ParentChildProgressResult = {
 export type ParentDashboardSummaryResult = {
   active_students: number;
   active_tutors: number;
-  attendance_rate: number;
+  /** `numeric` — a decimal string. */
+  attendance_rate: string;
   completed_lessons: number;
   learning_minutes: number;
-  month_spend: number;
+  /** `numeric` — a decimal string. */
+  month_spend: string;
   month_spend_currency: string;
-  outstanding_amount: number;
+  /** `numeric` — a decimal string. */
+  outstanding_amount: string;
   outstanding_count: number;
   outstanding_currency: string;
   pending_approvals: number;
@@ -451,16 +455,19 @@ export type PublicSubjectFacetsResult = {
   tutor_count: number;
 }[];
 
+/** `POST /catalogue/tutors/cards`, verified against a live response. */
 export type PublicTutorCardsResult = {
-  avatar_url: string;
-  country_code: string;
+  avatar_url: string | null;
+  country_code: string | null;
   currency: string;
   full_name: string;
-  headline: string;
-  hourly_rate: number;
+  headline: string | null;
+  /** `numeric` — a decimal string. */
+  hourly_rate: string;
   id: string;
   lessons_completed: number;
-  rating_avg: number;
+  /** `numeric`, and null for a tutor with no ratings yet. */
+  rating_avg: string | null;
   rating_count: number;
   subjects: string[];
   timezone: string;
@@ -468,20 +475,23 @@ export type PublicTutorCardsResult = {
   years_experience: number;
 }[];
 
+/** `GET /catalogue/tutors/:id`, verified against a live response. */
 export type PublicTutorDetailResult = {
-  agency_name: string;
-  avatar_url: string;
-  biography: string;
-  country_code: string;
+  agency_name: string | null;
+  avatar_url: string | null;
+  biography: string | null;
+  country_code: string | null;
   currency: string;
   full_name: string;
-  headline: string;
-  hourly_rate: number;
+  headline: string | null;
+  /** `numeric` — a decimal string. */
+  hourly_rate: string;
   id: string;
-  intro_video_url: string;
+  intro_video_url: string | null;
   languages: Json;
   qualifications: Json;
-  rating_avg: number;
+  /** `numeric` — a decimal string. */
+  rating_avg: string;
   rating_count: number;
   subjects: string[];
   timezone: string;
