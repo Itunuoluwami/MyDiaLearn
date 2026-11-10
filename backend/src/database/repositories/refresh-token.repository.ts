@@ -9,6 +9,7 @@ export interface RefreshTokenRow {
   family_id: string;
   expires_at: Date;
   revoked_at: Date | null;
+  revoked_reason: string | null;
 }
 
 /**
@@ -43,7 +44,7 @@ export class RefreshTokenRepository extends BaseRepository {
 
   async findByHash(tokenHash: string): Promise<RefreshTokenRow | null> {
     const rows = await this.prisma.$queryRaw<RefreshTokenRow[]>`
-      select id, user_id, family_id, expires_at, revoked_at
+      select id, user_id, family_id, expires_at, revoked_at, revoked_reason
       from auth.refresh_tokens
       where token_hash = ${tokenHash}
       limit 1

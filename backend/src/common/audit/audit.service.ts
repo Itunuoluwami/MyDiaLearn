@@ -27,6 +27,7 @@ export type AuditAction =
   | 'auth.register'
   | 'auth.token_refreshed'
   | 'auth.token_reuse_detected'
+  | 'auth.token_refresh_concurrent'
   | 'auth.password_reset_requested'
   | 'auth.password_reset_completed'
   | 'auth.password_changed'

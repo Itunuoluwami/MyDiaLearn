@@ -19,7 +19,9 @@ import { PasswordService } from './password.service';
 export type RefreshOutcome =
   | { kind: 'ok'; userId: string; familyId: string; rotatedFrom: string }
   | { kind: 'invalid' }
-  | { kind: 'reuse'; userId: string; familyId: string };
+  | { kind: 'reuse'; userId: string; familyId: string }
+  /** A spent token replayed inside the rotation grace window. See below. */
+  | { kind: 'concurrent'; userId: string; familyId: string };
 
 @Injectable()
 export class TokenService {
@@ -91,15 +93,32 @@ export class TokenService {
   /**
    * Validates a presented refresh token and, on success, revokes it.
    *
-   * Three outcomes matter and are distinguished for the caller:
-   *  - `ok`     the token was live; it is now spent and a new one may be issued
-   *  - `reuse`  the token was already revoked, which means it was replayed
-   *  - `invalid` unknown or expired
+   * Four outcomes matter and are distinguished for the caller:
+   *  - `ok`         the token was live; it is now spent and a new one may be issued
+   *  - `concurrent` a token this rotation chain spent moments ago (see below)
+   *  - `reuse`      the token was already revoked, which means it was replayed
+   *  - `invalid`    unknown or expired
    *
    * `reuse` is the interesting one. A refresh token is single-use, so seeing
    * one twice means a copy exists somewhere it should not. There is no way to
    * tell the attacker from the legitimate holder, so the whole family dies.
+   *
+   * That rule is right for a replay minutes or days later and wrong for one
+   * milliseconds later, because rotation has an unavoidable race: the client
+   * sends the old cookie, the server rotates, and the replacement `Set-Cookie`
+   * is still in flight. Anything that starts a second refresh in that window —
+   * a second browser tab, or a full page navigation that tears down the first
+   * document before its response lands — presents the token that was just
+   * spent. Treating that as theft logs the user out at random, which is what
+   * it did.
+   *
+   * So a token revoked as `rotated` within GRACE_MS is reported as
+   * `concurrent`: the family survives and the caller may mint a fresh token in
+   * it. The window is deliberately small, and it only forgives the single most
+   * recent rotation. A replay after it, or of any token revoked for another
+   * reason, still kills the family.
    */
+  private static readonly GRACE_MS = 20_000;
   async redeemRefreshToken(presented: string): Promise<RefreshOutcome> {
     const hash = this.passwords.hashToken(presented);
     const row = await this.refreshTokens.findByHash(hash);
@@ -107,6 +126,10 @@ export class TokenService {
     if (!row) return { kind: 'invalid' };
 
     if (row.revoked_at) {
+      const spentMsAgo = Date.now() - row.revoked_at.getTime();
+      if (row.revoked_reason === 'rotated' && spentMsAgo <= TokenService.GRACE_MS) {
+        return { kind: 'concurrent', userId: row.user_id, familyId: row.family_id };
+      }
       await this.refreshTokens.revokeFamily(row.family_id, 'reuse_detected');
       return { kind: 'reuse', userId: row.user_id, familyId: row.family_id };
     }

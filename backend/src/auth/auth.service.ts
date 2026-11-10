@@ -181,6 +181,17 @@ export class AuthService {
   async refresh(presented: string, context: RequestContext): Promise<IssuedTokens> {
     const outcome = await this.tokens.redeemRefreshToken(presented);
 
+    // A concurrent refresh is the same client racing itself, not an attacker.
+    // The family stays alive and a fresh token is issued into it, so whichever
+    // request lands second still ends up with a working session.
+    if (outcome.kind === 'concurrent') {
+      await this.audit.record('auth.token_refresh_concurrent', {
+        actorId: outcome.userId,
+        context,
+        metadata: { familyId: outcome.familyId },
+      });
+    }
+
     if (outcome.kind === 'reuse') {
       await this.audit.record('auth.token_reuse_detected', {
         actorId: outcome.userId,

@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 import type { AuthUser as User, Session } from "@/lib/auth/types";
 import type { AppRole } from "@/lib/domain-types";
@@ -93,39 +101,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadIdentity = useCallback(async (session: Session | null) => {
-    const userId = session?.user.id;
-    if (!userId) {
-      setProfile(null);
-      setRoles([]);
-      setPermissions([]);
-      return;
-    }
+  /**
+   * The identity fetch in flight, keyed by the user it is for.
+   *
+   * Mounting the provider announces the session three times — `getSession()`
+   * resolves it, subscribing replays `INITIAL_SESSION`, and the restore that
+   * woke both of them emits it again — and each announcement used to trigger
+   * its own `/users/me`. Three identical requests is wasteful anywhere and
+   * costs about five seconds against a hosted database. Sharing one promise
+   * per user collapses them into a single call; `refresh()` passes `force` to
+   * deliberately go again.
+   */
+  const identityRef = useRef<{ userId: string; promise: Promise<void> } | null>(null);
 
-    // When the NestJS provider is active it has already resolved roles and
-    // permissions server-side — through the same my_permissions() the browser
-    // used to call — and carries them on the session. Trusting that avoids a
-    // second round trip and, more importantly, avoids reading user_roles from
-    // Supabase for an account that only exists in DiaLearn's own database.
-    const claims = session?.user.user_metadata as
-      { roles?: string[]; permissions?: string[] } | undefined;
+  const loadIdentity = useCallback(
+    async (session: Session | null, options?: { force?: boolean }): Promise<void> => {
+      const userId = session?.user.id;
+      if (!userId) {
+        identityRef.current = null;
+        setProfile(null);
+        setRoles([]);
+        setPermissions([]);
+        return;
+      }
 
-    // Profile, roles and permissions in one call. /users/me resolves
-    // permissions through my_permissions(), so the account screen renders
-    // real fields rather than blanks.
-    try {
-      const me = await fetchCurrentUser(session);
-      setProfile(me.profile);
-      setRoles(me.roles);
-      setPermissions(me.permissions);
-    } catch {
-      // Fall back to the token claims, so a transient API blip degrades to a
-      // usable session (correct roles, empty profile) rather than a logout.
-      setProfile(null);
-      setRoles((claims?.roles ?? []) as AppRole[]);
-      setPermissions(claims?.permissions ?? []);
-    }
-  }, []);
+      const inFlight = identityRef.current;
+      if (!options?.force && inFlight?.userId === userId) return inFlight.promise;
+
+      // When the NestJS provider is active it has already resolved roles and
+      // permissions server-side — through the same my_permissions() the browser
+      // used to call — and carries them on the session. Trusting that avoids a
+      // second round trip and, more importantly, avoids reading user_roles from
+      // Supabase for an account that only exists in DiaLearn's own database.
+      const claims = session?.user.user_metadata as
+        { roles?: string[]; permissions?: string[] } | undefined;
+
+      // Profile, roles and permissions in one call. /users/me resolves
+      // permissions through my_permissions(), so the account screen renders
+      // real fields rather than blanks.
+      const promise = (async () => {
+        try {
+          const me = await fetchCurrentUser(session);
+          setProfile(me.profile);
+          setRoles(me.roles);
+          setPermissions(me.permissions);
+        } catch {
+          // Fall back to the token claims, so a transient API blip degrades to a
+          // usable session (correct roles, empty profile) rather than a logout.
+          // The cache is dropped so the next announcement may try again.
+          identityRef.current = null;
+          setProfile(null);
+          setRoles((claims?.roles ?? []) as AppRole[]);
+          setPermissions(claims?.permissions ?? []);
+        }
+      })();
+
+      identityRef.current = { userId, promise };
+      return promise;
+    },
+    [],
+  );
 
   useEffect(() => {
     let active = true;
@@ -160,7 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     const { data } = await authClient.getSession();
     setSession(data.session);
-    await loadIdentity(data.session);
+    await loadIdentity(data.session, { force: true });
   }, [loadIdentity]);
 
   const value = useMemo<AuthContextValue>(
