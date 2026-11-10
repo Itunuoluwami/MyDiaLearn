@@ -4,9 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, UserRound } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
-import { apiGet, apiPost, apiPatch, apiDelete, useApiData } from "@/lib/api/data-client";
-import type { Database } from "@/integrations/supabase/types";
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/data-client";
 import { useAuth } from "@/hooks/use-auth";
 import { useRedirectToPortalHome } from "@/hooks/use-portal-redirect";
 
@@ -33,6 +31,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+/**
+ * A learner as the family screen renders it.
+ *
+ * Declared here rather than derived from generated Supabase types: the API is
+ * the only source now, so this should change when the API does.
+ */
+interface FamilyChildRow {
+  id: string;
+  first_name: string;
+  last_name: string | null;
+  date_of_birth: string | null;
+  school_name: string | null;
+  learning_goals: string | null;
+  can_self_login: boolean;
+  can_book_lessons: boolean;
+  can_message_tutors: boolean;
+  is_active: boolean;
+  curriculum_id: string | null;
+  education_level_id: string | null;
+  curricula: { name: string } | null;
+  education_levels: { name: string } | null;
+}
 
 export const Route = createFileRoute("/_authenticated/family")({
   head: () => ({
@@ -70,7 +91,6 @@ function FamilyPage() {
   const { user, hasPermission } = useAuth();
 
   const queryClient = useQueryClient();
-  const viaApi = useApiData();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
 
@@ -79,73 +99,54 @@ function FamilyPage() {
   const students = useQuery({
     queryKey: ["students", user?.id],
     queryFn: async () => {
-      if (viaApi) {
-        // The caller's own learners (the API scopes the list to the parent),
-        // reshaped to the Supabase select's columns and joined names.
-        const page = await apiGet<{
-          data: {
-            id: string;
-            firstName: string;
-            lastName: string | null;
-            dateOfBirth: string | null;
-            schoolName: string | null;
-            learningGoals: string | null;
-            canSelfLogin: boolean;
-            canBookLessons: boolean;
-            canMessageTutors: boolean;
-            isActive: boolean;
-            curriculumId: string | null;
-            curriculumName: string | null;
-            educationLevelId: string | null;
-            educationLevelName: string | null;
-            createdAt: string;
-          }[];
-        }>("/students?limit=100");
-        return page.data
-          .slice()
-          .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-          .map((st) => ({
-            id: st.id,
-            first_name: st.firstName,
-            last_name: st.lastName,
-            date_of_birth: st.dateOfBirth,
-            school_name: st.schoolName,
-            learning_goals: st.learningGoals,
-            can_self_login: st.canSelfLogin,
-            can_book_lessons: st.canBookLessons,
-            can_message_tutors: st.canMessageTutors,
-            is_active: st.isActive,
-            curriculum_id: st.curriculumId,
-            education_level_id: st.educationLevelId,
-            curricula: st.curriculumName ? { name: st.curriculumName } : null,
-            education_levels: st.educationLevelName ? { name: st.educationLevelName } : null,
-          })) as never;
-      }
-      const { data, error } = await supabase
-        .from("students")
-        .select(
-          "id, first_name, last_name, date_of_birth, school_name, learning_goals, can_self_login, can_book_lessons, can_message_tutors, is_active, curriculum_id, education_level_id, curricula(name), education_levels(name)",
-        )
-        .order("created_at");
-      if (error) throw error;
-      return data;
+      // The caller's own learners (the API scopes the list to the parent),
+      // reshaped to the Supabase select's columns and joined names.
+      const page = await apiGet<{
+        data: {
+          id: string;
+          firstName: string;
+          lastName: string | null;
+          dateOfBirth: string | null;
+          schoolName: string | null;
+          learningGoals: string | null;
+          canSelfLogin: boolean;
+          canBookLessons: boolean;
+          canMessageTutors: boolean;
+          isActive: boolean;
+          curriculumId: string | null;
+          curriculumName: string | null;
+          educationLevelId: string | null;
+          educationLevelName: string | null;
+          createdAt: string;
+        }[];
+      }>("/students?limit=100");
+      return page.data
+        .slice()
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+        .map((st) => ({
+          id: st.id,
+          first_name: st.firstName,
+          last_name: st.lastName,
+          date_of_birth: st.dateOfBirth,
+          school_name: st.schoolName,
+          learning_goals: st.learningGoals,
+          can_self_login: st.canSelfLogin,
+          can_book_lessons: st.canBookLessons,
+          can_message_tutors: st.canMessageTutors,
+          is_active: st.isActive,
+          curriculum_id: st.curriculumId,
+          education_level_id: st.educationLevelId,
+          curricula: st.curriculumName ? { name: st.curriculumName } : null,
+          education_levels: st.educationLevelName ? { name: st.educationLevelName } : null,
+        })) satisfies FamilyChildRow[];
     },
   });
 
   const curricula = useQuery({
     queryKey: ["curricula"],
     queryFn: async () => {
-      if (viaApi) {
-        const rows = await apiGet<{ id: string; name: string }[]>("/catalogue/curricula");
-        return rows.map(({ id, name }) => ({ id, name }));
-      }
-      const { data, error } = await supabase
-        .from("curricula")
-        .select("id, name")
-        .eq("is_active", true)
-        .order("sort_order");
-      if (error) throw error;
-      return data;
+      const rows = await apiGet<{ id: string; name: string }[]>("/catalogue/curricula");
+      return rows.map(({ id, name }) => ({ id, name }));
     },
   });
 
@@ -153,51 +154,28 @@ function FamilyPage() {
     queryKey: ["education-levels", form.curriculum_id],
     enabled: Boolean(form.curriculum_id),
     queryFn: async () => {
-      if (viaApi) {
-        const rows = await apiGet<{ id: string; name: string; curriculum_id: string | null }[]>(
-          "/catalogue/education-levels",
-        );
-        return rows
-          .filter((row) => row.curriculum_id === form.curriculum_id)
-          .map(({ id, name }) => ({ id, name }));
-      }
-      const { data, error } = await supabase
-        .from("education_levels")
-        .select("id, name")
-        .eq("curriculum_id", form.curriculum_id)
-        .eq("is_active", true)
-        .order("sort_order");
-      if (error) throw error;
-      return data;
+      const rows = await apiGet<{ id: string; name: string; curriculum_id: string | null }[]>(
+        "/catalogue/education-levels",
+      );
+      return rows
+        .filter((row) => row.curriculum_id === form.curriculum_id)
+        .map(({ id, name }) => ({ id, name }));
     },
   });
 
   const createStudent = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not signed in");
-      if (viaApi) {
-        await apiPost("/students", {
-          firstName: form.first_name,
-          lastName: form.last_name || undefined,
-          dateOfBirth: form.date_of_birth || undefined,
-          curriculumId: form.curriculum_id || undefined,
-          educationLevelId: form.education_level_id || undefined,
-          schoolName: form.school_name || undefined,
-          learningGoals: form.learning_goals || undefined,
-        });
-        return;
-      }
-      const { error } = await supabase.from("students").insert({
-        parent_id: user.id,
-        first_name: form.first_name,
-        last_name: form.last_name || null,
-        date_of_birth: form.date_of_birth || null,
-        curriculum_id: form.curriculum_id || null,
-        education_level_id: form.education_level_id || null,
-        school_name: form.school_name || null,
-        learning_goals: form.learning_goals || null,
+      await apiPost("/students", {
+        firstName: form.first_name,
+        lastName: form.last_name || undefined,
+        dateOfBirth: form.date_of_birth || undefined,
+        curriculumId: form.curriculum_id || undefined,
+        educationLevelId: form.education_level_id || undefined,
+        schoolName: form.school_name || undefined,
+        learningGoals: form.learning_goals || undefined,
       });
-      if (error) throw error;
+      return;
     },
     onSuccess: async () => {
       setForm(EMPTY);
@@ -215,22 +193,15 @@ function FamilyPage() {
     }: {
       id: string;
       patch: Partial<
-        Pick<
-          Database["public"]["Tables"]["students"]["Update"],
-          "can_self_login" | "can_book_lessons" | "can_message_tutors"
-        >
+        Pick<FamilyChildRow, "can_self_login" | "can_book_lessons" | "can_message_tutors">
       >;
     }) => {
-      if (viaApi) {
-        await apiPatch(`/students/${id}`, {
-          canSelfLogin: patch.can_self_login,
-          canBookLessons: patch.can_book_lessons,
-          canMessageTutors: patch.can_message_tutors,
-        });
-        return;
-      }
-      const { error } = await supabase.from("students").update(patch).eq("id", id);
-      if (error) throw error;
+      await apiPatch(`/students/${id}`, {
+        canSelfLogin: patch.can_self_login,
+        canBookLessons: patch.can_book_lessons,
+        canMessageTutors: patch.can_message_tutors,
+      });
+      return;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["students"] });
@@ -240,12 +211,8 @@ function FamilyPage() {
 
   const removeStudent = useMutation({
     mutationFn: async (id: string) => {
-      if (viaApi) {
-        await apiDelete(`/students/${id}`);
-        return;
-      }
-      const { error } = await supabase.from("students").delete().eq("id", id);
-      if (error) throw error;
+      await apiDelete(`/students/${id}`);
+      return;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["students"] });

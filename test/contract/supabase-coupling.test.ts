@@ -59,25 +59,14 @@ const EXPECTED_RPCS = [
   "is_super_admin",
 ];
 
-const EXPECTED_TABLES = [
-  "commission_rules",
-  "curricula",
-  "education_levels",
-  "notification_templates",
-  "platform_settings",
-  "profiles",
-  "students",
-  "subjects",
-  "tutor_agencies",
-  "tutors",
-];
+const EXPECTED_TABLES = ["profiles"];
 
 describe("Supabase coupling inventory", () => {
   it("calls exactly the 4 stored procedures on record", () => {
     expect([...collect(RPC_PATTERN)].sort()).toEqual(EXPECTED_RPCS);
   });
 
-  it("reads exactly the 10 tables and views on record", () => {
+  it("reads exactly the 1 tables and views on record", () => {
     expect([...collect(TABLE_PATTERN)].sort()).toEqual(EXPECTED_TABLES);
   });
 
