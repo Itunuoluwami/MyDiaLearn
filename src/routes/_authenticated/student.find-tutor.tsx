@@ -398,9 +398,10 @@ type TutorData = {
   full_name?: string | null;
   avatar_url?: string | null;
   headline?: string | null;
-  rating_avg?: number | null;
+  // `numeric` comes over JSON as a string; both call sites coerce.
+  rating_avg?: number | string | null;
   rating_count?: number | null;
-  hourly_rate?: number | null;
+  hourly_rate?: number | string | null;
   currency?: string | null;
   country_code?: string | null;
   subjects?: string[] | null;

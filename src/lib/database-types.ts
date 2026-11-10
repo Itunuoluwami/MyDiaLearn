@@ -483,22 +483,30 @@ export type PublicTutorReviewsResult = {
   score: number;
 }[];
 
+/**
+ * `GET /catalogue/tutors`, verified against a live response rather than carried
+ * over from the generated types — which had every field non-null and the
+ * numerics as `number`. PostgreSQL `numeric` arrives over JSON as a string, so
+ * `hourly_rate` and `rating_avg` are strings and callers must coerce.
+ */
 export type PublicTutorSearchResult = {
-  availability_timezone: string;
+  availability_timezone: string | null;
   available_days: number[];
-  avatar_url: string;
-  country_code: string;
+  avatar_url: string | null;
+  country_code: string | null;
   created_at: string;
   currency: string;
   curricula: string[];
   full_name: string;
-  headline: string;
-  hourly_rate: number;
+  headline: string | null;
+  /** `numeric` — a decimal string, e.g. "20". */
+  hourly_rate: string;
   id: string;
   languages: Json;
   lessons_completed: number;
   levels: string[];
-  rating_avg: number;
+  /** `numeric` — a decimal string, e.g. "4.75". */
+  rating_avg: string;
   rating_count: number;
   subjects: string[];
   total_count: number;

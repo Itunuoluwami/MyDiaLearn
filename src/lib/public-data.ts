@@ -152,20 +152,6 @@ export function useTutorSearch(params: TutorSearchParams) {
   return useQuery({
     queryKey: ["public-tutor-search", params],
     queryFn: async () => {
-      const args: Record<string, unknown> = {
-        p_sort: params.sort || "top_rated",
-        p_limit: params.limit ?? 24,
-        p_offset: params.offset ?? 0,
-      };
-      if (params.q?.trim()) args["p_q"] = params.q.trim();
-      if (params.subject) args["p_subject"] = params.subject;
-      if (params.curriculum) args["p_curriculum"] = params.curriculum;
-      if (params.country) args["p_country"] = params.country;
-      if (params.level) args["p_level"] = params.level;
-      if (params.language) args["p_language"] = params.language;
-      if (params.minRating != null) args["p_min_rating"] = params.minRating;
-      if (params.maxPrice != null) args["p_max_price"] = params.maxPrice;
-
       const limit = params.limit ?? 24;
       const page = Math.floor((params.offset ?? 0) / limit) + 1;
       const qs = new URLSearchParams();
@@ -267,19 +253,26 @@ export function useVerificationSteps() {
 
 /* ---------------- Formatting ---------------- */
 
+/**
+ * PostgreSQL `numeric` arrives over JSON as a decimal string, so every money
+ * field from the API is a string. This accepts either, the way the parent-side
+ * `formatMoney` already did.
+ */
 export function formatMoney(
-  amount: number | null | undefined,
+  amount: number | string | null | undefined,
   currency: string | null | undefined,
 ) {
-  if (amount === null || amount === undefined) return "Rate on request";
+  if (amount === null || amount === undefined || amount === "") return "Rate on request";
+  const value = typeof amount === "string" ? Number(amount) : amount;
+  if (!Number.isFinite(value)) return "Rate on request";
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency: currency || "USD",
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(value);
   } catch {
-    return `${currency ?? ""} ${amount}`.trim();
+    return `${currency ?? ""} ${value}`.trim();
   }
 }
 
