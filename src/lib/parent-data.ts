@@ -84,9 +84,6 @@ export function childInitials(child: Pick<Child, "first_name" | "last_name"> | n
 /* Bookings + class sessions                                           */
 /* ------------------------------------------------------------------ */
 
-const BOOKING_SELECT =
-  "id, student_id, tutor_id, booked_by, subject_id, starts_at, ends_at, duration_minutes, booking_timezone, hourly_rate, currency, total_amount, status, student_notes, cancellation_policy_id, cancelled_at, cancellation_reason, created_at, subjects(name), education_levels(name), class_sessions(id, meeting_url, status, started_at, ended_at, student_attended, tutor_attended, tutor_notes, homework), payments(status)";
-
 /** True once at least one payment on the booking has actually succeeded —
  * used to decide whether to show "Pay now" (pay_for_booking() also rejects
  * a second payment, but checking here avoids the round trip and the "already

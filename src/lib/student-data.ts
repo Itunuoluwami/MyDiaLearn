@@ -9,6 +9,7 @@ import type {
   ClassSessionsRow,
   LearningResourcesRow,
   NotificationsRow,
+  NumericAsNumber,
   StudentsRow,
 } from "@/lib/database-types";
 export type { AssignmentStatus, BookingStatus } from "@/lib/domain-types";
@@ -16,15 +17,13 @@ import { apiGet, apiPost } from "@/lib/api/data-client";
 
 export type StudentRow = StudentsRow;
 
-const STUDENT_RECORD_SELECT = "*, curricula(name), education_levels(name)";
-
 type TutorRef = {
   id: string;
   profiles: { full_name: string | null; avatar_url?: string | null } | null;
 };
 
 export type StudentBooking = Pick<
-  BookingsRow,
+  NumericAsNumber<BookingsRow, "total_amount" | "hourly_rate">,
   | "id"
   | "student_id"
   | "tutor_id"

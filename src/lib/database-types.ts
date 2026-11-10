@@ -61,14 +61,14 @@ export interface BookingsRow {
   duration_minutes: number;
   education_level_id: string | null;
   ends_at: string;
-  hourly_rate: number;
+  hourly_rate: string;
   id: string;
   starts_at: string;
   status: BookingStatus;
   student_id: string;
   student_notes: string | null;
   subject_id: string | null;
-  total_amount: number;
+  total_amount: string;
   tutor_accepted_at: string | null;
   tutor_id: string;
   updated_at: string;
@@ -83,8 +83,8 @@ export interface CancellationPoliciesRow {
   is_active: boolean;
   is_default: boolean;
   name: string;
-  refund_percentage: number;
-  tutor_compensation_percentage: number;
+  refund_percentage: string;
+  tutor_compensation_percentage: string;
   updated_at: string;
 }
 
@@ -112,15 +112,15 @@ export interface CommissionRulesRow {
   currency: string | null;
   effective_from: string;
   effective_to: string | null;
-  fixed_amount: number | null;
+  fixed_amount: string | null;
   id: string;
   is_active: boolean;
   model: CommissionModel;
   name: string;
   notes: string | null;
-  percentage: number | null;
-  platform_fee_fixed: number;
-  platform_fee_percentage: number;
+  percentage: string | null;
+  platform_fee_fixed: string;
+  platform_fee_percentage: string;
   priority: number;
   subject_id: string | null;
   tiers: Json;
@@ -195,29 +195,29 @@ export interface NotificationsRow {
 }
 
 export interface PaymentsRow {
-  amount: number;
+  amount: string;
   booking_id: string | null;
-  commission_amount: number;
+  commission_amount: string;
   commission_rule_id: string | null;
   created_at: string;
   currency: string;
-  exchange_rate: number | null;
+  exchange_rate: string | null;
   id: string;
   metadata: Json;
   paid_at: string | null;
   payer_id: string;
-  platform_fee: number;
+  platform_fee: string;
   provider: string | null;
   provider_reference: string | null;
-  refunded_amount: number;
+  refunded_amount: string;
   status: PaymentStatus;
   tutor_id: string | null;
-  tutor_payout: number;
+  tutor_payout: string;
   updated_at: string;
 }
 
 export interface PayoutsRow {
-  amount: number;
+  amount: string;
   created_at: string;
   currency: string;
   id: string;
@@ -226,7 +226,7 @@ export interface PayoutsRow {
   requested_at: string;
   settled_at: string | null;
   status: PayoutStatus;
-  tutor_id: string;
+  tutor_id: string | null;
   updated_at: string;
 }
 
@@ -305,7 +305,7 @@ export interface TutorsRow {
   currency: string;
   education: Json;
   headline: string | null;
-  hourly_rate: number | null;
+  hourly_rate: string | null;
   id: string;
   intro_video_url: string | null;
   is_listed: boolean;
@@ -354,6 +354,19 @@ export interface TutorSubjectsRow {
   subject_id: string;
   tutor_id: string;
 }
+
+/**
+ * Marks named `numeric` fields of a row type as already coerced to numbers.
+ *
+ * PostgreSQL `numeric` arrives over JSON as a decimal string, so the row types
+ * above declare money as `string` — that is what the API really sends. Every
+ * client mapper then runs it through `Number()`, so the view types the screens
+ * consume genuinely hold numbers and can do arithmetic. This expresses that
+ * boundary instead of letting each side quietly disagree.
+ */
+export type NumericAsNumber<T, K extends keyof T> = Omit<T, K> & {
+  [P in K]: null extends T[P] ? number | null : number;
+};
 
 /* ---------- Function results ---------- */
 

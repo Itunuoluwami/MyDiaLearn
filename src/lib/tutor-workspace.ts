@@ -17,6 +17,7 @@ import type {
   LessonNotesRow,
   MessagesRow,
   MyConversationsResult,
+  NumericAsNumber,
   PayoutsRow,
   TutorEarningsRecordsResult,
   TutorEarningsSummaryResult,
@@ -457,7 +458,8 @@ export function useUpdateAssignment() {
 
 export type EarningsSummary = TutorEarningsSummaryResult[number];
 export type EarningsRecord = TutorEarningsRecordsResult[number];
-export type PayoutRow = PayoutsRow;
+/** Post-mapping: `amount` has been through `Number()`. */
+export type PayoutRow = NumericAsNumber<PayoutsRow, "amount">;
 
 interface ApiEarningsSummary {
   currency: string;

@@ -1,10 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { ApiError } from "@/lib/api/client";
-import type { PaymentsRow } from "@/lib/database-types";
+import type { NumericAsNumber, PaymentsRow } from "@/lib/database-types";
 import { apiPost } from "@/lib/api/data-client";
 
-export type PaymentRow = PaymentsRow;
+/** Post-`toPaymentRow`: the money fields have been through `Number()`. */
+export type PaymentRow = NumericAsNumber<
+  PaymentsRow,
+  "amount" | "platform_fee" | "commission_amount" | "tutor_payout" | "refunded_amount"
+>;
 
 /** The API's payment shape. Money stays a string on the wire (NUMERIC). */
 interface ApiPayment {

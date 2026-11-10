@@ -9,12 +9,13 @@ import type {
 } from "@/lib/domain-types";
 import type {
   BookingsRow,
+  NumericAsNumber,
   PaymentsRow,
   PayoutsRow,
   ProfilesRow,
   TutorDocumentsRow,
-  TutorVerificationProgressRow,
   TutorsRow,
+  TutorVerificationProgressRow,
   VerificationStepsRow,
 } from "@/lib/database-types";
 export type {
@@ -417,7 +418,7 @@ export function useRejectTutor() {
 type BookingRowDb = BookingsRow;
 
 export type AdminBooking = Pick<
-  BookingRowDb,
+  NumericAsNumber<BookingRowDb, "total_amount" | "hourly_rate">,
   | "id"
   | "student_id"
   | "tutor_id"
@@ -438,9 +439,6 @@ export type AdminBooking = Pick<
   tutors: { id: string; profiles: { full_name: string | null } | null } | null;
   subjects: { name: string } | null;
 };
-
-const ADMIN_BOOKING_SELECT =
-  "id, student_id, tutor_id, booked_by, subject_id, starts_at, ends_at, duration_minutes, status, currency, total_amount, cancellation_policy_id, cancelled_at, cancellation_reason, created_at, students(first_name, last_name), tutors(id, profiles(full_name)), subjects(name)";
 
 /** Flat admin API row → the nested shape the page reads. */
 function toAdminBooking(row: Record<string, unknown>): AdminBooking {
@@ -553,7 +551,7 @@ export function useAdminCancelBooking() {
 type PaymentRowDb = PaymentsRow;
 
 export type AdminPayment = Pick<
-  PaymentRowDb,
+  NumericAsNumber<PaymentRowDb, "amount" | "refunded_amount">,
   | "id"
   | "booking_id"
   | "tutor_id"
@@ -573,9 +571,6 @@ export type AdminPayment = Pick<
     tutors: { profiles: { full_name: string | null } | null } | null;
   } | null;
 };
-
-const ADMIN_PAYMENT_SELECT =
-  "id, booking_id, tutor_id, payer_id, amount, currency, status, provider, provider_reference, paid_at, refunded_amount, created_at, bookings(starts_at, students(first_name, last_name), tutors(profiles(full_name)))";
 
 function toAdminPayment(row: Record<string, unknown>): AdminPayment {
   const r = row as Record<string, string | number | null>;
@@ -672,7 +667,7 @@ export function useIssueRefund() {
 /* ------------------------------------------------------------------ */
 
 export type AdminPayout = Pick<
-  PayoutsRow,
+  NumericAsNumber<PayoutsRow, "amount">,
   | "id"
   | "tutor_id"
   | "amount"
@@ -683,9 +678,6 @@ export type AdminPayout = Pick<
   | "requested_at"
   | "settled_at"
 > & { tutors: { profiles: { full_name: string | null } | null } | null };
-
-const ADMIN_PAYOUT_SELECT =
-  "id, tutor_id, amount, currency, status, reference, notes, requested_at, settled_at, tutors(profiles(full_name))";
 
 export function useAdminPayouts(params?: { status?: PayoutStatus | "all" }) {
   const status = params?.status ?? "all";
@@ -761,9 +753,6 @@ export interface AdminDispute {
   against_profile: { full_name: string | null } | null;
   bookings: { starts_at: string; subjects: { name: string } | null } | null;
 }
-
-const ADMIN_DISPUTE_SELECT =
-  "id, booking_id, category, status, description, resolution_notes, resolved_at, created_at, raised_by_profile:profiles!raised_by(full_name), against_profile:profiles!against_profile_id(full_name), bookings(starts_at, subjects(name))";
 
 export function useAdminDisputes(status?: DisputeStatus | "all") {
   const filter = status ?? "open";
