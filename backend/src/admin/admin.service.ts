@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { AuditService, type AuditContext } from '../common/audit/audit.service';
+import { NotificationDispatchService } from '../notifications/services/notification-dispatch.service';
 import { NotFoundError } from '../common/exceptions/app.exception';
 import { translateAdminError } from './admin-errors';
 import { AdminRepository } from './admin.repository';
@@ -19,7 +20,37 @@ export class AdminService {
   constructor(
     private readonly repository: AdminRepository,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationDispatchService,
   ) {}
+
+  /**
+   * Tells a tutor what an admin just decided about their verification.
+   *
+   * Best-effort: the decision has already been recorded and audited, and a
+   * tutor who misses the notification still sees the new state on their
+   * verification page. Copy comes from `notification_templates`.
+   */
+  private async tellTutor(
+    adminId: string,
+    tutorId: string,
+    triggerKey: string,
+    vars: Record<string, unknown> = {},
+    stepId?: string,
+  ): Promise<void> {
+    try {
+      const recipient = await this.repository.verificationRecipient(tutorId, stepId);
+      if (!recipient) return;
+      await this.notifications.dispatchInApp({
+        actorId: adminId,
+        userId: recipient.tutor_user_id,
+        triggerKey,
+        vars: { step_name: recipient.step_name ?? 'verification', ...vars },
+        link: '/tutor/verification',
+      });
+    } catch {
+      // Never let telling someone fail the decision that was already made.
+    }
+  }
 
   async dashboard(adminId: string): Promise<Record<string, unknown> | null> {
     return this.repository.dashboardSummary(adminId);
@@ -107,6 +138,14 @@ export class AdminService {
     } catch (error) {
       throw translateAdminError(error, 'We could not save that review.');
     }
+
+    await this.tellTutor(
+      adminId,
+      input.tutorId,
+      'tutor.verification_updated',
+      { status: input.status },
+      input.stepId,
+    );
   }
 
   async reviewDocument(
@@ -131,6 +170,7 @@ export class AdminService {
       entityId: tutorId,
       context,
     });
+    await this.tellTutor(adminId, tutorId, 'tutor.verification_approved');
   }
 
   async rejectTutor(
@@ -149,6 +189,7 @@ export class AdminService {
       context,
       metadata: { hasReason: Boolean(reason?.trim()) },
     });
+    await this.tellTutor(adminId, tutorId, 'tutor.verification_rejected');
   }
 
   async setHourlyRate(

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PaymentsController } from './payments.controller';
 import { PaymentsRepository } from './payments.repository';
 import { PaymentsService } from './payments.service';
@@ -16,6 +17,7 @@ import { SettlementService } from './services/settlement.service';
  * duplicates the arithmetic — both read what the database already decides.
  */
 @Module({
+  imports: [NotificationsModule],
   controllers: [PaymentsController],
   providers: [
     PaymentsRepository,

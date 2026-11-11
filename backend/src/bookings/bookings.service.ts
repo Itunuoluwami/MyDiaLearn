@@ -8,6 +8,7 @@ import {
   NotFoundError,
 } from '../common/exceptions/app.exception';
 import { translateDatabaseError } from '../common/exceptions/database-errors';
+import { NotificationDispatchService } from '../notifications/services/notification-dispatch.service';
 import { PlatformSettingsService } from '../platform-settings/platform-settings.service';
 import { paginate, type Paginated, type PaginationQueryDto } from '../shared/query.dto';
 import type {
@@ -15,7 +16,11 @@ import type {
   BookingResponse,
   CreateBookingDto,
 } from './dto/booking.dto';
-import { BookingsRepository, type BookingRow } from './bookings.repository';
+import {
+  BookingsRepository,
+  type BookingNotificationContext,
+  type BookingRow,
+} from './bookings.repository';
 
 /**
  * Booking lifecycle.
@@ -36,8 +41,13 @@ import { BookingsRepository, type BookingRow } from './bookings.repository';
  *    later commission change never alters an existing booking.
  *
  * What this service adds: notice and horizon checks against admin
- * configuration, friendly errors for the database's raised exceptions, and
- * audit records for every status change.
+ * configuration, friendly errors for the database's raised exceptions, audit
+ * records for every status change, and telling the other party it happened.
+ *
+ * Notifications are raised by trigger key only. No copy is written here —
+ * subject and body come from `notification_templates`, so an admin can reword
+ * them without a deploy. Every dispatch is best-effort: a booking must not
+ * fail because a notification could not be delivered.
  */
 @Injectable()
 export class BookingsService {
@@ -45,7 +55,40 @@ export class BookingsService {
     private readonly repository: BookingsRepository,
     private readonly settings: PlatformSettingsService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationDispatchService,
   ) {}
+
+  /**
+   * The lesson, as a notification talks about it.
+   *
+   * `starts_at` is rendered in the booking's own timezone rather than the
+   * server's, because "your lesson on ..." is useless if it names an hour the
+   * reader was never in.
+   */
+  private static describe(ctx: BookingNotificationContext, timezone: string) {
+    // A notice names an hour, so it has to name it in a timezone the reader
+    // actually lives in. Telling a tutor their lesson is at 09:30 in one
+    // message and 08:30 in the next, for the same lesson, is worse than
+    // saying nothing.
+    return {
+      subject: ctx.subject_name ?? 'lesson',
+      starts_at: new Intl.DateTimeFormat('en-GB', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: timezone,
+      }).format(ctx.starts_at),
+    };
+  }
+
+  /** Never lets a notification failure reach the caller. */
+  private async notifySafely(run: () => Promise<unknown>): Promise<void> {
+    try {
+      await run();
+    } catch {
+      // NotificationDispatchService already logs with the trigger key; the
+      // booking itself has committed and must stand regardless.
+    }
+  }
 
   async create(
     callerId: string,
@@ -84,6 +127,22 @@ export class BookingsService {
         totalAmount: String(row.total_amount),
         currency: row.currency,
       },
+    });
+
+    // The tutor is the one who has to do something about this.
+    await this.notifySafely(async () => {
+      const ctx = await this.repository.notificationContext(row.id);
+      if (!ctx) return;
+      await this.notifications.dispatchInApp({
+        actorId: callerId,
+        userId: ctx.tutor_user_id,
+        triggerKey: 'booking.created',
+        vars: {
+          student_name: ctx.student_name,
+          ...BookingsService.describe(ctx, ctx.tutor_timezone),
+        },
+        link: '/tutor/classes',
+      });
     });
 
     return toResponse(row);
@@ -172,7 +231,61 @@ export class BookingsService {
       metadata: { status },
     });
 
+    // Only on `confirmed`. Accepting an unpaid lesson leaves it pending, and
+    // saying "confirmed" then would be a lie the payment screen contradicts.
+    if (accept && status === 'confirmed') {
+      await this.notifySafely(() => this.announceConfirmed(tutorUserId, bookingId));
+    }
+
     return { status };
+  }
+
+  /**
+   * Tells the family a lesson is on.
+   *
+   * Both the booker and the learner hear about it when they are different
+   * people and the learner has their own login — a child with an account
+   * should not have to be told by their parent.
+   */
+  private async announceConfirmed(actorId: string, bookingId: string): Promise<void> {
+    const ctx = await this.repository.notificationContext(bookingId);
+    if (!ctx) return;
+
+    // The family's own frame here: they chose it when they booked.
+    const described = BookingsService.describe(ctx, ctx.booking_timezone);
+    const emailVars = {
+      tutor_name: ctx.tutor_name ?? 'Your tutor',
+      student_name: ctx.student_name,
+      ...described,
+    };
+
+    // Keyed by user so a learner who booked for themselves is told once, not
+    // twice for being both the booker and the learner.
+    const recipients = new Map<string, { email: string | null; link: string }>();
+    recipients.set(ctx.booker_user_id, { email: ctx.booker_email, link: '/bookings' });
+    if (ctx.student_user_id && ctx.student_user_id !== ctx.booker_user_id) {
+      // The learner's own portal, not the parent's. Same event, different app.
+      recipients.set(ctx.student_user_id, {
+        email: ctx.student_email,
+        link: '/student/history',
+      });
+    } else if (ctx.student_user_id === ctx.booker_user_id) {
+      recipients.set(ctx.booker_user_id, {
+        email: ctx.booker_email,
+        link: '/student/history',
+      });
+    }
+
+    for (const [userId, recipient] of recipients) {
+      await this.notifications.dispatch({
+        actorId,
+        userId,
+        ...(recipient.email ? { email: recipient.email } : {}),
+        triggerKey: 'booking.confirmed',
+        vars: { counterpart: ctx.tutor_name ?? 'your tutor', ...described, ...emailVars },
+        link: recipient.link,
+      });
+    }
   }
 
   async rate(
@@ -220,6 +333,24 @@ export class BookingsService {
       entityId: bookingId,
       context,
       metadata: { by: 'family' },
+    });
+
+    // Only an unpaid, still-pending lesson reaches here, so there is nothing
+    // to refund and the template's refund note says so rather than staying a
+    // visible {{placeholder}}.
+    await this.notifySafely(async () => {
+      const ctx = await this.repository.notificationContext(bookingId);
+      if (!ctx) return;
+      await this.notifications.dispatchInApp({
+        actorId: userId,
+        userId: ctx.tutor_user_id,
+        triggerKey: 'booking.cancelled',
+        vars: {
+          ...BookingsService.describe(ctx, ctx.tutor_timezone),
+          refund_note: 'No payment had been taken.',
+        },
+        link: '/tutor/classes',
+      });
     });
   }
 

@@ -42,13 +42,31 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   ) {
     // keepAlive stops idle pooled connections being dropped silently by the
     // network between bursts of traffic to the remote database.
-    super({ adapter: new PrismaPg({ connectionString: database.url, keepAlive: true }) });
+    super({ adapter: new PrismaPg(PrismaService.poolOptions(database.url)) });
     this.restricted = database.appUrl
       ? new PrismaClient({
-          adapter: new PrismaPg({ connectionString: database.appUrl, keepAlive: true }),
+          adapter: new PrismaPg(PrismaService.poolOptions(database.appUrl)),
         })
       : null;
     this.logger.setContext(PrismaService.name);
+  }
+
+  /**
+   * Connection options, with the session pinned to UTC.
+   *
+   * This database server runs on America/Los_Angeles, and reading a
+   * `timestamptz` back through the driver adapter on a non-UTC session
+   * returned the wall-clock time relabelled as UTC — eight hours adrift. The
+   * stored value was always correct; everything the API said about it was not,
+   * so a notification raised a minute ago arrived in the UI as "8 hours ago"
+   * and every booking and payment time was wrong by the same amount.
+   *
+   * Pinning the session removes the ambiguity at the source rather than
+   * correcting for it at each call site, and costs nothing: all timestamps in
+   * this schema are `timestamptz`, which is absolute.
+   */
+  private static poolOptions(connectionString: string) {
+    return { connectionString, keepAlive: true, options: '-c timezone=UTC' };
   }
 
   async onModuleInit(): Promise<void> {

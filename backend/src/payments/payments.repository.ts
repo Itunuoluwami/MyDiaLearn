@@ -195,6 +195,46 @@ export class PaymentsRepository extends BaseRepository {
     `;
   }
 
+  /**
+   * What the payment bought, for the receipt notification.
+   *
+   * Owner connection: the receipt is addressed by the system, and the payer is
+   * not necessarily able to read the booking's joins under RLS. Null when the
+   * lesson carries no subject, which the caller renders as "lesson".
+   */
+  async bookingSubject(bookingId: string): Promise<string | null> {
+    const rows = await this.prisma.$queryRaw<{ name: string | null }[]>`
+      select sub.name
+      from public.bookings b
+      left join public.subjects sub on sub.id = b.subject_id
+      where b.id = ${bookingId}::uuid
+      limit 1
+    `;
+    return rows[0]?.name ?? null;
+  }
+
+  /**
+   * Who to pay and where to tell them, for a settled payout.
+   *
+   * Owner connection: the admin approving the settlement is not the tutor, and
+   * the notification is addressed on the system's behalf.
+   */
+  async payoutRecipient(
+    payoutId: string,
+  ): Promise<{ email: string | null; amount: string; currency: string } | null> {
+    const rows = await this.prisma.$queryRaw<
+      { email: string | null; amount: string; currency: string }[]
+    >`
+      select p.email, po.amount::text as amount, po.currency
+      from public.payouts po
+      join public.tutors t    on t.id = po.tutor_id
+      join public.profiles p  on p.id = t.profile_id
+      where po.id = ${payoutId}::uuid
+      limit 1
+    `;
+    return rows[0] ?? null;
+  }
+
   async markPaid(
     paymentId: string,
     providerReference: string,

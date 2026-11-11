@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 
 import { AuditService, type AuditContext } from '../../common/audit/audit.service';
+import { NotificationDispatchService } from '../../notifications/services/notification-dispatch.service';
 import {
   AppException,
   ErrorCode,
@@ -58,6 +59,7 @@ export class PaymentProcessingService {
     private readonly repository: PaymentsRepository,
     private readonly gateway: PaymentGatewayService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationDispatchService,
     private readonly logger: PinoLogger,
     @Inject(authConfig.KEY) private readonly config: AuthConfig,
   ) {
@@ -173,12 +175,17 @@ export class PaymentProcessingService {
       return payment;
     }
     try {
-      return await this.repository.markPaid(
+      const paid = await this.repository.markPaid(
         payment.id,
         result.providerReference,
         result.amount,
         result.currency,
       );
+      // Here rather than in payForBooking: a charge can also land by the payer
+      // returning from the provider or by webhook, and the receipt should go
+      // out once however it arrived.
+      await this.sendReceipt(payment, result.amount, result.currency);
+      return paid;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (/PAYMENT_AMOUNT_MISMATCH/.test(message)) {
@@ -365,6 +372,54 @@ export class PaymentProcessingService {
   }
 
   // --- helpers ---------------------------------------------------------------------
+
+  /**
+   * The payer's receipt. Email only — there is no in-app template for this,
+   * and that is the admin's choice to make by adding one, not this service's
+   * to assume.
+   *
+   * Best-effort by construction: EmailService returns null rather than
+   * throwing, and anything else is swallowed here. A charge that succeeded
+   * must not be reported as failed because a receipt did not go out.
+   */
+  /**
+   * Tells a tutor their payout has been sent.
+   *
+   * Called once a settlement request has actually executed, not when it is
+   * raised: a payout needs a second approver, and announcing money that a
+   * colleague might still decline would be worse than saying nothing.
+   */
+  async notifyPayoutSent(payoutId: string): Promise<void> {
+    try {
+      const recipient = await this.repository.payoutRecipient(payoutId);
+      if (!recipient?.email) return;
+      await this.notifications.dispatchEmail({
+        to: recipient.email,
+        triggerKey: 'payout.sent',
+        vars: { amount: recipient.amount, currency: recipient.currency },
+      });
+    } catch (error) {
+      this.logger.error({ err: error, payoutId }, 'Payout notification not sent');
+    }
+  }
+
+  private async sendReceipt(
+    payment: PaymentForProcessing,
+    amount: string,
+    currency: string,
+  ): Promise<void> {
+    if (!payment.payer_email) return;
+    try {
+      const subject = await this.repository.bookingSubject(payment.booking_id);
+      await this.notifications.dispatchEmail({
+        to: payment.payer_email,
+        triggerKey: 'payment.succeeded',
+        vars: { amount, currency, subject: subject ?? 'lesson' },
+      });
+    } catch (error) {
+      this.logger.error({ err: error, paymentId: payment.id }, 'Receipt not sent');
+    }
+  }
 
   private async requireForProcessing(paymentId: string): Promise<PaymentForProcessing> {
     const payment = await this.repository.forProcessing(paymentId);

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { PaymentsModule } from '../payments/payments.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { AdminController } from './admin.controller';
 import { AdminRepository } from './admin.repository';
 import { AdminService } from './admin.service';
@@ -24,7 +25,7 @@ import { AdminSettingsService } from './settings/admin-settings.service';
  * admin_execute_action() or admin_cancel_booking().
  */
 @Module({
-  imports: [PaymentsModule],
+  imports: [NotificationsModule, PaymentsModule],
   controllers: [
     AdminController,
     AdminSettingsController,

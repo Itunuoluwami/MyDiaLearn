@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { NotificationsModule } from '../notifications/notifications.module';
 import { BookingsController } from './bookings.controller';
 import { BookingsRepository } from './bookings.repository';
 import { BookingsService } from './bookings.service';
@@ -12,6 +13,7 @@ import { BookingsService } from './bookings.service';
  * they cannot be raced or forgotten. See bookings.service.ts.
  */
 @Module({
+  imports: [NotificationsModule],
   controllers: [BookingsController],
   providers: [BookingsRepository, BookingsService],
   exports: [BookingsService],

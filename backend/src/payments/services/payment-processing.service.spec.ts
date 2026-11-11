@@ -3,6 +3,7 @@ import type { PinoLogger } from 'nestjs-pino';
 import type { AuditService } from '../../common/audit/audit.service';
 import type { AuthConfig } from '../../config/configuration';
 import type { PaymentGatewayService } from '../../integrations/payments/payment.service';
+import type { NotificationDispatchService } from '../../notifications/services/notification-dispatch.service';
 import type { PaymentsRepository } from '../payments.repository';
 import { PaymentProcessingService } from './payment-processing.service';
 
@@ -65,15 +66,21 @@ function setup() {
     parseWebhook: jest.fn(),
   };
   const audit = { record: jest.fn() };
+  const notifications = {
+    dispatchEmail: jest.fn().mockResolvedValue(true),
+    dispatchInApp: jest.fn().mockResolvedValue(undefined),
+    dispatch: jest.fn().mockResolvedValue({ inApp: true, email: true }),
+  };
   const logger = { setContext: jest.fn(), error: jest.fn(), warn: jest.fn(), info: jest.fn() };
   const service = new PaymentProcessingService(
     repository as unknown as PaymentsRepository,
     gateway as unknown as PaymentGatewayService,
     audit as unknown as AuditService,
+    notifications as unknown as NotificationDispatchService,
     logger as unknown as PinoLogger,
     { appUrl: 'http://localhost:8080' } as AuthConfig,
   );
-  return { service, repository, gateway, audit };
+  return { service, repository, gateway, audit, notifications };
 }
 
 describe('PaymentProcessingService', () => {

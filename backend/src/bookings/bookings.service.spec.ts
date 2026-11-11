@@ -4,6 +4,7 @@ import { AuditService } from '../common/audit/audit.service';
 import type { AppException } from '../common/exceptions/app.exception';
 import { PlatformSettingsService } from '../platform-settings/platform-settings.service';
 import { BookingsRepository } from './bookings.repository';
+import { NotificationDispatchService } from '../notifications/services/notification-dispatch.service';
 import { BookingsService, translateBookingError } from './bookings.service';
 import type { CreateBookingDto } from './dto/booking.dto';
 
@@ -15,6 +16,7 @@ describe('BookingsService', () => {
   let repository: Record<string, jest.Mock>;
   let audit: Record<string, jest.Mock>;
   let settings: Record<string, jest.Mock>;
+  let notifications: Record<string, jest.Mock>;
 
   const row = {
     id: 'b0000000-0000-4000-8000-000000000001',
@@ -60,6 +62,11 @@ describe('BookingsService', () => {
       endClass: jest.fn(),
     };
     audit = { record: jest.fn() };
+    notifications = {
+      dispatch: jest.fn().mockResolvedValue({ inApp: true, email: false }),
+      dispatchInApp: jest.fn().mockResolvedValue(undefined),
+      dispatchEmail: jest.fn().mockResolvedValue(true),
+    };
     settings = {
       minNoticeHours: jest.fn().mockResolvedValue(12),
       maxAdvanceDays: jest.fn().mockResolvedValue(60),
@@ -72,6 +79,7 @@ describe('BookingsService', () => {
         { provide: BookingsRepository, useValue: repository },
         { provide: PlatformSettingsService, useValue: settings },
         { provide: AuditService, useValue: audit },
+        { provide: NotificationDispatchService, useValue: notifications },
       ],
     }).compile();
 
@@ -192,5 +200,189 @@ describe('translateBookingError', () => {
     );
     expect(error.getStatus()).toBe(500);
     expect(error.message).not.toContain('some_internal_idx');
+  });
+});
+
+/**
+ * Who gets told, and what must never happen because of it.
+ *
+ * These exist because for a long time nothing was told at all: a tutor was not
+ * informed that someone had booked them, and a family was not informed that
+ * the lesson was on. The templates were in the database the whole time; only
+ * the calls were missing.
+ */
+describe('BookingsService notifications', () => {
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const BOOKING_ID = 'b0000000-0000-4000-8000-000000000001';
+  const TUTOR_USER = 'tu000000-0000-4000-8000-000000000001';
+  const BOOKER = 'u0000000-0000-4000-8000-000000000001';
+  const LEARNER = 'su000000-0000-4000-8000-000000000001';
+
+  const bookingRow = {
+    id: BOOKING_ID,
+    student_id: 's0000000-0000-4000-8000-000000000001',
+    tutor_id: 't0000000-0000-4000-8000-000000000001',
+    booked_by: BOOKER,
+    subject_id: null,
+    education_level_id: null,
+    starts_at: new Date(Date.now() + 3 * DAY_MS),
+    ends_at: new Date(Date.now() + 3 * DAY_MS + 3_600_000),
+    duration_minutes: 60,
+    booking_timezone: 'Africa/Lagos',
+    hourly_rate: '25.00',
+    currency: 'USD',
+    total_amount: '25.00',
+    status: 'pending',
+    student_notes: null,
+    tutor_accepted_at: null,
+    cancelled_at: null,
+    cancellation_reason: null,
+    created_at: new Date(),
+  };
+
+  const context = { ip: null, userAgent: null } as never;
+
+  function harness(overrides: Record<string, unknown> = {}) {
+    const notifications = {
+      dispatch: jest.fn().mockResolvedValue({ inApp: true, email: true }),
+      dispatchInApp: jest.fn().mockResolvedValue(undefined),
+      dispatchEmail: jest.fn().mockResolvedValue(true),
+    };
+    const repository = {
+      createWithQuote: jest.fn().mockResolvedValue(bookingRow),
+      respond: jest.fn().mockResolvedValue('confirmed'),
+      cancelByFamily: jest.fn().mockResolvedValue('cancelled'),
+      findById: jest.fn().mockResolvedValue(bookingRow),
+      notificationContext: jest.fn().mockResolvedValue({
+        id: BOOKING_ID,
+        starts_at: bookingRow.starts_at,
+        booking_timezone: 'Africa/Lagos',
+        tutor_timezone: 'Africa/Lagos',
+        total_amount: '25.00',
+        currency: 'USD',
+        subject_name: 'Physics',
+        tutor_user_id: TUTOR_USER,
+        tutor_name: 'Coach Jeje',
+        tutor_email: 'tutor@example.com',
+        student_name: 'Jam Jok',
+        student_user_id: LEARNER,
+        student_email: 'learner@example.com',
+        booker_user_id: BOOKER,
+        booker_name: 'A Parent',
+        booker_email: 'parent@example.com',
+      }),
+      ...overrides,
+    };
+    const settings = {
+      minNoticeHours: jest.fn().mockResolvedValue(1),
+      maxAdvanceDays: jest.fn().mockResolvedValue(365),
+      allowedDurations: jest.fn().mockResolvedValue([30, 60]),
+    };
+    const service = new BookingsService(
+      repository as never,
+      settings as never,
+      { record: jest.fn() } as never,
+      notifications as never,
+    );
+    return { service, repository, notifications };
+  }
+
+  it('tells the tutor when a lesson is requested', async () => {
+    const { service, notifications } = harness();
+    await service.create(
+      BOOKER,
+      {
+        studentId: bookingRow.student_id,
+        tutorId: bookingRow.tutor_id,
+        startsAt: bookingRow.starts_at.toISOString(),
+        durationMinutes: 60,
+        timezone: 'Africa/Lagos',
+      } as never,
+      context,
+    );
+
+    expect(notifications.dispatchInApp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: TUTOR_USER,
+        triggerKey: 'booking.created',
+        vars: expect.objectContaining({ student_name: 'Jam Jok', subject: 'Physics' }),
+      }),
+    );
+  });
+
+  it('a notification failure never fails the booking', async () => {
+    // The lesson is already in the database by this point. Throwing here
+    // would tell the family it did not work when it did.
+    const { service, notifications } = harness();
+    notifications.dispatchInApp.mockRejectedValue(new Error('smtp exploded'));
+
+    await expect(
+      service.create(
+        BOOKER,
+        {
+          studentId: bookingRow.student_id,
+          tutorId: bookingRow.tutor_id,
+          startsAt: bookingRow.starts_at.toISOString(),
+          durationMinutes: 60,
+          timezone: 'Africa/Lagos',
+        } as never,
+        context,
+      ),
+    ).resolves.toBeDefined();
+  });
+
+  it('tells both the booker and the learner when a lesson is confirmed', async () => {
+    const { service, notifications } = harness();
+    await service.respond(TUTOR_USER, BOOKING_ID, true, context);
+
+    const recipients = notifications.dispatch.mock.calls.map((call) => call[0].userId);
+    expect(recipients).toEqual(expect.arrayContaining([BOOKER, LEARNER]));
+    expect(notifications.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ triggerKey: 'booking.confirmed' }),
+    );
+  });
+
+  it('says nothing when accepting leaves the lesson unpaid and pending', async () => {
+    // tutor_respond_booking() returns `pending` when no payment has cleared.
+    // Announcing "confirmed" then would contradict the pay button still on
+    // the learner's screen.
+    const { service, notifications } = harness({
+      respond: jest.fn().mockResolvedValue('pending'),
+    });
+    await service.respond(TUTOR_USER, BOOKING_ID, true, context);
+
+    expect(notifications.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('says nothing when the tutor declines', async () => {
+    const { service, notifications } = harness({
+      respond: jest.fn().mockResolvedValue('rejected'),
+    });
+    await service.respond(TUTOR_USER, BOOKING_ID, false, context);
+
+    expect(notifications.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('tells the tutor when the family cancels', async () => {
+    const { service, notifications } = harness();
+    await service.cancelByFamily(BOOKER, BOOKING_ID, 'Changed our minds', context);
+
+    expect(notifications.dispatchInApp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: TUTOR_USER,
+        triggerKey: 'booking.cancelled',
+        // Left unrendered this would show a literal {{refund_note}}.
+        vars: expect.objectContaining({ refund_note: expect.any(String) }),
+      }),
+    );
+  });
+
+  it('does not notify a booking that has already gone', async () => {
+    const { service, notifications } = harness({
+      notificationContext: jest.fn().mockResolvedValue(null),
+    });
+    await service.respond(TUTOR_USER, BOOKING_ID, true, context);
+
+    expect(notifications.dispatch).not.toHaveBeenCalled();
   });
 });

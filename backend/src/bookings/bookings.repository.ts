@@ -36,6 +36,38 @@ export interface BookingRow {
   created_at: Date;
 }
 
+/**
+ * Who to tell about a booking, and what to call them.
+ *
+ * Addressing a notification is system work, not the actor's: when a tutor
+ * accepts, the person to notify is the family, and when a family books, it is
+ * the tutor. Neither can necessarily read the other's profile under RLS, so
+ * this one lookup runs on the owner connection — the same way template lookups
+ * and audit writes do.
+ */
+export interface BookingNotificationContext {
+  id: string;
+  starts_at: Date;
+  /** The timezone the family booked in. */
+  booking_timezone: string;
+  /** The tutor's own, for notices addressed to them. */
+  tutor_timezone: string;
+  total_amount: string;
+  currency: string;
+  subject_name: string | null;
+  tutor_user_id: string;
+  tutor_name: string | null;
+  tutor_email: string | null;
+  student_name: string;
+  /** The learner's own login, when they have one. */
+  student_user_id: string | null;
+  student_email: string | null;
+  /** Whoever made the booking: the learner themselves, or their parent. */
+  booker_user_id: string;
+  booker_name: string | null;
+  booker_email: string | null;
+}
+
 export interface AvailableSlot {
   starts_at: Date;
   ends_at: Date;
@@ -132,6 +164,43 @@ export class BookingsRepository extends BaseRepository {
   }
 
   /** Bookings the caller may see. RLS decides which those are. */
+  /**
+   * Both sides of a booking, for addressing notifications.
+   *
+   * Owner connection on purpose: see BookingNotificationContext. Returns null
+   * when the booking has gone, so a caller never has to guard separately.
+   */
+  async notificationContext(bookingId: string): Promise<BookingNotificationContext | null> {
+    const rows = await this.prisma.$queryRaw<BookingNotificationContext[]>`
+      select b.id,
+             b.starts_at,
+             b.booking_timezone,
+             coalesce(t.timezone, b.booking_timezone) as tutor_timezone,
+             b.total_amount::text as total_amount,
+             b.currency,
+             sub.name                  as subject_name,
+             t.profile_id              as tutor_user_id,
+             tp.full_name              as tutor_name,
+             tp.email                  as tutor_email,
+             trim(concat(s.first_name, ' ', coalesce(s.last_name, ''))) as student_name,
+             sp.id                     as student_user_id,
+             sp.email                  as student_email,
+             b.booked_by               as booker_user_id,
+             bp.full_name              as booker_name,
+             bp.email                  as booker_email
+      from public.bookings b
+      join public.tutors t          on t.id = b.tutor_id
+      join public.profiles tp       on tp.id = t.profile_id
+      join public.students s        on s.id = b.student_id
+      left join public.profiles sp  on sp.id = s.profile_id
+      left join public.profiles bp  on bp.id = b.booked_by
+      left join public.subjects sub on sub.id = b.subject_id
+      where b.id = ${bookingId}::uuid
+      limit 1
+    `;
+    return rows[0] ?? null;
+  }
+
   async list(
     userId: string,
     query: PaginationQueryDto,

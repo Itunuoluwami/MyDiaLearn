@@ -141,6 +141,32 @@ export class AdminRepository extends BaseRepository {
   }
 
   /** One progress row per (tutor, step): first review inserts, later ones update. */
+  /**
+   * The tutor behind a verification record, and the step's own name.
+   *
+   * Owner connection: the admin is not the tutor, and the notification is
+   * addressed on the system's behalf. `stepId` is optional because the overall
+   * approve and reject decisions are not about one step.
+   */
+  async verificationRecipient(
+    tutorId: string,
+    stepId?: string,
+  ): Promise<{ tutor_user_id: string; tutor_email: string | null; step_name: string | null } | null> {
+    const rows = await this.prisma.$queryRaw<
+      { tutor_user_id: string; tutor_email: string | null; step_name: string | null }[]
+    >`
+      select t.profile_id as tutor_user_id,
+             p.email       as tutor_email,
+             vs.name       as step_name
+      from public.tutors t
+      join public.profiles p on p.id = t.profile_id
+      left join public.verification_steps vs on vs.id = ${stepId ?? null}::uuid
+      where t.id = ${tutorId}::uuid
+      limit 1
+    `;
+    return rows[0] ?? null;
+  }
+
   async reviewStep(
     adminId: string,
     input: { tutorId: string; stepId: string; status: string; reviewerNotes: string | null },

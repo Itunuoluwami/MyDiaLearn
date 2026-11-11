@@ -175,6 +175,19 @@ export class GovernanceService {
     // the payment; the database has queued it in payment_refunds. Send it to
     // the provider now rather than waiting for a retry run. A provider error
     // leaves it pending — the approval itself stands.
+    // A settled payout is money leaving: the tutor should hear it from us
+    // rather than from their bank. Only once the request has executed.
+    if (result['status'] === 'executed' && result['action'] === 'payout.settle') {
+      const payload = result['payload'];
+      const payoutId =
+        payload && typeof payload === 'object'
+          ? (payload as Record<string, unknown>)['payout_id']
+          : undefined;
+      if (typeof payoutId === 'string') {
+        await this.payments.notifyPayoutSent(payoutId);
+      }
+    }
+
     if (
       result['status'] === 'executed' &&
       (result['action'] === 'payment.refund' ||
