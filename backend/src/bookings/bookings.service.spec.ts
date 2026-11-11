@@ -4,6 +4,7 @@ import { AuditService } from '../common/audit/audit.service';
 import type { AppException } from '../common/exceptions/app.exception';
 import { PlatformSettingsService } from '../platform-settings/platform-settings.service';
 import { BookingsRepository } from './bookings.repository';
+import { CLASSROOM_PROVIDER } from '../integrations/classroom/classroom.interface';
 import { NotificationDispatchService } from '../notifications/services/notification-dispatch.service';
 import { BookingsService, translateBookingError } from './bookings.service';
 import type { CreateBookingDto } from './dto/booking.dto';
@@ -80,6 +81,10 @@ describe('BookingsService', () => {
         { provide: PlatformSettingsService, useValue: settings },
         { provide: AuditService, useValue: audit },
         { provide: NotificationDispatchService, useValue: notifications },
+        {
+          provide: CLASSROOM_PROVIDER,
+          useValue: { name: 'none', isEnabled: () => false },
+        },
       ],
     }).compile();
 
@@ -278,11 +283,19 @@ describe('BookingsService notifications', () => {
       maxAdvanceDays: jest.fn().mockResolvedValue(365),
       allowedDurations: jest.fn().mockResolvedValue([30, 60]),
     };
+    const classroom = {
+      name: 'none',
+      isEnabled: () => false,
+      createSession: jest.fn(),
+      endSession: jest.fn(),
+      getRecordingUrl: jest.fn(),
+    };
     const service = new BookingsService(
       repository as never,
       settings as never,
       { record: jest.fn() } as never,
       notifications as never,
+      classroom as never,
     );
     return { service, repository, notifications };
   }

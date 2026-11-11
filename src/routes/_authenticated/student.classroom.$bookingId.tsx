@@ -1,11 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { PhoneCall, Video, Wifi, WifiOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ShieldCheck } from "lucide-react";
 
+import { ClassStage } from "@/components/classroom/ClassStage";
+import { DeviceControls } from "@/components/classroom/DeviceControls";
+import { Whiteboard } from "@/components/classroom/Whiteboard";
+import { useLocalMedia } from "@/components/classroom/use-local-media";
 import { StudentShell } from "@/components/student/StudentShell";
 import { Button } from "@/components/ui/button";
-import { useStudentBookings } from "@/lib/student-data";
-import { useStudentRecord } from "@/lib/student-data";
-import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useJoinClass, useStudentBookings } from "@/lib/student-data";
 
 export const Route = createFileRoute("/_authenticated/student/classroom/$bookingId")({
   head: () => ({
@@ -17,32 +22,63 @@ export const Route = createFileRoute("/_authenticated/student/classroom/$booking
   component: StudentClassroomPage,
 });
 
+/** How long the class has been running, from the tutor's start. */
+function elapsedLabel(from: string | null, until: string | null, now: number): string {
+  if (!from) return "Not started";
+  const end = until ? new Date(until).getTime() : now;
+  const seconds = Math.max(0, Math.floor((end - new Date(from).getTime()) / 1000));
+  const minutes = Math.floor(seconds / 60);
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
 function StudentClassroomPage() {
   const { bookingId } = Route.useParams();
-  const { data: student } = useStudentRecord();
+  const navigate = useNavigate();
+
+  // Joining is what authorizes this screen and records that the learner
+  // turned up — the page used to read a meeting URL off the bookings list,
+  // which did neither.
+  const session = useJoinClass(bookingId);
   const bookings = useStudentBookings({ statuses: ["confirmed", "in_progress"] });
+  const booking = (bookings.data ?? []).find((row) => row.id === bookingId);
 
-  const booking = (bookings.data ?? []).find((b) => b.id === bookingId);
-  const session = booking?.class_sessions?.[0];
-  const meetingUrl = session?.meeting_url;
+  const media = useLocalMedia();
+  const [handRaised, setHandRaised] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
-  const tutorName =
-    (booking as typeof booking & { tutors?: { profiles?: { full_name?: string } | null } | null })
-      ?.tutors?.profiles?.full_name ?? "Your Tutor";
-  const subjectName =
-    (booking as typeof booking & { subjects?: { name: string } | null })?.subjects?.name ?? "Class";
+  const data = session.data;
+  const live = data?.status === "in_progress" || Boolean(data?.started_at && !data.ended_at);
 
-  if (!booking && !bookings.isLoading) {
+  // Only tick while the clock is actually moving.
+  useEffect(() => {
+    if (!live) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [live]);
+
+  const subject = data?.subject_name ?? "Class";
+  const tutor = data?.tutor_name ?? "your tutor";
+
+  if (session.isLoading) {
+    return (
+      <StudentShell title="Classroom">
+        <Skeleton className="aspect-video w-full rounded-2xl" />
+      </StudentShell>
+    );
+  }
+
+  if (session.isError || !data) {
     return (
       <StudentShell title="Classroom">
         <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card py-20 text-center">
           <span className="text-6xl">🚫</span>
-          <p className="text-xl font-extrabold text-foreground">Class not found</p>
-          <p className="text-sm text-muted-foreground">
-            This class may not exist or hasn't started yet.
+          <p className="text-xl font-extrabold text-foreground">You can't open this class</p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Only the learner and the family on this booking can join, and the lesson has to be
+            confirmed first.
           </p>
           <Button asChild variant="outline" className="min-h-11 rounded-xl">
-            <Link to="/student/dashboard">Back to Dashboard</Link>
+            <Link to="/student/dashboard">Back to dashboard</Link>
           </Button>
         </div>
       </StudentShell>
@@ -50,108 +86,97 @@ function StudentClassroomPage() {
   }
 
   return (
-    <StudentShell title={`📡 ${subjectName}`} description={`Live class with ${tutorName}`}>
-      <div className="max-w-4xl space-y-5">
-        {/* Live Indicator */}
-        <div className="flex items-center gap-3 rounded-2xl bg-primary p-4 text-primary-foreground">
-          <div className="flex size-10 items-center justify-center rounded-full bg-white/20">
-            <Video className="size-5" />
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest opacity-75">Live Now</p>
-            <p className="font-extrabold">
-              {subjectName} with {tutorName}
-            </p>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="relative flex size-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-60" />
-              <span className="relative inline-flex size-3 rounded-full bg-white" />
-            </span>
-            <span className="text-sm font-bold">LIVE</span>
-          </div>
-        </div>
+    <StudentShell title={`📡 ${subject}`} description={`Live class with ${tutor}`}>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="min-w-0 space-y-4">
+          <ClassStage
+            meetingUrl={data.meeting_url}
+            live={live}
+            elapsed={elapsedLabel(data.started_at, data.ended_at, now)}
+            media={media}
+            selfLabel="You"
+          />
 
-        {/* Video Area */}
-        <div
-          className={cn(
-            "relative overflow-hidden rounded-3xl border-2 border-primary/30 bg-gradient-to-br from-primary-deep via-primary to-secondary aspect-video w-full shadow-xl",
-          )}
-        >
-          {meetingUrl ? (
-            <iframe
-              src={meetingUrl}
-              title="Live class"
-              allow="camera; microphone; fullscreen; speaker-selection"
-              className="absolute inset-0 h-full w-full border-0"
+          <div className="overflow-hidden rounded-2xl border border-border bg-ink shadow-soft">
+            <DeviceControls
+              media={media}
+              handRaised={handRaised}
+              onToggleHand={() => setHandRaised((value) => !value)}
+              onLeave={() => {
+                media.stopAll();
+                void navigate({ to: "/student/dashboard" });
+              }}
+              leaveLabel="Leave class"
             />
-          ) : (
-            /* Placeholder UI for MVP */
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-white">
-              <div className="flex size-24 items-center justify-center rounded-full bg-white/10 backdrop-blur">
-                <Video className="size-12 text-white" />
-              </div>
-              <p className="text-2xl font-extrabold">Waiting for your tutor…</p>
-              <p className="text-sm opacity-75">The class will begin shortly.</p>
-              <div className="mt-2 flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur">
-                <Wifi className="size-4" />
-                <span className="text-sm font-semibold">Connection ready</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Controls */}
-        <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-border bg-card p-4">
-          <ControlBtn icon={Video} label="Camera" active />
-          <ControlBtn icon={PhoneCall} label="Microphone" active />
-          <ControlBtn icon={Wifi} label="Connection" active />
-          <Button
-            asChild
-            variant="outline"
-            className="ml-auto min-h-11 rounded-xl border-destructive/40 text-destructive hover:bg-destructive/10"
-          >
-            <Link to="/student/dashboard">Leave Class</Link>
-          </Button>
-        </div>
-
-        {/* Homework / Notes from tutor if available */}
-        {session?.homework && (
-          <div className="rounded-2xl border border-secondary/30 bg-secondary/10 p-4">
-            <p className="mb-1 text-xs font-extrabold uppercase tracking-widest text-secondary-foreground">
-              Homework from last session
-            </p>
-            <p className="text-sm text-foreground">{session.homework}</p>
           </div>
-        )}
+
+          {!live ? (
+            <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
+              Your tutor hasn't started the class yet. You can turn your camera on and check how you
+              look while you wait — this page updates on its own when they begin.
+            </div>
+          ) : null}
+
+          <p className="flex items-start gap-2 rounded-xl bg-surface/70 p-3 text-xs text-muted-foreground">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+            Only you and your tutor can open this room, and your attendance is recorded against the
+            lesson.
+          </p>
+        </div>
+
+        <div className="min-w-0">
+          <Tabs defaultValue="whiteboard">
+            <TabsList className="w-full">
+              <TabsTrigger value="whiteboard" className="min-h-11 flex-1">
+                Whiteboard
+              </TabsTrigger>
+              <TabsTrigger value="lesson" className="min-h-11 flex-1">
+                Lesson
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="whiteboard" className="mt-4">
+              <Whiteboard />
+            </TabsContent>
+
+            <TabsContent value="lesson" className="mt-4">
+              <div className="card-elevated space-y-3 p-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Subject
+                  </p>
+                  <p className="mt-1 text-sm">{subject}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Tutor
+                  </p>
+                  <p className="mt-1 text-sm">{tutor}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Planned length
+                  </p>
+                  <p className="mt-1 text-sm">{data.duration_minutes} minutes</p>
+                </div>
+                {booking?.class_sessions?.[0]?.homework ? (
+                  <div className="rounded-xl border border-secondary/30 bg-secondary/10 p-3">
+                    <p className="text-xs font-extrabold uppercase tracking-widest text-secondary-foreground">
+                      Homework from last session
+                    </p>
+                    <p className="mt-1 text-sm text-foreground">
+                      {booking.class_sessions[0].homework}
+                    </p>
+                  </div>
+                ) : null}
+                <Button asChild variant="outline" className="min-h-11 w-full rounded-xl">
+                  <Link to="/student/materials">Open my assignments</Link>
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </StudentShell>
-  );
-}
-
-function ControlBtn({
-  icon: Icon,
-  label,
-  active,
-}: {
-  icon: React.ElementType;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <button
-        type="button"
-        className={cn(
-          "flex size-12 items-center justify-center rounded-full border-2 transition-all",
-          active
-            ? "border-primary bg-primary/10 text-primary hover:bg-primary/20"
-            : "border-muted bg-muted text-muted-foreground",
-        )}
-      >
-        <Icon className="size-5" />
-      </button>
-      <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-    </div>
   );
 }

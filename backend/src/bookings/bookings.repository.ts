@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { BaseRepository } from '../database/repositories/base.repository';
 import type { PaginationQueryDto } from '../shared/query.dto';
-import { NotAuthorizedError } from '../common/exceptions/app.exception';
+import { ConflictError, NotAuthorizedError } from '../common/exceptions/app.exception';
 
 export interface BookingRow {
   id: string;
@@ -338,6 +338,86 @@ export class BookingsRepository extends BaseRepository {
       `;
       return rows[0] ?? null;
     });
+  }
+
+  /**
+   * The classroom as a family member sees it, marking them present.
+   *
+   * The tutor has `tutor_open_class()`; the family had nothing, and the student
+   * screen read `meeting_url` off the booking list instead. That meant no
+   * authorization of its own, no session row when the tutor had not opened one,
+   * and nowhere to record that the learner turned up — so `student_attended`
+   * stayed null however many lessons were taught.
+   *
+   * `can_access_booking()` is the same check the row-level security policies
+   * use, so a parent, the learner and the tutor all pass and nobody else does.
+   */
+  async joinClass(userId: string, bookingId: string): Promise<Record<string, unknown> | null> {
+    return this.prisma.withUser(userId, async (tx) => {
+      const allowed = await tx.$queryRaw<{ ok: boolean }[]>`
+        select public.can_access_booking(${bookingId}::uuid) as ok
+      `;
+      if (!allowed[0]?.ok) throw new NotAuthorizedError('That class is not yours to join.');
+
+      const ready = await tx.$queryRaw<{ status: string }[]>`
+        select status::text from public.bookings where id = ${bookingId}::uuid
+      `;
+      const status = ready[0]?.status;
+      if (!status) return null;
+      if (!['confirmed', 'in_progress', 'completed'].includes(status)) {
+        throw new ConflictError('This lesson is not confirmed yet.');
+      }
+
+      // The tutor may not have opened the room yet; the learner arriving first
+      // is normal and should not be an error.
+      await tx.$executeRaw`
+        insert into public.class_sessions (booking_id, status)
+        -- class_sessions.status is booking_status, mirroring the booking.
+        select ${bookingId}::uuid, ${status}::public.booking_status
+        where not exists (
+          select 1 from public.class_sessions where booking_id = ${bookingId}::uuid
+        )
+      `;
+      await tx.$executeRaw`
+        update public.class_sessions
+           set student_attended = true, updated_at = now()
+         where booking_id = ${bookingId}::uuid
+      `;
+
+      const rows = await tx.$queryRaw<Record<string, unknown>[]>`
+        select cs.id, cs.meeting_url, cs.meeting_provider, cs.started_at, cs.ended_at,
+               cs.status::text as status,
+               b.starts_at, b.ends_at, b.duration_minutes,
+               sub.name as subject_name,
+               tp.full_name as tutor_name
+        from public.class_sessions cs
+        join public.bookings b       on b.id = cs.booking_id
+        join public.tutors t         on t.id = b.tutor_id
+        join public.profiles tp      on tp.id = t.profile_id
+        left join public.subjects sub on sub.id = b.subject_id
+        where cs.booking_id = ${bookingId}::uuid
+        limit 1
+      `;
+      return rows[0] ?? null;
+    });
+  }
+
+  /**
+   * Records the room a provider handed back.
+   *
+   * Owner connection: provisioning happens on the system's behalf when the
+   * tutor opens the class, and the columns were designed for exactly this.
+   */
+  async setMeetingRoom(
+    bookingId: string,
+    meetingUrl: string,
+    provider: string,
+  ): Promise<void> {
+    await this.prisma.$executeRaw`
+      update public.class_sessions
+         set meeting_url = ${meetingUrl}, meeting_provider = ${provider}, updated_at = now()
+       where booking_id = ${bookingId}::uuid
+    `;
   }
 
   async startClass(tutorUserId: string, bookingId: string): Promise<void> {

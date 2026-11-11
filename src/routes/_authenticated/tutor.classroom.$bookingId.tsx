@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Circle,
@@ -26,6 +26,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ClassStage } from "@/components/classroom/ClassStage";
+import { DeviceControls } from "@/components/classroom/DeviceControls";
+import { Whiteboard } from "@/components/classroom/Whiteboard";
+import { useLocalMedia } from "@/components/classroom/use-local-media";
 import { formatDayInZone, formatTimeInZone } from "@/lib/parent-data";
 import { useTutorBookings, useTutorTimezone } from "@/lib/tutor-data";
 import {
@@ -77,8 +81,11 @@ function ClassroomPage() {
   const startClass = useStartClass();
   const endClass = useEndClass();
   const [now, setNow] = useState(() => Date.now());
-  const [micOn, setMicOn] = useState(true);
-  const [cameraOn, setCameraOn] = useState(true);
+  // Real devices, not just button state: the mic and camera buttons open the
+  // tutor's own hardware so they can check framing before the learner arrives.
+  const navigate = useNavigate();
+  const media = useLocalMedia();
+  const [handRaised, setHandRaised] = useState(false);
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
@@ -135,137 +142,64 @@ function ClassroomPage() {
       ) : (
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="min-w-0 space-y-4">
+            <ClassStage
+              meetingUrl={data.meeting_url ?? null}
+              live={live}
+              elapsed={elapsedLabel(data.started_at, data.ended_at, now)}
+              media={media}
+              selfLabel="You"
+            />
+
             <div className="overflow-hidden rounded-2xl border border-border bg-ink shadow-soft">
-              <div className="relative aspect-video w-full">
-                <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_30%_20%,rgba(30,95,116,0.55),transparent_60%),radial-gradient(circle_at_75%_80%,rgba(242,166,90,0.35),transparent_55%)]">
-                  <div className="px-6 text-center">
-                    <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-card/15 text-card">
-                      <Video className="size-7" aria-hidden="true" />
-                    </span>
-                    <p className="mt-4 text-sm font-semibold text-card">
-                      {live ? "Class in progress" : "Video area"}
-                    </p>
-                    <p className="mx-auto mt-1 max-w-sm text-xs text-card/70">
-                      {data.meeting_url
-                        ? "Your meeting room is ready. Open it to join the live video call."
-                        : "Live video is being connected for DiaLearn classes. Use this room for the lesson timer, chat and notes in the meantime."}
-                    </p>
-                    {data.meeting_url ? (
-                      <Button asChild variant="cta" size="sm" className="mt-4 min-h-11 sm:min-h-10">
-                        <a href={data.meeting_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="size-4" /> Open meeting room
-                        </a>
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="absolute left-3 top-3 flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
-                      live ? "bg-destructive text-destructive-foreground" : "bg-card/20 text-card",
-                    )}
-                  >
-                    <Circle
-                      className={cn("size-2 fill-current", live && "animate-pulse")}
-                      aria-hidden="true"
-                    />
-                    {live ? "Live" : "Standby"}
-                  </span>
-                  <span className="rounded-full bg-card/20 px-2.5 py-1 text-xs font-semibold tabular-nums text-card">
-                    {elapsedLabel(data.started_at, data.ended_at, now)}
-                  </span>
-                </div>
-
-                <div className="absolute bottom-3 right-3 hidden w-40 overflow-hidden rounded-xl border border-card/20 bg-card/10 sm:block">
-                  <div className="aspect-video grid place-items-center text-xs font-medium text-card/70">
-                    You
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-card/10 bg-ink p-3">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="min-h-11 min-w-11 text-card hover:bg-card/15 hover:text-card"
-                    aria-label={micOn ? "Mute microphone" : "Unmute microphone"}
-                    aria-pressed={micOn}
-                    onClick={() => setMicOn((value) => !value)}
-                  >
-                    {micOn ? <Mic className="size-5" /> : <MicOff className="size-5" />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="min-h-11 min-w-11 text-card hover:bg-card/15 hover:text-card"
-                    aria-label={cameraOn ? "Turn camera off" : "Turn camera on"}
-                    aria-pressed={cameraOn}
-                    onClick={() => setCameraOn((value) => !value)}
-                  >
-                    {cameraOn ? <Video className="size-5" /> : <VideoOff className="size-5" />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="min-h-11 min-w-11 text-card hover:bg-card/15 hover:text-card"
-                    aria-label="Share your screen"
-                  >
-                    <MonitorUp className="size-5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="min-h-11 min-w-11 text-card hover:bg-card/15 hover:text-card"
-                    aria-label="Raise hand"
-                  >
-                    <Hand className="size-5" />
-                  </Button>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  {live ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="min-h-11 sm:min-h-10"
-                        disabled={endClass.isPending}
-                        onClick={() => void handleEnd(false)}
-                      >
-                        Learner didn't join
-                      </Button>
-                      <Button
-                        variant="cta"
-                        size="sm"
-                        className="min-h-11 sm:min-h-10"
-                        disabled={endClass.isPending}
-                        onClick={() => void handleEnd(true)}
-                      >
-                        <Square className="size-4" /> End class
-                      </Button>
-                    </>
-                  ) : data.status === "completed" ? (
-                    <Button asChild variant="cta" size="sm" className="min-h-11 sm:min-h-10">
-                      <Link to="/tutor/notes/$bookingId" params={{ bookingId }}>
-                        <NotebookPen className="size-4" /> Lesson notes
-                      </Link>
+              <DeviceControls
+                media={media}
+                handRaised={handRaised}
+                onToggleHand={() => setHandRaised((value) => !value)}
+                onLeave={() => {
+                  media.stopAll();
+                  void navigate({ to: "/tutor/classes" });
+                }}
+                leaveLabel="Leave room"
+              >
+                {live ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-h-11 sm:min-h-10"
+                      disabled={endClass.isPending}
+                      onClick={() => void handleEnd(false)}
+                    >
+                      Learner didn't join
                     </Button>
-                  ) : (
                     <Button
                       variant="cta"
                       size="sm"
                       className="min-h-11 sm:min-h-10"
-                      disabled={startClass.isPending}
-                      onClick={() => void handleStart()}
+                      disabled={endClass.isPending}
+                      onClick={() => void handleEnd(true)}
                     >
-                      <Circle className="size-4 fill-current" /> Start class
+                      <Square className="size-4" /> End class
                     </Button>
-                  )}
-                </div>
-              </div>
+                  </>
+                ) : data.status === "completed" ? (
+                  <Button asChild variant="cta" size="sm" className="min-h-11 sm:min-h-10">
+                    <Link to="/tutor/notes/$bookingId" params={{ bookingId }}>
+                      <NotebookPen className="size-4" /> Lesson notes
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="cta"
+                    size="sm"
+                    className="min-h-11 sm:min-h-10"
+                    disabled={startClass.isPending}
+                    onClick={() => void handleStart()}
+                  >
+                    <Circle className="size-4 fill-current" /> Start class
+                  </Button>
+                )}
+              </DeviceControls>
             </div>
 
             <SectionCard
@@ -330,28 +264,7 @@ function ClassroomPage() {
               </TabsContent>
 
               <TabsContent value="whiteboard" className="mt-4">
-                <div className="card-elevated p-4">
-                  <div className="grid aspect-square place-items-center rounded-xl border border-dashed border-border bg-[linear-gradient(0deg,var(--color-border)_1px,transparent_1px),linear-gradient(90deg,var(--color-border)_1px,transparent_1px)] bg-[length:24px_24px] p-6 text-center">
-                    <div>
-                      <span className="mx-auto flex size-11 items-center justify-center rounded-xl bg-primary-soft text-primary-deep">
-                        <PenLine className="size-5" aria-hidden="true" />
-                      </span>
-                      <p className="mt-3 text-sm font-semibold">Shared whiteboard</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Collaborative drawing arrives with live video. Share files from your library
-                        in the meantime.
-                      </p>
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        className="mt-4 min-h-11 sm:min-h-10"
-                      >
-                        <Link to="/tutor/resources">Open materials</Link>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                <Whiteboard />
               </TabsContent>
 
               <TabsContent value="people" className="mt-4">

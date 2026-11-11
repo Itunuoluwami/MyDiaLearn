@@ -497,3 +497,46 @@ export function formatTimeInZone(iso: string | null | undefined, tz: string | nu
     return new Date(iso).toLocaleTimeString();
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Live classroom                                                      */
+/* ------------------------------------------------------------------ */
+
+/** The classroom as the family side sees it, from `/bookings/:id/class/join`. */
+export interface ClassroomSession {
+  id: string;
+  meeting_url: string | null;
+  meeting_provider: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  status: string;
+  starts_at: string;
+  ends_at: string;
+  duration_minutes: number;
+  subject_name: string | null;
+  tutor_name: string | null;
+}
+
+/**
+ * Joins the lesson, which is also how the learner's attendance is recorded.
+ *
+ * The student screen used to read `meeting_url` off the bookings list, which
+ * meant no authorization of its own and no record that the learner turned up.
+ * The endpoint checks the same `can_access_booking()` the row-level security
+ * policies use, so a parent, the learner and nobody else may open it.
+ *
+ * Joining is idempotent — arriving twice is normal — so this is a query rather
+ * than something the screen has to fire exactly once.
+ */
+export function useJoinClass(bookingId: string | undefined) {
+  return useQuery({
+    queryKey: ["class-join", bookingId],
+    enabled: Boolean(bookingId),
+    // The room's state changes while the page is open: the tutor starts the
+    // class, or a provider room appears.
+    refetchInterval: 30_000,
+    queryFn: async (): Promise<ClassroomSession> => {
+      return apiPost<ClassroomSession>(`/bookings/${bookingId}/class/join`, {});
+    },
+  });
+}

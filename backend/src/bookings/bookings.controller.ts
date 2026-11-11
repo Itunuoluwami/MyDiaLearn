@@ -144,6 +144,20 @@ export class BookingsController {
     return this.bookings.openClass(user.id, id);
   }
 
+  /**
+   * The family's way in. Not `@Roles('tutor')`: a learner with their own login
+   * and the parent who booked both belong in the room, and which of them it is
+   * `can_access_booking()` decides, not a role.
+   */
+  @Post(':id/class/join')
+  @HttpCode(HttpStatus.OK)
+  async joinClass(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ): Promise<Record<string, unknown>> {
+    return this.bookings.joinClass(user.id, id);
+  }
+
   @Post(':id/class/start')
   @Roles('tutor')
   @HttpCode(HttpStatus.NO_CONTENT)

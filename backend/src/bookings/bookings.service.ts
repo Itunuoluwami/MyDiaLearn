@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
 import { AuditService, type AuditContext } from '../common/audit/audit.service';
 import {
@@ -8,6 +8,10 @@ import {
   NotFoundError,
 } from '../common/exceptions/app.exception';
 import { translateDatabaseError } from '../common/exceptions/database-errors';
+import {
+  CLASSROOM_PROVIDER,
+  type ClassroomProvider,
+} from '../integrations/classroom/classroom.interface';
 import { NotificationDispatchService } from '../notifications/services/notification-dispatch.service';
 import { PlatformSettingsService } from '../platform-settings/platform-settings.service';
 import { paginate, type Paginated, type PaginationQueryDto } from '../shared/query.dto';
@@ -56,6 +60,7 @@ export class BookingsService {
     private readonly settings: PlatformSettingsService,
     private readonly audit: AuditService,
     private readonly notifications: NotificationDispatchService,
+    @Inject(CLASSROOM_PROVIDER) private readonly classroom: ClassroomProvider,
   ) {}
 
   /**
@@ -404,9 +409,54 @@ export class BookingsService {
     });
   }
 
+  /**
+   * The tutor's classroom, provisioning a room the first time it is opened.
+   *
+   * `tutor_open_class()` creates the session row; this adds the only part that
+   * needs the outside world. When a video provider is configured and the
+   * session has no room yet, one is created and written to the columns that
+   * were always meant to hold it. When none is configured — today's case — the
+   * room stays null and both classrooms fall back to their own controls, which
+   * is why `isEnabled()` exists rather than a thrown error on a normal path.
+   *
+   * Provisioning never fails opening the class: a tutor with a lesson starting
+   * needs the room, the timer and the chat more than they need a video link.
+   */
   async openClass(tutorUserId: string, bookingId: string): Promise<Record<string, unknown>> {
     const session = await this.repository.openClass(tutorUserId, bookingId);
-    if (!session) throw new NotFoundError('Class session');
+    if (!session) throw new NotFoundError('Class');
+
+    if (!this.classroom.isEnabled() || session['meeting_url']) return session;
+
+    try {
+      const room = await this.classroom.createSession({
+        bookingId,
+        startsAt: new Date(String(session['starts_at'])),
+        durationMinutes: Number(session['duration_minutes'] ?? 60),
+        hostName: String(session['tutor_name'] ?? 'DiaLearn tutor'),
+        ...(session['subject_name'] ? { subject: String(session['subject_name']) } : {}),
+      });
+      await this.repository.setMeetingRoom(bookingId, room.joinUrl, room.provider);
+      return {
+        ...session,
+        meeting_url: room.hostUrl ?? room.joinUrl,
+        meeting_provider: room.provider,
+      };
+    } catch {
+      // Logged by the provider. The lesson goes ahead without a video room.
+      return session;
+    }
+  }
+
+  /**
+   * The same classroom for the family side, which had no endpoint at all.
+   *
+   * A learner or parent opening this is also how `student_attended` gets set —
+   * the tutor confirms it at the end, but nobody was recording the arrival.
+   */
+  async joinClass(userId: string, bookingId: string): Promise<Record<string, unknown>> {
+    const session = await this.repository.joinClass(userId, bookingId);
+    if (!session) throw new NotFoundError('Class');
     return session;
   }
 
@@ -446,6 +496,12 @@ export class BookingsService {
       context,
       metadata: { studentAttended: studentAttended ?? null },
     });
+
+    // Tear the provider's room down so a finished lesson's link stops working.
+    // Never fails ending the class: the booking is already completed.
+    if (this.classroom.isEnabled()) {
+      await this.classroom.endSession(bookingId).catch(() => undefined);
+    }
   }
 
   /**
