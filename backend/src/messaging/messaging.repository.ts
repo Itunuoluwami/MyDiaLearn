@@ -96,6 +96,28 @@ export class MessagingRepository extends BaseRepository {
    * than by a check here. last_message_at is bumped in the same transaction so
    * the conversation list re-sorts correctly.
    */
+  /**
+   * Everyone in a conversation except the sender, with somewhere to email.
+   *
+   * notify_message_received() already raises the in-app notice for each of
+   * them, so this addresses the email half only. Owner connection: a
+   * participant cannot necessarily read another's profile under RLS.
+   */
+  async messageRecipients(
+    conversationId: string,
+    senderId: string,
+  ): Promise<{ email: string; sender_name: string | null }[]> {
+    return this.prisma.$queryRaw<{ email: string; sender_name: string | null }[]>`
+      select p.email,
+             (select full_name from public.profiles where id = ${senderId}::uuid) as sender_name
+      from public.conversation_participants cp
+      join public.profiles p on p.id = cp.user_id
+      where cp.conversation_id = ${conversationId}::uuid
+        and cp.user_id <> ${senderId}::uuid
+        and p.email is not null
+    `;
+  }
+
   async sendMessage(
     userId: string,
     input: {

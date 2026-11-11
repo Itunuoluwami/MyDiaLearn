@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 import { TeachingController } from './teaching.controller';
 import { TeachingRepository } from './teaching.repository';
@@ -17,6 +18,7 @@ import { TeachingService } from './teaching.service';
  * no notification is raised in application code.
  */
 @Module({
+  imports: [NotificationsModule],
   controllers: [TeachingController],
   providers: [TeachingRepository, TeachingService],
   exports: [TeachingService],

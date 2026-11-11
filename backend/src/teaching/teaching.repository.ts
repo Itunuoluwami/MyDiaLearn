@@ -232,6 +232,40 @@ export class TeachingRepository extends BaseRepository {
     });
   }
 
+  /**
+   * Where to email the learner about an assignment, and who set it.
+   *
+   * The assignments_notify trigger already raises the in-app notice, so this
+   * exists only to address the email half. Owner connection: the tutor cannot
+   * necessarily read the learner's profile under RLS, and the address is used
+   * by the system rather than shown to them. Null email when the learner has
+   * no login of their own — a parent-managed child — in which case nothing is
+   * sent and the in-app notice stands alone.
+   */
+  async assignmentRecipient(assignmentId: string): Promise<{
+    student_email: string | null;
+    tutor_name: string | null;
+    title: string;
+    due_at: Date | null;
+  } | null> {
+    const rows = await this.prisma.$queryRaw<
+      { student_email: string | null; tutor_name: string | null; title: string; due_at: Date | null }[]
+    >`
+      select sp.email      as student_email,
+             tp.full_name  as tutor_name,
+             a.title,
+             a.due_at
+      from public.assignments a
+      join public.students s       on s.id = a.student_id
+      left join public.profiles sp on sp.id = s.profile_id
+      join public.tutors t         on t.id = a.tutor_id
+      join public.profiles tp      on tp.id = t.profile_id
+      where a.id = ${assignmentId}::uuid
+      limit 1
+    `;
+    return rows[0] ?? null;
+  }
+
   async createAssignment(
     tutorUserId: string,
     input: {

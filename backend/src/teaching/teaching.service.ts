@@ -5,6 +5,7 @@ import {
   STORAGE_PROVIDER,
   type StorageProvider,
 } from '../integrations/storage/storage.interface';
+import { NotificationDispatchService } from '../notifications/services/notification-dispatch.service';
 import { paginate, type Paginated, type PaginationQueryDto } from '../shared/query.dto';
 import type {
   AssignmentResponse,
@@ -30,8 +31,36 @@ import {
 export class TeachingService {
   constructor(
     private readonly repository: TeachingRepository,
+    private readonly notifications: NotificationDispatchService,
     @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
   ) {}
+
+  /**
+   * The email half of "your tutor set you homework".
+   *
+   * The in-app half is raised by the assignments_notify trigger in the
+   * database, so only email is sent here — dispatching both would show the
+   * learner the same thing twice. Best-effort: homework that has been set
+   * stays set whether or not the mail goes out.
+   */
+  private async emailAssignment(assignmentId: string): Promise<void> {
+    try {
+      const recipient = await this.repository.assignmentRecipient(assignmentId);
+      if (!recipient?.student_email) return;
+      await this.notifications.dispatchEmail({
+        to: recipient.student_email,
+        triggerKey: 'assignment.assigned',
+        vars: {
+          title: recipient.title,
+          tutor_name: recipient.tutor_name ?? 'Your tutor',
+          // The in-app template says the same when there is no date.
+          due_at: recipient.due_at ? recipient.due_at.toISOString().slice(0, 10) : 'soon',
+        },
+      });
+    } catch {
+      // Already logged by the dispatcher; never fails setting the homework.
+    }
+  }
 
   // --- Lesson notes ----------------------------------------------------------
 
@@ -77,9 +106,11 @@ export class TeachingService {
     tutorUserId: string,
     input: Parameters<TeachingRepository['createAssignment']>[1],
   ): Promise<AssignmentResponse> {
-    // The assignments_notify trigger notifies the family, so no notification is
-    // raised here. Not audited: setting homework is routine, not sensitive.
-    return toAssignment(await this.repository.createAssignment(tutorUserId, input));
+    // The assignments_notify trigger raises the in-app notice; only the email
+    // half is sent from here. Not audited: setting homework is routine.
+    const row = await this.repository.createAssignment(tutorUserId, input);
+    if (row.status === 'assigned') await this.emailAssignment(row.id);
+    return toAssignment(row);
   }
 
   async submitAssignment(
@@ -119,6 +150,8 @@ export class TeachingService {
     const row = await this.repository.assignDraft(tutorUserId, id);
     // Missing, not the caller's, or no longer a draft: none can be assigned.
     if (!row) throw new NotFoundError('Draft assignment');
+    // A draft becoming assigned is the moment the learner first hears of it.
+    await this.emailAssignment(row.id);
     return toAssignment(row);
   }
 

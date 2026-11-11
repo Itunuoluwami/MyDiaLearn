@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 import { MessagingController } from './messaging.controller';
 import { MessagingRepository } from './messaging.repository';
@@ -12,6 +13,7 @@ import { MessagingService } from './messaging.service';
  * membership, enforced by in_conversation() through the table policies.
  */
 @Module({
+  imports: [NotificationsModule],
   controllers: [MessagingController],
   providers: [MessagingRepository, MessagingService],
   exports: [MessagingService],

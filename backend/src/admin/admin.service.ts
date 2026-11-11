@@ -40,9 +40,10 @@ export class AdminService {
     try {
       const recipient = await this.repository.verificationRecipient(tutorId, stepId);
       if (!recipient) return;
-      await this.notifications.dispatchInApp({
+      await this.notifications.dispatch({
         actorId: adminId,
         userId: recipient.tutor_user_id,
+        ...(recipient.tutor_email ? { email: recipient.tutor_email } : {}),
         triggerKey,
         vars: { step_name: recipient.step_name ?? 'verification', ...vars },
         link: '/tutor/verification',

@@ -301,9 +301,11 @@ describe('BookingsService notifications', () => {
       context,
     );
 
-    expect(notifications.dispatchInApp).toHaveBeenCalledWith(
+    expect(notifications.dispatch).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: TUTOR_USER,
+        // Both channels: a tutor not looking at the app still needs to know.
+        email: 'tutor@example.com',
         triggerKey: 'booking.created',
         vars: expect.objectContaining({ student_name: 'Jam Jok', subject: 'Physics' }),
       }),
@@ -314,7 +316,7 @@ describe('BookingsService notifications', () => {
     // The lesson is already in the database by this point. Throwing here
     // would tell the family it did not work when it did.
     const { service, notifications } = harness();
-    notifications.dispatchInApp.mockRejectedValue(new Error('smtp exploded'));
+    notifications.dispatch.mockRejectedValue(new Error('smtp exploded'));
 
     await expect(
       service.create(
@@ -367,9 +369,10 @@ describe('BookingsService notifications', () => {
     const { service, notifications } = harness();
     await service.cancelByFamily(BOOKER, BOOKING_ID, 'Changed our minds', context);
 
-    expect(notifications.dispatchInApp).toHaveBeenCalledWith(
+    expect(notifications.dispatch).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: TUTOR_USER,
+        email: 'tutor@example.com',
         triggerKey: 'booking.cancelled',
         // Left unrendered this would show a literal {{refund_note}}.
         vars: expect.objectContaining({ refund_note: expect.any(String) }),

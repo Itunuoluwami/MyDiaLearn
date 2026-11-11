@@ -133,9 +133,10 @@ export class BookingsService {
     await this.notifySafely(async () => {
       const ctx = await this.repository.notificationContext(row.id);
       if (!ctx) return;
-      await this.notifications.dispatchInApp({
+      await this.notifications.dispatch({
         actorId: callerId,
         userId: ctx.tutor_user_id,
+        ...(ctx.tutor_email ? { email: ctx.tutor_email } : {}),
         triggerKey: 'booking.created',
         vars: {
           student_name: ctx.student_name,
@@ -341,9 +342,10 @@ export class BookingsService {
     await this.notifySafely(async () => {
       const ctx = await this.repository.notificationContext(bookingId);
       if (!ctx) return;
-      await this.notifications.dispatchInApp({
+      await this.notifications.dispatch({
         actorId: userId,
         userId: ctx.tutor_user_id,
+        ...(ctx.tutor_email ? { email: ctx.tutor_email } : {}),
         triggerKey: 'booking.cancelled',
         vars: {
           ...BookingsService.describe(ctx, ctx.tutor_timezone),

@@ -34,11 +34,17 @@ export const EMAIL_TRIGGERS = [
   'account.welcome',
   'account.email_verification',
   'account.password_reset',
+  'booking.created',
   'booking.confirmed',
+  'booking.cancelled',
   'booking.reminder',
+  'assignment.assigned',
+  'message.received',
   'payment.succeeded',
   'payout.sent',
   'tutor.verification_updated',
+  'tutor.verification_approved',
+  'tutor.verification_rejected',
   'admin.invitation',
   'agency.tutor_invite',
 ] as const;
@@ -120,6 +126,63 @@ export const TEMPLATE_FALLBACKS: Record<EmailTrigger, TemplateDefinition> = {
     ],
     action: { label: 'View booking', urlVar: 'booking_url' },
     variables: ['tutor_name', 'subject', 'student_name', 'starts_at'],
+  },
+
+  'booking.created': {
+    subject: 'New lesson request from {{student_name}}',
+    heading: 'You have a new lesson request',
+    paragraphs: [
+      '{{student_name}} has asked for a {{subject}} lesson on {{starts_at}}.',
+      'Accept or decline it from your classes page.',
+    ],
+    action: { label: 'Open my classes', urlVar: 'classes_url' },
+    variables: ['student_name', 'subject', 'starts_at'],
+  },
+
+  'booking.cancelled': {
+    subject: 'A lesson was cancelled',
+    heading: 'A lesson was cancelled',
+    paragraphs: ['The {{subject}} lesson on {{starts_at}} was cancelled.', '{{refund_note}}'],
+    variables: ['subject', 'starts_at', 'refund_note'],
+  },
+
+  'assignment.assigned': {
+    subject: 'New assignment: {{title}}',
+    heading: 'You have new homework',
+    paragraphs: ['{{tutor_name}} assigned "{{title}}".', 'Due {{due_at}}.'],
+    action: { label: 'Open the assignment', urlVar: 'assignment_url' },
+    variables: ['title', 'tutor_name', 'due_at'],
+  },
+
+  'message.received': {
+    subject: 'New message from {{sender_name}}',
+    heading: 'You have a new message',
+    paragraphs: ['{{sender_name}} sent you a message:', '{{preview}}'],
+    action: { label: 'Reply on DiaLearn', urlVar: 'messages_url' },
+    footerNote: 'Replies stay on DiaLearn so there is always a record.',
+    variables: ['sender_name', 'preview'],
+  },
+
+  'tutor.verification_approved': {
+    subject: "You're verified",
+    heading: "You're verified",
+    paragraphs: [
+      'Your profile has been approved.',
+      "You're now listed in tutor search and families can book you.",
+    ],
+    action: { label: 'Open my profile', urlVar: 'profile_url' },
+    variables: [],
+  },
+
+  'tutor.verification_rejected': {
+    subject: 'Your verification needs changes',
+    heading: 'Your verification needs changes',
+    paragraphs: [
+      'Our team reviewed your profile and needs some changes before approving it.',
+      'Open your verification page to see what to fix, then submit again.',
+    ],
+    action: { label: 'See what to fix', urlVar: 'verification_url' },
+    variables: [],
   },
 
   'booking.reminder': {
