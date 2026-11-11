@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -31,8 +31,10 @@ import {
   useAddManagedTutorSubject,
   useAddManagedTutorWindow,
   useAgencyTutors,
+  useDeleteManagedTutorDocument,
   useDeleteManagedTutorWindow,
   useManagedTutorAvailability,
+  useManagedTutorDocuments,
   useManagedTutorProfile,
   useManagedTutorSubjects,
   useManagedTutorVerification,
@@ -40,6 +42,7 @@ import {
   useSetManagedTutorWindow,
   useSubmitManagedTutorVerification,
   useUpdateManagedTutorProfile,
+  useUploadManagedTutorDocument,
 } from "@/lib/agency-data";
 import { formatMoney, useLevelOptions, useSubjectOptions } from "@/lib/parent-data";
 import { VERIFICATION_LABEL, VERIFICATION_TONE, WEEKDAYS } from "@/lib/tutor-data";
@@ -534,7 +537,39 @@ function AvailabilityTab({ tutorId }: { tutorId: string }) {
 function VerificationTab({ tutorId, status }: { tutorId: string; status?: string | undefined }) {
   const steps = useManagedTutorVerification(tutorId);
   const submit = useSubmitManagedTutorVerification(tutorId);
+  const documents = useManagedTutorDocuments(tutorId);
+  const upload = useUploadManagedTutorDocument(tutorId);
+  const removeDoc = useDeleteManagedTutorDocument(tutorId);
   const canSubmit = status === "unverified" || status === "rejected";
+
+  const [docStepId, setDocStepId] = useState("");
+  const [docLabel, setDocLabel] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleUpload() {
+    const file = fileRef.current?.files?.[0];
+    if (!file) {
+      toast.error("Choose a file to upload.");
+      return;
+    }
+    if (docLabel.trim().length < 3) {
+      toast.error("Give the document a name.");
+      return;
+    }
+    try {
+      await upload.mutateAsync({
+        file,
+        label: docLabel.trim(),
+        stepId: docStepId || null,
+      });
+      setDocLabel("");
+      setDocStepId("");
+      if (fileRef.current) fileRef.current.value = "";
+      toast.success("Document uploaded");
+    } catch (error) {
+      toast.error((error as Error).message || "We couldn't upload that document.");
+    }
+  }
 
   async function handleSubmit() {
     try {
@@ -608,10 +643,111 @@ function VerificationTab({ tutorId, status }: { tutorId: string; status?: string
           ))}
         </ul>
       )}
+      {/* Supporting documents.
+          This panel used to be a sentence saying upload would arrive "once
+          file storage is enabled". Storage has been enabled for a while, and
+          without this an agency could submit a tutor with nothing attached —
+          a reviewer opened the queue to no identity document, no
+          qualifications and no background check. */}
+      <div className="mt-6 rounded-xl border border-border bg-surface/60 p-4">
+        <p className="text-sm font-semibold">Supporting documents</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Stored privately. Only your agency and the DiaLearn review team can open them.
+        </p>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="agency-doc-step">Verification step</Label>
+            <Select value={docStepId} onValueChange={setDocStepId}>
+              <SelectTrigger id="agency-doc-step" className="mt-1.5 min-h-11">
+                <SelectValue placeholder="Choose a step" />
+              </SelectTrigger>
+              <SelectContent>
+                {(steps.data ?? []).map((step) => (
+                  <SelectItem key={step.id} value={step.id}>
+                    {step.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="agency-doc-label">Document name</Label>
+            <Input
+              id="agency-doc-label"
+              className="mt-1.5 min-h-11"
+              value={docLabel}
+              onChange={(event) => setDocLabel(event.target.value)}
+              placeholder="Degree certificate"
+            />
+          </div>
+        </div>
+
+        <div className="mt-3">
+          <Label htmlFor="agency-doc-file">File (PDF or image, max 10MB)</Label>
+          <Input
+            id="agency-doc-file"
+            ref={fileRef}
+            type="file"
+            accept="application/pdf,image/*"
+            className="mt-1.5 min-h-11"
+          />
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-3 min-h-11"
+          disabled={upload.isPending}
+          onClick={() => void handleUpload()}
+        >
+          {upload.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+          Upload document
+        </Button>
+
+        <div className="mt-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Uploaded
+          </p>
+          {documents.isLoading ? (
+            <CardSkeletonList rows={1} height="h-12" />
+          ) : (documents.data ?? []).length === 0 ? (
+            <p className="mt-2 text-sm text-muted-foreground">Nothing uploaded yet.</p>
+          ) : (
+            <ul className="mt-2 space-y-2">
+              {(documents.data ?? []).map((doc) => (
+                <li
+                  key={doc.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium">{doc.label}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {VERIFICATION_LABEL[doc.status as keyof typeof VERIFICATION_LABEL] ??
+                        doc.status}
+                    </span>
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0"
+                    disabled={removeDoc.isPending}
+                    onClick={() => void removeDoc.mutateAsync(doc.id)}
+                  >
+                    <Trash2 className="size-4" />
+                    <span className="sr-only">Remove {doc.label}</span>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
       <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-        Supporting documents are shared with DiaLearn during review; document upload will appear
-        here once file storage is enabled.
+        DiaLearn reviews every tutor, including those managed by an agency.
       </p>
     </SectionCard>
   );

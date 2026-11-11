@@ -34,5 +34,8 @@ import { FilesService } from './files.service';
   ],
   controllers: [FilesController],
   providers: [FilesRepository, FilesService],
+  // Agencies upload verification documents on behalf of the tutors they
+  // manage, through this same service, so the storage rules stay in one place.
+  exports: [FilesService],
 })
 export class FilesModule {}

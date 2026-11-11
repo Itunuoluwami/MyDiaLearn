@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AuthModule } from '../auth/auth.module';
+import { FilesModule } from '../files/files.module';
 import { TutorsModule } from '../tutors/tutors.module';
 import { AgenciesController } from './agencies.controller';
 import { AgenciesRepository } from './agencies.repository';
@@ -20,7 +21,7 @@ import { AgenciesService } from './agencies.service';
  * in the admin module.
  */
 @Module({
-  imports: [AuthModule, TutorsModule],
+  imports: [AuthModule, TutorsModule, FilesModule],
   controllers: [AgenciesController],
   providers: [AgenciesRepository, AgenciesService],
 })

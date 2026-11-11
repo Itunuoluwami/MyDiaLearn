@@ -11,6 +11,9 @@ import {
 import { translateDatabaseError } from '../common/exceptions/database-errors';
 import { TutorAvailabilityService } from '../tutors/services/tutor-availability.service';
 import { TutorVerificationService } from '../tutors/services/tutor-verification.service';
+import type { AddTutorDocumentDto } from '../tutors/dto/tutor.dto';
+import { FilesService } from '../files/files.service';
+import type { IncomingFile } from '../files/files.service';
 import { TutorsService } from '../tutors/tutors.service';
 import type { UpdateTutorProfileDto } from '../tutors/dto/tutor.dto';
 import { AgenciesRepository, type AgencyRow } from './agencies.repository';
@@ -36,6 +39,7 @@ export class AgenciesService {
     private readonly tutors: TutorsService,
     private readonly availability: TutorAvailabilityService,
     private readonly verification: TutorVerificationService,
+    private readonly files: FilesService,
     private readonly audit: AuditService,
   ) {}
 
@@ -278,6 +282,66 @@ export class AgenciesService {
   submitTutorVerification(ownerId: string, tutorId: string, context: AuditContext) {
     return this.managed(ownerId, tutorId, 'verification_submitted', context, (pid) =>
       this.verification.submit(pid, context),
+    );
+  }
+
+  /* --- Verification documents ----------------------------------------------
+   *
+   * An agency could submit a tutor for verification but had no way to attach
+   * anything to the submission, so a reviewer opened the queue to a tutor with
+   * no identity document, no qualifications and no background check. The
+   * tutor's own portal has required five documents all along; this is the same
+   * capability for the people who manage tutors on their behalf.
+   *
+   * All four reuse the tutor-side services unchanged, through `asTutor`, which
+   * resolves the managed tutor's profile id only after proving the caller's
+   * agency owns them. Every rule those services enforce — what may be
+   * uploaded, where it lands, who may read it back — therefore still applies,
+   * and an agency gets no path a tutor does not already have.
+   */
+
+  tutorDocuments(ownerId: string, tutorId: string) {
+    return this.asTutor(ownerId, tutorId, (pid) => this.verification.documents(pid));
+  }
+
+  /**
+   * Uploads the bytes into the managed tutor's own storage folder.
+   *
+   * `FilesService.upload` derives the folder from the tutor row belonging to
+   * the id it is given, so passing the tutor's profile id puts the file
+   * exactly where the tutor's own upload would have put it — not under the
+   * agency owner, who has no tutor row and would be refused.
+   */
+  uploadTutorDocument(
+    ownerId: string,
+    tutorId: string,
+    file: IncomingFile | undefined,
+    context: AuditContext,
+  ) {
+    return this.managed(ownerId, tutorId, 'document_uploaded', context, (pid) =>
+      this.files.upload(pid, 'tutor-document', file),
+    );
+  }
+
+  addTutorDocument(
+    ownerId: string,
+    tutorId: string,
+    dto: AddTutorDocumentDto,
+    context: AuditContext,
+  ) {
+    return this.managed(ownerId, tutorId, 'document_added', context, (pid) =>
+      this.verification.addDocument(pid, dto, context),
+    );
+  }
+
+  removeTutorDocument(
+    ownerId: string,
+    tutorId: string,
+    documentId: string,
+    context: AuditContext,
+  ) {
+    return this.managed(ownerId, tutorId, 'document_removed', context, (pid) =>
+      this.verification.removeDocument(pid, documentId, context),
     );
   }
 

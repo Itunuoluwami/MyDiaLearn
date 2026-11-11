@@ -11,10 +11,15 @@ import {
   Post,
   Query,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
 
 import { auditContextOf } from '../common/audit/request-context';
+import type { IncomingFile } from '../files/files.service';
+import { AddTutorDocumentDto } from '../tutors/dto/tutor.dto';
 import {
   CurrentUser,
   type AuthenticatedUser,
@@ -216,6 +221,60 @@ export class AgenciesController {
     @Req() request: Request,
   ) {
     return this.agencies.submitTutorVerification(user.id, tutorId, auditContextOf(request));
+  }
+
+  // --- Verification documents ----------------------------------------------
+  //
+  // The same two-step shape the tutor's own portal uses: the bytes go to
+  // storage first, then the returned path is recorded against a verification
+  // step. Splitting them keeps the metadata write out of the upload's
+  // transaction and lets a failed record be retried without re-sending a file.
+
+  @Get('tutors/:tutorId/documents')
+  tutorDocuments(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('tutorId', UUID) tutorId: string,
+  ) {
+    return this.agencies.tutorDocuments(user.id, tutorId);
+  }
+
+  @Post('tutors/:tutorId/documents/upload')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file'))
+  uploadTutorDocument(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('tutorId', UUID) tutorId: string,
+    @UploadedFile() file: IncomingFile | undefined,
+    @Req() request: Request,
+  ) {
+    return this.agencies.uploadTutorDocument(
+      user.id,
+      tutorId,
+      file,
+      auditContextOf(request),
+    );
+  }
+
+  @Post('tutors/:tutorId/documents')
+  @HttpCode(HttpStatus.CREATED)
+  addTutorDocument(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('tutorId', UUID) tutorId: string,
+    @Body() dto: AddTutorDocumentDto,
+    @Req() request: Request,
+  ) {
+    return this.agencies.addTutorDocument(user.id, tutorId, dto, auditContextOf(request));
+  }
+
+  @Delete('tutors/:tutorId/documents/:documentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeTutorDocument(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('tutorId', UUID) tutorId: string,
+    @Param('documentId', UUID) documentId: string,
+    @Req() request: Request,
+  ): Promise<void> {
+    await this.agencies.removeTutorDocument(user.id, tutorId, documentId, auditContextOf(request));
   }
 
   // --- Bookings and money --------------------------------------------------------

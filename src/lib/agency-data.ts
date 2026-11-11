@@ -385,6 +385,72 @@ export function useSubmitManagedTutorVerification(tutorId: string) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Verification documents                                              */
+/* ------------------------------------------------------------------ */
+//
+// An agency could submit a tutor for verification but had no way to attach
+// anything, so a reviewer opened the queue to a tutor with no identity
+// document and no qualifications. These mirror the tutor's own document
+// hooks, against the agency-scoped endpoints.
+
+export interface ManagedTutorDocument {
+  id: string;
+  stepId: string | null;
+  label: string;
+  mimeType: string | null;
+  sizeBytes: number | null;
+  status: string;
+  reviewerNotes: string | null;
+  createdAt: string;
+}
+
+export function useManagedTutorDocuments(tutorId: string) {
+  return useQuery({
+    queryKey: ["agency-tutor", tutorId, "documents"],
+    queryFn: async () => {
+      return apiGet<ManagedTutorDocument[]>(`${tutorBase(tutorId)}/documents`);
+    },
+  });
+}
+
+export function useUploadManagedTutorDocument(tutorId: string) {
+  const invalidate = useManagedInvalidate(tutorId);
+  return useMutation({
+    mutationFn: async (input: { file: File; label: string; stepId?: string | null }) => {
+      // Two steps, as on the tutor's own page: the bytes go to the managed
+      // tutor's storage folder first, then the returned path is recorded
+      // against the step. A failed record can be retried without re-sending.
+      const form = new FormData();
+      form.append("file", input.file);
+      const uploaded = await apiPost<{
+        storagePath: string;
+        mimeType: string | null;
+        sizeBytes: number;
+      }>(`${tutorBase(tutorId)}/documents/upload`, form);
+
+      await apiPost(`${tutorBase(tutorId)}/documents`, {
+        label: input.label,
+        storagePath: uploaded.storagePath,
+        sizeBytes: uploaded.sizeBytes,
+        ...(input.stepId ? { stepId: input.stepId } : {}),
+        ...(uploaded.mimeType ? { mimeType: uploaded.mimeType } : {}),
+      });
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteManagedTutorDocument(tutorId: string) {
+  const invalidate = useManagedInvalidate(tutorId);
+  return useMutation({
+    mutationFn: async (documentId: string) => {
+      await apiDelete(`${tutorBase(tutorId)}/documents/${documentId}`);
+    },
+    onSuccess: invalidate,
+  });
+}
+
+/* ------------------------------------------------------------------ */
 /* Bookings and money                                                  */
 /* ------------------------------------------------------------------ */
 
