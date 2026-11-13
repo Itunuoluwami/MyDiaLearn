@@ -18,8 +18,12 @@ import { Route as ClassPreviewRouteImport } from './routes/class-preview'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ForAgenciesRouteImport } from './routes/for-agencies'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as SubjectsRouteImport } from './routes/subjects'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrustAndSafetyRouteImport } from './routes/trust-and-safety'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
@@ -65,7 +69,11 @@ import { Route as AuthenticatedStudentFindTutorRouteImport } from './routes/_aut
 import { Route as AuthenticatedStudentHistoryRouteImport } from './routes/_authenticated/student.history'
 import { Route as AuthenticatedStudentMaterialsRouteImport } from './routes/_authenticated/student.materials'
 import { Route as AuthenticatedStudentMessagesRouteImport } from './routes/_authenticated/student.messages'
+import { Route as AuthenticatedStudentMyTutorsRouteImport } from './routes/_authenticated/student.my-tutors'
 import { Route as AuthenticatedStudentNotificationsRouteImport } from './routes/_authenticated/student.notifications'
+import { Route as AuthenticatedStudentProgressRouteImport } from './routes/_authenticated/student.progress'
+import { Route as AuthenticatedStudentScheduleRouteImport } from './routes/_authenticated/student.schedule'
+import { Route as AuthenticatedTutorAnalyticsRouteImport } from './routes/_authenticated/tutor.analytics'
 import { Route as AuthenticatedTutorAssignmentsRouteImport } from './routes/_authenticated/tutor.assignments'
 import { Route as AuthenticatedTutorAvailabilityRouteImport } from './routes/_authenticated/tutor.availability'
 import { Route as AuthenticatedTutorClassesRouteImport } from './routes/_authenticated/tutor.classes'
@@ -132,6 +140,11 @@ const ForAgenciesRoute = ForAgenciesRouteImport.update({
   path: '/for-agencies',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HowItWorksRoute = HowItWorksRouteImport.update({
   id: '/how-it-works',
   path: '/how-it-works',
@@ -140,6 +153,21 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubjectsRoute = SubjectsRouteImport.update({
+  id: '/subjects',
+  path: '/subjects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrustAndSafetyRoute = TrustAndSafetyRouteImport.update({
@@ -393,10 +421,34 @@ const AuthenticatedStudentMessagesRoute =
     path: '/student/messages',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedStudentMyTutorsRoute =
+  AuthenticatedStudentMyTutorsRouteImport.update({
+    id: '/student/my-tutors',
+    path: '/student/my-tutors',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedStudentNotificationsRoute =
   AuthenticatedStudentNotificationsRouteImport.update({
     id: '/student/notifications',
     path: '/student/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStudentProgressRoute =
+  AuthenticatedStudentProgressRouteImport.update({
+    id: '/student/progress',
+    path: '/student/progress',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedStudentScheduleRoute =
+  AuthenticatedStudentScheduleRouteImport.update({
+    id: '/student/schedule',
+    path: '/student/schedule',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTutorAnalyticsRoute =
+  AuthenticatedTutorAnalyticsRouteImport.update({
+    id: '/tutor/analytics',
+    path: '/tutor/analytics',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedTutorAssignmentsRoute =
@@ -535,8 +587,12 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/explore': typeof ExploreRoute
   '/for-agencies': typeof ForAgenciesRoute
+  '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/subjects': typeof SubjectsRoute
+  '/terms': typeof TermsRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/account': typeof AuthenticatedAccountRoute
   '/bookings': typeof AuthenticatedBookingsRoute
@@ -581,7 +637,11 @@ export interface FileRoutesByFullPath {
   '/student/history': typeof AuthenticatedStudentHistoryRoute
   '/student/materials': typeof AuthenticatedStudentMaterialsRoute
   '/student/messages': typeof AuthenticatedStudentMessagesRoute
+  '/student/my-tutors': typeof AuthenticatedStudentMyTutorsRoute
   '/student/notifications': typeof AuthenticatedStudentNotificationsRoute
+  '/student/progress': typeof AuthenticatedStudentProgressRoute
+  '/student/schedule': typeof AuthenticatedStudentScheduleRoute
+  '/tutor/analytics': typeof AuthenticatedTutorAnalyticsRoute
   '/tutor/assignments': typeof AuthenticatedTutorAssignmentsRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/tutor/classes': typeof AuthenticatedTutorClassesRoute
@@ -614,8 +674,12 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/explore': typeof ExploreRoute
   '/for-agencies': typeof ForAgenciesRoute
+  '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/subjects': typeof SubjectsRoute
+  '/terms': typeof TermsRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/account': typeof AuthenticatedAccountRoute
   '/bookings': typeof AuthenticatedBookingsRoute
@@ -660,7 +724,11 @@ export interface FileRoutesByTo {
   '/student/history': typeof AuthenticatedStudentHistoryRoute
   '/student/materials': typeof AuthenticatedStudentMaterialsRoute
   '/student/messages': typeof AuthenticatedStudentMessagesRoute
+  '/student/my-tutors': typeof AuthenticatedStudentMyTutorsRoute
   '/student/notifications': typeof AuthenticatedStudentNotificationsRoute
+  '/student/progress': typeof AuthenticatedStudentProgressRoute
+  '/student/schedule': typeof AuthenticatedStudentScheduleRoute
+  '/tutor/analytics': typeof AuthenticatedTutorAnalyticsRoute
   '/tutor/assignments': typeof AuthenticatedTutorAssignmentsRoute
   '/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/tutor/classes': typeof AuthenticatedTutorClassesRoute
@@ -695,8 +763,12 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/explore': typeof ExploreRoute
   '/for-agencies': typeof ForAgenciesRoute
+  '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/subjects': typeof SubjectsRoute
+  '/terms': typeof TermsRoute
   '/trust-and-safety': typeof TrustAndSafetyRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
@@ -741,7 +813,11 @@ export interface FileRoutesById {
   '/_authenticated/student/history': typeof AuthenticatedStudentHistoryRoute
   '/_authenticated/student/materials': typeof AuthenticatedStudentMaterialsRoute
   '/_authenticated/student/messages': typeof AuthenticatedStudentMessagesRoute
+  '/_authenticated/student/my-tutors': typeof AuthenticatedStudentMyTutorsRoute
   '/_authenticated/student/notifications': typeof AuthenticatedStudentNotificationsRoute
+  '/_authenticated/student/progress': typeof AuthenticatedStudentProgressRoute
+  '/_authenticated/student/schedule': typeof AuthenticatedStudentScheduleRoute
+  '/_authenticated/tutor/analytics': typeof AuthenticatedTutorAnalyticsRoute
   '/_authenticated/tutor/assignments': typeof AuthenticatedTutorAssignmentsRoute
   '/_authenticated/tutor/availability': typeof AuthenticatedTutorAvailabilityRoute
   '/_authenticated/tutor/classes': typeof AuthenticatedTutorClassesRoute
@@ -776,8 +852,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/explore'
     | '/for-agencies'
+    | '/help'
     | '/how-it-works'
     | '/pricing'
+    | '/privacy'
+    | '/subjects'
+    | '/terms'
     | '/trust-and-safety'
     | '/account'
     | '/bookings'
@@ -822,7 +902,11 @@ export interface FileRouteTypes {
     | '/student/history'
     | '/student/materials'
     | '/student/messages'
+    | '/student/my-tutors'
     | '/student/notifications'
+    | '/student/progress'
+    | '/student/schedule'
+    | '/tutor/analytics'
     | '/tutor/assignments'
     | '/tutor/availability'
     | '/tutor/classes'
@@ -855,8 +939,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/explore'
     | '/for-agencies'
+    | '/help'
     | '/how-it-works'
     | '/pricing'
+    | '/privacy'
+    | '/subjects'
+    | '/terms'
     | '/trust-and-safety'
     | '/account'
     | '/bookings'
@@ -901,7 +989,11 @@ export interface FileRouteTypes {
     | '/student/history'
     | '/student/materials'
     | '/student/messages'
+    | '/student/my-tutors'
     | '/student/notifications'
+    | '/student/progress'
+    | '/student/schedule'
+    | '/tutor/analytics'
     | '/tutor/assignments'
     | '/tutor/availability'
     | '/tutor/classes'
@@ -935,8 +1027,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/explore'
     | '/for-agencies'
+    | '/help'
     | '/how-it-works'
     | '/pricing'
+    | '/privacy'
+    | '/subjects'
+    | '/terms'
     | '/trust-and-safety'
     | '/_authenticated/account'
     | '/_authenticated/bookings'
@@ -981,7 +1077,11 @@ export interface FileRouteTypes {
     | '/_authenticated/student/history'
     | '/_authenticated/student/materials'
     | '/_authenticated/student/messages'
+    | '/_authenticated/student/my-tutors'
     | '/_authenticated/student/notifications'
+    | '/_authenticated/student/progress'
+    | '/_authenticated/student/schedule'
+    | '/_authenticated/tutor/analytics'
     | '/_authenticated/tutor/assignments'
     | '/_authenticated/tutor/availability'
     | '/_authenticated/tutor/classes'
@@ -1016,8 +1116,12 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   ExploreRoute: typeof ExploreRoute
   ForAgenciesRoute: typeof ForAgenciesRoute
+  HelpRoute: typeof HelpRoute
   HowItWorksRoute: typeof HowItWorksRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
+  SubjectsRoute: typeof SubjectsRoute
+  TermsRoute: typeof TermsRoute
   TrustAndSafetyRoute: typeof TrustAndSafetyRoute
   TutorsTutorIdRoute: typeof TutorsTutorIdRoute
   TutorsIndexRoute: typeof TutorsIndexRoute
@@ -1088,6 +1192,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForAgenciesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/how-it-works': {
       id: '/how-it-works'
       path: '/how-it-works'
@@ -1100,6 +1211,27 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subjects': {
+      id: '/subjects'
+      path: '/subjects'
+      fullPath: '/subjects'
+      preLoaderRoute: typeof SubjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trust-and-safety': {
@@ -1417,11 +1549,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudentMessagesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/student/my-tutors': {
+      id: '/_authenticated/student/my-tutors'
+      path: '/student/my-tutors'
+      fullPath: '/student/my-tutors'
+      preLoaderRoute: typeof AuthenticatedStudentMyTutorsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/student/notifications': {
       id: '/_authenticated/student/notifications'
       path: '/student/notifications'
       fullPath: '/student/notifications'
       preLoaderRoute: typeof AuthenticatedStudentNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/student/progress': {
+      id: '/_authenticated/student/progress'
+      path: '/student/progress'
+      fullPath: '/student/progress'
+      preLoaderRoute: typeof AuthenticatedStudentProgressRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/student/schedule': {
+      id: '/_authenticated/student/schedule'
+      path: '/student/schedule'
+      fullPath: '/student/schedule'
+      preLoaderRoute: typeof AuthenticatedStudentScheduleRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tutor/analytics': {
+      id: '/_authenticated/tutor/analytics'
+      path: '/tutor/analytics'
+      fullPath: '/tutor/analytics'
+      preLoaderRoute: typeof AuthenticatedTutorAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/tutor/assignments': {
@@ -1628,7 +1788,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStudentHistoryRoute: typeof AuthenticatedStudentHistoryRoute
   AuthenticatedStudentMaterialsRoute: typeof AuthenticatedStudentMaterialsRoute
   AuthenticatedStudentMessagesRoute: typeof AuthenticatedStudentMessagesRoute
+  AuthenticatedStudentMyTutorsRoute: typeof AuthenticatedStudentMyTutorsRoute
   AuthenticatedStudentNotificationsRoute: typeof AuthenticatedStudentNotificationsRoute
+  AuthenticatedStudentProgressRoute: typeof AuthenticatedStudentProgressRoute
+  AuthenticatedStudentScheduleRoute: typeof AuthenticatedStudentScheduleRoute
+  AuthenticatedTutorAnalyticsRoute: typeof AuthenticatedTutorAnalyticsRoute
   AuthenticatedTutorAssignmentsRoute: typeof AuthenticatedTutorAssignmentsRoute
   AuthenticatedTutorAvailabilityRoute: typeof AuthenticatedTutorAvailabilityRoute
   AuthenticatedTutorClassesRoute: typeof AuthenticatedTutorClassesRoute
@@ -1691,8 +1855,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStudentHistoryRoute: AuthenticatedStudentHistoryRoute,
   AuthenticatedStudentMaterialsRoute: AuthenticatedStudentMaterialsRoute,
   AuthenticatedStudentMessagesRoute: AuthenticatedStudentMessagesRoute,
+  AuthenticatedStudentMyTutorsRoute: AuthenticatedStudentMyTutorsRoute,
   AuthenticatedStudentNotificationsRoute:
     AuthenticatedStudentNotificationsRoute,
+  AuthenticatedStudentProgressRoute: AuthenticatedStudentProgressRoute,
+  AuthenticatedStudentScheduleRoute: AuthenticatedStudentScheduleRoute,
+  AuthenticatedTutorAnalyticsRoute: AuthenticatedTutorAnalyticsRoute,
   AuthenticatedTutorAssignmentsRoute: AuthenticatedTutorAssignmentsRoute,
   AuthenticatedTutorAvailabilityRoute: AuthenticatedTutorAvailabilityRoute,
   AuthenticatedTutorClassesRoute: AuthenticatedTutorClassesRoute,
@@ -1745,8 +1913,12 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   ExploreRoute: ExploreRoute,
   ForAgenciesRoute: ForAgenciesRoute,
+  HelpRoute: HelpRoute,
   HowItWorksRoute: HowItWorksRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
+  SubjectsRoute: SubjectsRoute,
+  TermsRoute: TermsRoute,
   TrustAndSafetyRoute: TrustAndSafetyRoute,
   TutorsTutorIdRoute: TutorsTutorIdRoute,
   TutorsIndexRoute: TutorsIndexRoute,

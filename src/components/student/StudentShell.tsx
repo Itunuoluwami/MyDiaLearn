@@ -4,13 +4,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
   BookOpen,
+  CalendarClock,
   CalendarDays,
   LayoutDashboard,
+  LineChart,
   LogOut,
   MessagesSquare,
   MoreHorizontal,
   Search,
   User,
+  UserRound,
 } from "lucide-react";
 
 import { toast } from "sonner";
@@ -35,9 +38,12 @@ type NavItem = { to: string; label: string; icon: typeof Search };
 
 const NAV: NavItem[] = [
   { to: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/student/my-tutors", label: "My Tutors", icon: UserRound },
   { to: "/student/find-tutor", label: "Find a Tutor", icon: Search },
   { to: "/student/history", label: "My Classes", icon: CalendarDays },
+  { to: "/student/schedule", label: "Schedule", icon: CalendarClock },
   { to: "/student/materials", label: "Assignments & Materials", icon: BookOpen },
+  { to: "/student/progress", label: "Progress", icon: LineChart },
   { to: "/student/messages", label: "Messages", icon: MessagesSquare },
   { to: "/student/notifications", label: "Notifications", icon: Bell },
 ];

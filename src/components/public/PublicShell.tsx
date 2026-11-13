@@ -23,6 +23,7 @@ const FOOTER_GROUPS = [
     title: "Learn",
     links: [
       { to: "/explore", label: "Explore subjects" },
+      { to: "/subjects", label: "All subjects" },
       { to: "/tutors", label: "Browse tutors" },
       { to: "/how-it-works", label: "How it works" },
       { to: "/class-preview", label: "What a class looks like" },
@@ -42,7 +43,15 @@ const FOOTER_GROUPS = [
     links: [
       { to: "/about", label: "About DiaLearn" },
       { to: "/trust-and-safety", label: "Trust & safety" },
+      { to: "/help", label: "Help centre" },
       { to: "/contact", label: "Contact us" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { to: "/terms", label: "Terms of service" },
+      { to: "/privacy", label: "Privacy notice" },
     ],
   },
 ] as const;

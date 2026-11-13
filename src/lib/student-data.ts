@@ -540,3 +540,39 @@ export function useJoinClass(bookingId: string | undefined) {
     },
   });
 }
+
+/* ------------------------------------------------------------------ */
+/* Progress                                                            */
+/* ------------------------------------------------------------------ */
+
+/** One subject's progress, as `/students/:id/progress` returns it. */
+export interface StudentProgressRow {
+  subject_id: string;
+  subject_name: string;
+  completed_lessons: number;
+  scheduled_lessons: number;
+  attended_count: number;
+  missed_count: number;
+  cancelled_count: number;
+  learning_minutes: number;
+  /** `numeric` — a decimal string. */
+  avg_rating: string;
+}
+
+/**
+ * The learner's own progress, by subject.
+ *
+ * The endpoint takes a student id and is already used by the parent portal
+ * for each child; a learner with their own login reads their own row through
+ * the same route, and row-level security limits them to it.
+ */
+export function useMyProgress() {
+  const { data: student } = useStudentRecord();
+  return useQuery({
+    queryKey: ["student-progress", student?.id],
+    enabled: Boolean(student?.id),
+    queryFn: async (): Promise<StudentProgressRow[]> => {
+      return apiGet<StudentProgressRow[]>(`/students/${student?.id}/progress`);
+    },
+  });
+}

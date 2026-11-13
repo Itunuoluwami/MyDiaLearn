@@ -3,6 +3,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   BadgeCheck,
+  BarChart3,
   Bell,
   CalendarDays,
   ClipboardList,
@@ -54,6 +55,7 @@ const NAV: NavItem[] = [
   { to: "/tutor/messages", label: "Messages", icon: MessagesSquare },
   { to: "/tutor/earnings", label: "Earnings", icon: Wallet },
   { to: "/tutor/reviews", label: "Reviews", icon: Star },
+  { to: "/tutor/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/tutor/profile", label: "Teaching profile", icon: UserRound },
   { to: "/tutor/verification", label: "Verification", icon: ShieldCheck },
   { to: "/tutor/notifications", label: "Notifications", icon: Bell },
