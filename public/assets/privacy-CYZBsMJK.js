@@ -1,0 +1,1 @@
+import{o as e}from"./useStore-B9WcefOa.js";import{t}from"./LegalPage-Deog16c1.js";var n=e(),r=()=>(0,n.jsx)(t,{title:`Privacy notice`,intro:`DiaLearn teaches children, so we collect as little as we can and are explicit about the rest.`,settingsKey:`content.privacy_sections`,updated:`13 November 2026`});export{r as component};

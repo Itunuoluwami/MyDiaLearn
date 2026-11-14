@@ -1,0 +1,1 @@
+import{o as e}from"./useStore-B9WcefOa.js";import{t}from"./LegalPage-Deog16c1.js";var n=e(),r=()=>(0,n.jsx)(t,{title:`Terms of service`,intro:`DiaLearn is a marketplace. These terms cover what we do, what tutors and families agree to, and how money is handled.`,settingsKey:`content.terms_sections`,updated:`13 November 2026`});export{r as component};

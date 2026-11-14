@@ -1,0 +1,5 @@
+# Created on the server, never deployed.
+.env
+.env.*
+App_Data/
+iisnode/

@@ -1,0 +1,1 @@
+import{o as e}from"./useStore-B9WcefOa.js";import{a as t}from"./dist-tY3oLvgA.js";var n=e();function r({className:e,...r}){return(0,n.jsx)(`div`,{className:t(`shimmer rounded-md`,e),...r})}export{r as t};
