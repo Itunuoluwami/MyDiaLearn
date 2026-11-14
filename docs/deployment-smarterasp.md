@@ -38,10 +38,9 @@ Under **Settings → Secrets and variables → Actions**:
 
 - **Variables** (public values, inlined into the browser bundle):
   - `VITE_API_BASE_URL`: `https://api.mydialearn.com`
-  - `VITE_AUTH_PROVIDER`: `nestjs`
-- **Secrets**, only while the Supabase fallback still exists:
-  - `VITE_SUPABASE_URL`
-  - `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+No **Secrets** are needed. Nothing the frontend build reads is secret, and the
+API's secrets live only in the `.env` you create on the server.
 
 Under **Settings → Actions → General → Workflow permissions**, allow **Read and
 write** so the workflow can push the deploy branches.
