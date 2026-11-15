@@ -55,12 +55,21 @@ alternative, but it requires installing SmarterASP's GitHub app on the
 repository, and it still leaves a **Pull/Deploy** button to press by hand.
 FTP publishes on push with nothing to click.
 
-From the control panel's **FTP** section, add under **Settings → Secrets and
-variables → Actions**:
+The account's root FTP login can reach every site on it, this one included
+but also every unrelated site sharing the hosting account. Create a **separate
+FTP user per site**, each restricted to that site's folder, so a workflow run
+cannot write outside the site it deploys. Control panel → **FTP** → **+ FTP
+User**, with the path set to the site folder rather than `/`.
 
-- **Secrets**: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`
-- **Variables**: `FTP_DIR_WEB` and `FTP_DIR_API` — each site's folder as the
-  FTP login sees it, for example `/mydialearn/` and `/dialearn/`.
+Then, under **Settings → Secrets and variables → Actions**:
+
+- **Secrets**: `FTP_SERVER` (for example `win8053.site4now.net`), then
+  `FTP_WEB_USERNAME` / `FTP_WEB_PASSWORD` and `FTP_API_USERNAME` /
+  `FTP_API_PASSWORD`.
+- **Variables**: `FTP_DIR_WEB` and `FTP_DIR_API` — each site's folder **as that
+  user sees it**. A user restricted to the site folder lands in it already, so
+  the value is usually just `/`. A root user needs the full path, for example
+  `/mydialearn/`.
 
 Both upload steps are skipped while their variable is unset, so the workflow
 stays green until you fill them in.

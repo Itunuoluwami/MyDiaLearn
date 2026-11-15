@@ -56,8 +56,8 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          username: ${{ secrets.FTP_WEB_USERNAME }}
+          password: ${{ secrets.FTP_WEB_PASSWORD }}
           local-dir: ./.output/
           server-dir: ${{ vars.FTP_DIR_WEB }}
           # Server-owned paths. Without these the sync deletes them, taking
@@ -122,8 +122,8 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          username: ${{ secrets.FTP_API_USERNAME }}
+          password: ${{ secrets.FTP_API_PASSWORD }}
           local-dir: ./api-site/
           server-dir: ${{ vars.FTP_DIR_API }}
           exclude: |
