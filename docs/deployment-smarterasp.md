@@ -5,7 +5,7 @@ DiaLearn runs as two SmarterASP sites, both Node.js under IIS/iisnode:
 | Site     | Example domain       | Branch       | What it is                               |
 | -------- | -------------------- | ------------ | ---------------------------------------- |
 | Frontend | `mydialearn.com`     | `deploy-web` | TanStack Start server (nitro `iis_node`) |
-| API      | `api.mydialearn.com` | `deploy-api` | NestJS, with production `node_modules`   |
+| API      | `backend.mydialearn.com` | `deploy-api` | NestJS, with production `node_modules`   |
 
 The database is the existing site4now PostgreSQL. Uploaded files are stored on
 the API site's own disk, under `App_Data/uploads`.
@@ -37,7 +37,7 @@ touches those files.
 Under **Settings → Secrets and variables → Actions**:
 
 - **Variables** (public values, inlined into the browser bundle):
-  - `VITE_API_BASE_URL`: `https://api.mydialearn.com`
+  - `VITE_API_BASE_URL`: `https://backend.mydialearn.com`
 
 No **Secrets** are needed. Nothing the frontend build reads is secret, and the
 API's secrets live only in the `.env` you create on the server.
@@ -93,7 +93,7 @@ every other respect: JSON logs, secure cookies, and no development error detail.
 
 ### 4. Check it
 
-- `https://api.mydialearn.com/health` should return `"database":{"status":"up"}`
+- `https://backend.mydialearn.com/health` should return `"database":{"status":"up"}`
   and `"storage":{"adapter":"local","status":"up"}`.
 - `https://mydialearn.com` should render, and signing in should reach the portal.
 
