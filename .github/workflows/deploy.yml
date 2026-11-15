@@ -48,6 +48,27 @@ jobs:
       - name: Publish to deploy-web
         run: bash scripts/publish-deploy-branch.sh deploy-web .output
 
+      # FTP is the live deploy. The branch above is kept as a record of what
+      # was published, and as a fallback if the control panel's GitHub
+      # integration is ever connected.
+      - name: Upload to the frontend site
+        if: vars.FTP_DIR_WEB != ''
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./.output/
+          server-dir: ${{ vars.FTP_DIR_WEB }}
+          # Server-owned paths. Without these the sync deletes them, taking
+          # the API's configuration and every uploaded file with it.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.env
+            **/App_Data/**
+            **/iisnode/**
+
   api:
     # Windows, because the API ships its node_modules and @node-rs/argon2 is a
     # native module: the binary has to match the server's OS.
@@ -92,3 +113,22 @@ jobs:
 
       - name: Publish to deploy-api
         run: bash scripts/publish-deploy-branch.sh deploy-api "$RUNNER_TEMP/api-site"
+
+      - name: Stage the API site for upload
+        run: cp -a "$RUNNER_TEMP/api-site" ./api-site
+
+      - name: Upload to the API site
+        if: vars.FTP_DIR_API != ''
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./api-site/
+          server-dir: ${{ vars.FTP_DIR_API }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.env
+            **/App_Data/**
+            **/iisnode/**

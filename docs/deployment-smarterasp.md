@@ -48,18 +48,38 @@ write** so the workflow can push the deploy branches.
 Then run the workflow once (**Actions → Deploy (SmarterASP) → Run workflow**).
 The two branches appear when it finishes.
 
-### 2. SmarterASP sites
+### 2. FTP credentials
+
+The deploy uploads over FTP. The control panel's own GitHub integration is an
+alternative, but it requires installing SmarterASP's GitHub app on the
+repository, and it still leaves a **Pull/Deploy** button to press by hand.
+FTP publishes on push with nothing to click.
+
+From the control panel's **FTP** section, add under **Settings → Secrets and
+variables → Actions**:
+
+- **Secrets**: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`
+- **Variables**: `FTP_DIR_WEB` and `FTP_DIR_API` — each site's folder as the
+  FTP login sees it, for example `/mydialearn/` and `/dialearn/`.
+
+Both upload steps are skipped while their variable is unset, so the workflow
+stays green until you fill them in.
+
+The sync deletes remote files that are not in the build, which is what keeps a
+deploy from leaving stale code behind. Three paths are excluded so it cannot:
+`.env`, `App_Data/` (every uploaded file) and `iisnode/`.
+
+### 3. SmarterASP sites
 
 For each site:
 
 1. Set the Node.js version to **20.19 or later**; **22** is preferred. Prisma 7
-   and NestJS 11 will not start on older versions.
-2. Under **GitHub deployment**, link the repository and select the branch:
-   `deploy-web` for the frontend, `deploy-api` for the API.
-3. Bind the domain and enable the free SSL certificate. Cookies are marked
+   and NestJS 11 will not start on older versions. Under **Node.js App**, set
+   the startup file to `index.js` and turn the app on.
+2. Bind the domain and enable the free SSL certificate. Cookies are marked
    `Secure` in staging and production, so sign-in needs HTTPS.
 
-### 3. The API's `.env` (on the server only)
+### 4. The API's `.env` (on the server only)
 
 Use the File Manager to create `.env` in the API site's root, next to
 `web.config`. Start from `backend/.env.example`. The values that differ from
@@ -91,7 +111,7 @@ Stay on `APP_ENV=staging` while payments are simulated: the API refuses to start
 in `production` with the simulated gateway. `staging` behaves like production in
 every other respect: JSON logs, secure cookies, and no development error detail.
 
-### 4. Check it
+### 5. Check it
 
 - `https://backend.mydialearn.com/health` should return `"database":{"status":"up"}`
   and `"storage":{"adapter":"local","status":"up"}`.
@@ -99,10 +119,12 @@ every other respect: JSON logs, secure cookies, and no development error detail.
 
 ## Day to day
 
-Merge to `main`, and the workflow publishes. Then press **Pull/Deploy** in each
-site's GitHub panel. If SmarterASP offers auto-deploy on push, enable it on the
-deploy branches. To publish a feature branch without merging, run the workflow
-by hand and pick that branch.
+Merge to `main` and the workflow publishes, over FTP, with nothing to press.
+To publish a feature branch without merging, run the workflow by hand from the
+Actions tab and pick that branch.
+
+`VITE_API_BASE_URL` is inlined into the browser bundle at build time, so
+changing it means re-running the workflow, not just editing the variable.
 
 Database changes are not part of the deploy. They are still applied with
 `bun run db:schema:extras` from a machine with `DATABASE_URL`, as before.
