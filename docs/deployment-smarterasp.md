@@ -75,8 +75,16 @@ Both upload steps are skipped while their variable is unset, so the workflow
 stays green until you fill them in.
 
 The sync deletes remote files that are not in the build, which is what keeps a
-deploy from leaving stale code behind. Three paths are excluded so it cannot:
-`.env`, `App_Data/` (every uploaded file) and `iisnode/`.
+deploy from leaving stale code behind. Three paths are excluded so it cannot
+take the rest with it: `.env`, `App_Data/` (every uploaded file) and
+`iisnode/`.
+
+Set the variable `FTP_DRY_RUN` to `true` and run the workflow once after
+changing either directory. Both uploads then log every file they would send
+and delete, and change nothing. Read the log, confirm the paths are the two
+site folders, then set it back to `false`. This matters most with the
+account's root login, where a wrong path mirrors the build over a different
+site.
 
 ### 3. SmarterASP sites
 

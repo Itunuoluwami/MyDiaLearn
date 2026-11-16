@@ -62,6 +62,11 @@ jobs:
           server-dir: ${{ vars.FTP_DIR_WEB }}
           # Server-owned paths. Without these the sync deletes them, taking
           # the API's configuration and every uploaded file with it.
+          # Set the FTP_DRY_RUN variable to "true" to log what would be
+          # uploaded and deleted without touching the server. Worth doing
+          # once after changing either directory: with the account's root
+          # login, a wrong path mirrors the build over another site.
+          dry-run: ${{ vars.FTP_DRY_RUN == 'true' }}
           exclude: |
             **/.git*
             **/.git*/**
@@ -126,6 +131,11 @@ jobs:
           password: ${{ secrets.FTP_API_PASSWORD }}
           local-dir: ./api-site/
           server-dir: ${{ vars.FTP_DIR_API }}
+          # Set the FTP_DRY_RUN variable to "true" to log what would be
+          # uploaded and deleted without touching the server. Worth doing
+          # once after changing either directory: with the account's root
+          # login, a wrong path mirrors the build over another site.
+          dry-run: ${{ vars.FTP_DRY_RUN == 'true' }}
           exclude: |
             **/.git*
             **/.git*/**
