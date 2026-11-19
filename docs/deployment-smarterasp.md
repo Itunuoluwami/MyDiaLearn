@@ -146,6 +146,33 @@ changing it means re-running the workflow, not just editing the variable.
 Database changes are not part of the deploy. They are still applied with
 `bun run db:schema:extras` from a machine with `DATABASE_URL`, as before.
 
+## How IIS starts Node here
+
+SmarterASP does **not** use iisnode, whatever the Node.js App panel's wording
+suggests. It uses **httpPlatformHandler**: IIS starts `node index.js`, passes a
+free port in `%HTTP_PLATFORM_PORT%`, and proxies to it.
+
+This matters because both halves of the build default to the wrong thing.
+Nitro's `iis_node` preset writes an iisnode `web.config`, and the API's used to
+be written for iisnode as well. A site configured for iisnode answers **502
+with an empty body** — no IIS error page, nothing in the control panel. So:
+
+- `deploy/iis/web.config` (frontend) and `backend/deploy/iis/web.config` (API)
+  are the real ones. The workflow copies the frontend's over Nitro's output.
+- Saving anything in the panel's **Node.js App** screen rewrites the server's
+  `web.config` to the panel's own httpPlatformHandler version. That is
+  harmless now that the repo agrees with it, and the next deploy restores the
+  repo's.
+- `startupTimeLimit` is raised to 120s. The panel's default of 20 is not
+  enough for NestJS to build its module graph and for Prisma to reach a
+  database on another host from a cold app pool.
+- Crashes go to `log.txt_*.log` in the site root, which is the only
+  diagnostic there is. The catch-all rewrite and a `.log` filter keep it
+  unservable.
+- `<iisnode>` attributes no longer apply, `enableXFF` among them. Client IP
+  for rate limiting comes from httpPlatformHandler's forwarded headers
+  instead; see `main.ts`.
+
 ## Things specific to shared IIS hosting
 
 - **The app pool recycles** (daily, and after idle time). The first request
