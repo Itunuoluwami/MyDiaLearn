@@ -146,6 +146,36 @@ changing it means re-running the workflow, not just editing the variable.
 Database changes are not part of the deploy. They are still applied with
 `bun run db:schema:extras` from a machine with `DATABASE_URL`, as before.
 
+## Running the API on the frontend's own origin
+
+The hosting plan's free-SSL quota is exhausted, so `backend.mydialearn.com`
+has no certificate and HTTPS to it fails. `mydialearn.com` does have one, so
+the API runs as an IIS **sub-application at `/api` on the frontend's site**
+until a certificate is bought for the subdomain.
+
+This is not only a workaround. Same-origin removes CORS, and it removes the
+third-party refresh cookie: with the API on another domain that cookie is
+cross-site, and Firefox and Safari block those by default.
+
+Set up in the control panel with **Node.js App → Create Node.js App For
+Subfolder**, pointing at `/api` inside the frontend site, startup file
+`index.js`.
+
+What differs from the subdomain deployment:
+
+- `API_PREFIX=` (empty) in the API's `.env`. The path is already in the URL;
+  a prefix here would make every route `/api/api/...`. Nest skips
+  `setGlobalPrefix` entirely when it is empty.
+- `VITE_API_BASE_URL=https://mydialearn.com/api`, so the frontend must be
+  rebuilt — it is inlined at build time.
+- `CORS_ORIGIN` and `COOKIE_DOMAIN` stop mattering; same origin, host-only
+  cookie.
+- `/health` is excluded from the prefix, so it is at
+  `https://mydialearn.com/api/health`.
+
+Moving back to the subdomain later is one repository variable and three
+lines of `.env`.
+
 ## How IIS starts Node here
 
 SmarterASP does **not** use iisnode, whatever the Node.js App panel's wording

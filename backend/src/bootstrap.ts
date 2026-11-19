@@ -50,7 +50,12 @@ export function configureApp(app: INestApplication): AppConfig {
   });
 
   // /health stays off the prefix so probes do not have to track API_PREFIX.
-  app.setGlobalPrefix(config.apiPrefix, { exclude: ['health', 'health/{*path}'] });
+  // An empty prefix means the app is already mounted under a path by the web
+  // server; setGlobalPrefix('') would make Nest prepend a bare slash to every
+  // route, so skip it entirely.
+  if (config.apiPrefix) {
+    app.setGlobalPrefix(config.apiPrefix, { exclude: ['health', 'health/{*path}'] });
+  }
 
   app.useGlobalPipes(createValidationPipe());
   app.enableShutdownHooks();
