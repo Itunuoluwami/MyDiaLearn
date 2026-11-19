@@ -29,7 +29,9 @@ function configureApp(app) {
         exposedHeaders: ['x-request-id'],
         maxAge: 86_400,
     });
-    app.setGlobalPrefix(config.apiPrefix, { exclude: ['health', 'health/{*path}'] });
+    if (config.apiPrefix) {
+        app.setGlobalPrefix(config.apiPrefix, { exclude: ['health', 'health/{*path}'] });
+    }
     app.useGlobalPipes((0, validation_pipe_1.createValidationPipe)());
     app.enableShutdownHooks();
     return config;

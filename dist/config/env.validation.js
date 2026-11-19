@@ -42,7 +42,7 @@ exports.envValidationSchema = Joi.object({
     PORT: Joi.alternatives()
         .try(Joi.number().port(), Joi.string().pattern(/^\\\\\.\\pipe\\/))
         .default(3000),
-    API_PREFIX: Joi.string().default('api'),
+    API_PREFIX: Joi.string().allow('').default('api'),
     CORS_ORIGIN: Joi.string()
         .default('http://localhost:8080')
         .description('Comma-separated list of allowed origins, or "*"'),
