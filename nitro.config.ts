@@ -29,7 +29,22 @@
 export default {
   routeRules: {
     "/api/**": {
-      proxy: "https://timotech-003-site3.ftempurl.com/api/**",
+      proxy: {
+        // Loopback, not the public hostname. Proxying to
+        // https://timotech-003-site3.ftempurl.com failed in ~1.1s with an
+        // empty 500 and nothing in either site's stdout log, while the same
+        // build proxied to the same URL correctly from a developer machine.
+        // That is the signature of hairpin NAT: the request leaves for the
+        // server's own public address and never comes back.
+        //
+        // Both sites are bindings on the same IIS, so 127.0.0.1 reaches it
+        // without leaving the machine, and the Host header below is what IIS
+        // routes on — it decides which site answers.
+        to: "http://127.0.0.1/api/**",
+        headers: {
+          host: "timotech-003-site3.ftempurl.com",
+        },
+      },
     },
   },
 };
