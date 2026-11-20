@@ -176,6 +176,32 @@ What differs from the subdomain deployment:
 Moving back to the subdomain later is one repository variable and three
 lines of `.env`.
 
+## The /api proxy (temporary)
+
+The API is meant to run as an IIS sub-application at `/api` on the frontend's
+site. It does not, yet: the control panel's **Create Node.js App For
+Subfolder** dialog returns an empty folder picker for this control-panel user
+and its folder field is read-only, so the application cannot be registered. A
+support ticket is open.
+
+Until then `nitro.config.ts` proxies `/api/**` to the API site's own
+`*.ftempurl.com` hostname, which has a valid wildcard certificate. The browser
+only ever talks to `mydialearn.com`, so the refresh cookie stays first-party
+and sign-in works in Firefox and Safari, which block third-party cookies.
+
+Two things to do when the ticket is resolved:
+
+1. **Delete `nitro.config.ts`.** Left in place it intercepts `/api` and the
+   sub-application never sees a request.
+2. Move the API files back to `/mydialearn/api`. While the proxy is in use
+   that folder must not sit at `api`, because its `web.config` declares
+   `httpPlatform`, which IIS rejects outside a registered application — the
+   path answers 500 before Nitro ever sees it.
+
+The proxy keeps the `/api` prefix on the way out, because the API on that host
+runs with `API_PREFIX=api`. The sub-application will run with `API_PREFIX=`
+empty instead, since the path is then already in the URL.
+
 ## How IIS starts Node here
 
 SmarterASP does **not** use iisnode, whatever the Node.js App panel's wording
