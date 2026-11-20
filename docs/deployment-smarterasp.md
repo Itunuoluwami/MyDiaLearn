@@ -176,31 +176,36 @@ What differs from the subdomain deployment:
 Moving back to the subdomain later is one repository variable and three
 lines of `.env`.
 
-## The /api proxy (temporary)
+## Why /api cannot be proxied here
 
 The API is meant to run as an IIS sub-application at `/api` on the frontend's
-site. It does not, yet: the control panel's **Create Node.js App For
-Subfolder** dialog returns an empty folder picker for this control-panel user
-and its folder field is read-only, so the application cannot be registered. A
-support ticket is open.
+site. It does not: the control panel's **Create Node.js App For Subfolder**
+dialog returns an empty folder picker for this control-panel user and its
+folder field is read-only, so the application cannot be registered. A support
+ticket is open. Until it is resolved the API has no reachable HTTPS origin,
+because the plan's free-SSL quota is exhausted and `backend.mydialearn.com`
+resets on TLS.
 
-Until then `nitro.config.ts` proxies `/api/**` to the API site's own
-`*.ftempurl.com` hostname, which has a valid wildcard certificate. The browser
-only ever talks to `mydialearn.com`, so the refresh cookie stays first-party
-and sign-in works in Firefox and Safari, which block third-party cookies.
+Proxying `/api/**` from the frontend's own Nitro server was tried and does not
+work on this host. Recorded here so it is not tried again:
 
-Two things to do when the ticket is resolved:
+1. **`proxy: "https://timotech-003-site3.ftempurl.com/api/**"`.** Correct
+   against the live API from a developer machine — real rows, every response
+   header intact. On the server: ~1.1s, empty 500, nothing in either site's
+   stdout log. Fast rather than hanging, with Node never logging, is what
+   hairpin NAT looks like: the request leaves for the server's own public
+   address and does not come back.
+2. **`proxy: { to: "http://127.0.0.1/api/**", headers: { host: ... } }`**, to
+   stay on the machine and let IIS route by Host. Also 500, in ~1.3s.
 
-1. **Delete `nitro.config.ts`.** Left in place it intercepts `/api` and the
-   sub-application never sees a request.
-2. Move the API files back to `/mydialearn/api`. While the proxy is in use
-   that folder must not sit at `api`, because its `web.config` declares
-   `httpPlatform`, which IIS rejects outside a registered application — the
-   path answers 500 before Nitro ever sees it.
+Both were deployed and measured. The route rule itself is fine — it compiles
+into `.output/server/index.mjs` and works off-server — so the obstacle is the
+host's networking, not Nitro.
 
-The proxy keeps the `/api` prefix on the way out, because the API on that host
-runs with `API_PREFIX=api`. The sub-application will run with `API_PREFIX=`
-empty instead, since the path is then already in the URL.
+What is left is the sub-application, which needs no proxy at all. The files
+and a correct `.env` are staged at `/mydialearn/api-pending`; rename that to
+`api` once the application is registered. Its `.env` already sets
+`API_PREFIX=` empty, because the path is then in the URL.
 
 ## How IIS starts Node here
 
